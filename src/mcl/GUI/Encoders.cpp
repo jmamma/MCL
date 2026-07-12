@@ -4,13 +4,6 @@
 #include "platform.h"
 #include <stdlib.h>
 
-EncoderParent::EncoderParent(encoder_handle_t _handler) :
-    old(0),
-    cur(0),
-    redisplay(false),
-    handler(_handler) {
-}
-
 void EncoderParent::checkHandle() {
     if (cur != old && handler != nullptr) {
         handler(this);
@@ -25,11 +18,9 @@ void EncoderParent::setValue(int value, bool handle) {
     } else {
         old = cur = value;
     }
-    redisplay = true;
 }
 
 void EncoderParent::displayAt(int i) {
-    redisplay = false;
 }
 
 bool EncoderParent::hasChanged() {
@@ -39,10 +30,6 @@ bool EncoderParent::hasChanged() {
 void EncoderParent::clear() {
     old = 0;
     cur = 0;
-}
-
-Encoder::Encoder(const char *_name, encoder_handle_t _handler) :
-    EncoderParent(_handler) {
 }
 
 int Encoder::update_rotations(encoder_t *enc) {

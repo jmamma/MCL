@@ -1,6 +1,5 @@
 #ifndef MIDISDS_H__
 #define MIDISDS_H__
-
 #include "Wav.h"
 
 #define SDS_LOOP_OFF 0x7F
@@ -9,6 +8,16 @@
 #define SDS_SEND 0x03
 #define SDS_REC 0x02
 #define SDS_READY 0xFF
+
+static inline uint32_t midi_sds_sample_midpoint(uint8_t sample_format) {
+  return UINT32_C(1) << (sample_format - 1);
+}
+
+// Forward declarations for the reader classes
+struct SDSFileReader;
+struct SyxReader;
+struct WavReader;
+
 class MidiSDSClass {
 public:
   Wav wav_file;
@@ -21,15 +30,13 @@ public:
   uint32_t loopStart;
   uint32_t loopEnd;
   uint8_t loopType;
-
   uint32_t samplesSoFar;
-
   bool use_hand_shake = true;
   bool hand_shake_state;
-
+  bool user_cancelled;
   uint8_t state = SDS_READY;
 
-  //cached calculations
+  // Cached calculations
   uint8_t midiBytes_per_word;
   uint8_t bytes_per_word;
   int32_t sample_offset;
@@ -46,18 +53,25 @@ public:
     loopType = SDS_LOOP_OFF;
     state = SDS_READY;
     hand_shake_state = false;
+    user_cancelled = false;
   }
 
   void setSampleRate(uint32_t hz) { samplePeriod = (uint32_t)1000000000 / hz; }
+
   uint8_t waitForMsg(uint16_t timeout = 2000);
   uint8_t waitForHandshake();
+
+  // Public interface methods
   bool sendSyx(const char *filename, uint16_t sample_number);
-  bool sendWav(const char *filename, const char *samplename, uint16_t sample_number, bool show_progress = false);
-  bool sendSamples(bool show_progress);
-  bool recvWav(const char *filename, uint16_t sample_number /* always show progress */);
+  bool sendWav(const char *filename, const char *samplename,
+               uint16_t sample_number, bool show_progress = false);
+  bool recvWav(const char *filename, uint16_t sample_number);
+
   void incPacketNumber();
   void cancel();
   void dump_header();
+
+  // MIDI message methods
   void sendAckMessage();
   void sendNakMessage();
   void sendCancelMessage();
@@ -65,8 +79,32 @@ public:
   void sendEOFMessage();
   void sendGeneralMessage(uint8_t type);
   void sendDumpRequest(uint16_t slot);
-  void sendDumpHeader();
   bool sendData(uint8_t *buf, uint8_t len);
+
+private:
+  enum class AckResult : uint8_t { Ok, Retry, Cancel };
+
+  bool transmitPacket(uint8_t *buf, uint16_t len);
+  AckResult awaitDataAck(uint16_t latency_ms);
+
+  // Consolidated send method (used by sendSyx and sendWav)
+  bool sendFile(SDSFileReader &reader, const char *filename,
+                uint16_t sample_number, const char *samplename,
+                bool show_progress);
 };
+// Abstract base class for file readers
+struct SDSFileReader {
+  virtual bool open(const char *filename) = 0;
+  virtual void close() = 0;
+  virtual uint32_t size() = 0;
+  virtual int readPacket(uint8_t *buf, size_t bufsize) = 0;
+  virtual bool hasMorePackets() = 0;
+  virtual uint32_t position() = 0;
+
+protected:
+  ~SDSFileReader() = default;
+};
+
 extern MidiSDSClass midi_sds;
+
 #endif /* MIDISDS_H__ */

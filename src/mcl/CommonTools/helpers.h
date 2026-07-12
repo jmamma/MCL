@@ -37,7 +37,7 @@ extern const uint32_t _bvmasks32[];
 /** 8-bit macros. **/
 #define SET_BIT8(target, bit)               SET_BIT(target,bit)
 #define CLEAR_BIT8(target, bit)             CLEAR_BIT(target,bit)
-#define TOGGLE_BIT8(target, bit)            TOGGLE_BIT(taget, bit)
+#define TOGGLE_BIT8(target, bit)            TOGGLE_BIT(target, bit)
 #define IS_BIT_SET8(target, bit)            IS_BIT_SET(target, bit)
 #define IS_BIT_CLEAR8(target, bit)          IS_BIT_CLEAR(target, bit)
 

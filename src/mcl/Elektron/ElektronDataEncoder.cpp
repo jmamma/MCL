@@ -28,6 +28,11 @@ void ElektronDataToSysexEncoder::init(uint8_t *_sysex,
   inChecksum = false;
   checksum = 0;
   retLen = 0;
+#if !defined(__AVR__)
+  inRLE = false;
+  rleCount = 0;
+  rleByte = 0;
+#endif
   start7Bit();
 }
 
@@ -83,20 +88,23 @@ void ElektronDataToSysexEncoder::begin() {
 uint16_t ElektronDataToSysexEncoder::finish() {
   uint8_t inc = ((cnt7 > 0) ? (cnt7 + 1) : 0);
   cnt7 = 0;
-  if (inChecksum) {
-    for (uint8_t i = 0; i < inc; i++) {
-      checksum += ptr[i];
+  // Single pass over the pending group: the former two loops (checksum sum and
+  // uart send) covered the same [0,inc) range, so fold the per-byte work into
+  // one loop. Both inner conditionals are loop-invariant and inc<=8, so the
+  // extra per-iteration tests are negligible (cold flush-on-save path).
+  uint8_t flushed = inc;
+  uint8_t *p = ptr;
+  while (inc--) {
+    uint8_t b = *(p++);
+    if (inChecksum) {
+      checksum += b;
+    }
+    if (uart != NULL) {
+      uart_send(b);
     }
   }
-  if (uart != NULL) {
-    for (uint8_t i = 0; i < inc; i++) {
-      uart_send(ptr[i]);
-    }
-    ptr = data;
-  } else {
-    ptr += inc;
-  }
-  retLen += inc;
+  ptr = (uart != NULL) ? data : p;
+  retLen += flushed;
   return retLen;
 }
 
@@ -114,27 +122,55 @@ DATA_ENCODER_RETURN_TYPE ElektronDataToSysexEncoder::encode7Bit(uint8_t inb) {
   ptr[0] |= msb << (6 - cnt7);
   ptr[cnt7 + 1] = c;
   if (++cnt7 == 7) {
-    retLen += 8;
-    if (inChecksum) {
-      for (uint8_t i = 0; i < 8; i++) {
-        checksum += ptr[i];
-      }
-    }
-    if (uart != NULL) {
-      for (uint8_t i = 0; i < 8; i++) {
-        uart_send(data[i]);
-      }
-      ptr = data;
-    } else {
-      ptr += 8;
-    }
-    cnt7 = 0;
+    // A full 7-byte group occupies 8 sysex bytes (1 MSB byte + 7 payload).
+    // finish() flushes exactly cnt7+1 == 8 bytes here: it sums them into the
+    // checksum, sends them over uart (or advances ptr), bumps retLen and
+    // resets cnt7 -- identical to the inlined flush this replaces. (In uart
+    // mode ptr is always reset to data after every flush, so summing/sending
+    // ptr[i] equals the former data[i] reads.) Cold: only reached while
+    // building/transmitting a sysex dump on save, never on the per-tick path.
+    finish();
   }
-
   DATA_ENCODER_TRUE();
 }
 
+#if !defined(__AVR__)
+void ElektronDataToSysexEncoder::startRLE() {
+  inRLE = true;
+  rleCount = 0;
+  rleByte = 0;
+}
+
+void ElektronDataToSysexEncoder::stopRLE() {
+  rleFlush();
+  inRLE = false;
+}
+
+void ElektronDataToSysexEncoder::rleFlush() {
+  if (!rleCount) return;
+  if (rleByte < 0x80 && rleCount == 1) {
+    encode7Bit(rleByte);
+  } else {
+    encode7Bit(0x80 | rleCount);
+    encode7Bit(rleByte);
+  }
+  rleCount = 0;
+}
+#endif
+
 DATA_ENCODER_RETURN_TYPE ElektronDataToSysexEncoder::pack8(uint8_t inb) {
+#if !defined(__AVR__)
+  if (inRLE) {
+    if (inb == rleByte && rleCount < 0x7F) {
+      rleCount++;
+      DATA_ENCODER_TRUE();
+    }
+    rleFlush();
+    rleCount = 1;
+    rleByte = inb;
+    DATA_ENCODER_TRUE();
+  }
+#endif
   if (in7Bit) {
     DATA_ENCODER_CHECK(encode7Bit(inb));
   } else {
@@ -212,39 +248,91 @@ uint16_t ElektronSysexToDataEncoder::finish() {
 
 void ElektronSysexDecoder::init(uint8_t *_data) {
   DataDecoder::init(_data);
+#if !defined(__AVR__)
+  inRLE = false;
+  rleCount = 0;
+  rleByte = 0;
+#endif
   start7Bit();
 }
 
-void ElektronSysexDecoder::init(MidiClass *_midi, uint16_t _offset) {
-  DataDecoder::init(_midi, _offset);
+void ElektronSysexDecoder::init(const SysexView &_sysexView, uint16_t _offset) {
+  data = ptr = nullptr;
+  offset = _offset;
+  n = offset;
+  sysexView = _sysexView;
+#if !defined(__AVR__)
+  inRLE = false;
+  rleCount = 0;
+  rleByte = 0;
+#endif
   start7Bit();
 }
 
-DATA_ENCODER_RETURN_TYPE ElektronSysexDecoder::get8(uint8_t *c) {
+uint8_t ElektronSysexDecoder::readByte() {
+  return data ? *(ptr++) : sysexView.getByte(n++);
+}
 
+#if !defined(__AVR__)
+void ElektronSysexDecoder::startRLE() {
+  inRLE = true;
+  rleCount = 0;
+  rleByte = 0;
+}
+
+void ElektronSysexDecoder::stopRLE() {
+  inRLE = false;
+  rleCount = 0;
+}
+
+void ElektronSysexDecoder::getRaw8(uint8_t *c) {
   if (in7Bit) {
     if ((cnt7 % 8) == 0) {
-      if (data) {
-        bits = *(ptr++);
-      } else {
-        bits = midi->midiSysex->getByte(n++);
-      }
+      bits = readByte();
       cnt7++;
     }
     bits <<= 1;
-    if (data) {
-      *c = *(ptr++) | (bits & 0x80);
-    } else {
-      *c = midi->midiSysex->getByte(n++) | (bits & 0x80);
-    }
+    *c = readByte() | (bits & 0x80);
     cnt7++;
   } else {
-    if (data) {
-      *c = *(ptr++);
-    } else {
-      *c = midi->midiSysex->getByte(n++);
-    }
+    *c = readByte();
   }
+}
+#endif
 
+DATA_ENCODER_RETURN_TYPE ElektronSysexDecoder::get8(uint8_t *c) {
+#if !defined(__AVR__)
+  if (inRLE) {
+    if (rleCount > 0) {
+      rleCount--;
+      *c = rleByte;
+      DATA_ENCODER_TRUE();
+    }
+    uint8_t b;
+    getRaw8(&b);
+    if (b & 0x80) {
+      uint8_t count = b & 0x7F;
+      getRaw8(&rleByte);
+      if (count > 1) {
+        rleCount = count - 1;
+      }
+      *c = rleByte;
+    } else {
+      *c = b;
+    }
+    DATA_ENCODER_TRUE();
+  }
+#endif
+  if (in7Bit) {
+    if ((cnt7 % 8) == 0) {
+      bits = readByte();
+      cnt7++;
+    }
+    bits <<= 1;
+    *c = readByte() | (bits & 0x80);
+    cnt7++;
+  } else {
+    *c = readByte();
+  }
   DATA_ENCODER_TRUE();
 }

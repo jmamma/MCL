@@ -1,4 +1,4 @@
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "MidiClock.h"
 #include "global.h"
 #include "helpers.h"
@@ -45,6 +45,7 @@ void __not_in_flash_func(timer1_handler)() {
 
   MidiUart.tickActiveSense();
   MidiUart2.tickActiveSense();
+  MidiUartUSB.tickActiveSense();
 
   TRIGGER_SW_IRQ3();
   CLEAR_LOCK();
@@ -54,13 +55,25 @@ void __not_in_flash_func(timer2_handler)() {
   LOCK();
   g_clock_fast++;
 
+#ifdef PLATFORM_TBD
+  bool emitted_internal_clock = MidiClock.handleInternalTimerTick();
+  if (emitted_internal_clock && MidiClock.state == MidiClockClass::STARTED &&
+      !MidiClock.inCallback) {
+    TRIGGER_SW_IRQ1();
+  }
+#else
+  bool emitted_internal_clock = false;
+#endif
+
   MidiClock.div192th_countdown++;
-  if (MidiClock.state == MidiClockClass::STARTED) {
-    if (MidiClock.div192th_countdown >= MidiClock.div192_time) {
-      if (MidiClock.div192th_counter != MidiClock.div192th_counter_last) {
+  if (!emitted_internal_clock &&
+      MidiClock.state == MidiClockClass::STARTED) {
+    if (MidiClock.div192_time > 0 &&
+        MidiClock.div192th_countdown >= MidiClock.div192_time) {
+      if (MidiClock.interp_budget > 0) {
         MidiClock.increment192Counter();
         MidiClock.div192th_countdown = 0;
-        MidiClock.div192th_counter_last = MidiClock.div192th_counter;
+        MidiClock.interp_budget--;
         if (!MidiClock.inCallback) {
           TRIGGER_SW_IRQ1();
         }
@@ -182,5 +195,3 @@ void core1_loop() {
 }
 
 #endif
-
-

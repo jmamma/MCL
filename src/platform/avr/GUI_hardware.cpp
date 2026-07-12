@@ -94,14 +94,6 @@ ALWAYS_INLINE()  uint16_t SR165Class::read16() {
 #define ENCODER_BUTTON(i) (encoders[(i)].button)
 #define ENCODER_BUTTON_SHIFT(i) (encoders[(i)].button_shift)
 
-EncodersClass::EncodersClass() {
-  clearEncoders();
-  for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
-    sr_old2s[i] = 0;
-  }
-  sr_old = 0;
-}
-
 void EncodersClass::clearEncoders() {
  // USE_LOCK();
  // SET_LOCK();
@@ -139,16 +131,15 @@ void EncodersClass::poll(uint16_t sr) {
 
 /**********************************************/
 
-ButtonsClass::ButtonsClass() {
-  clear();
-}
-
 void ButtonsClass::clear() {
   for (uint8_t i = 0; i < GUI_NUM_BUTTONS; i++) {
-    CLEAR_B_DOUBLE_CLICK(i);
-    CLEAR_B_CLICK(i);
-    CLEAR_B_LONG_CLICK(i);
-    STORE_B_OLD(i, B_CURRENT(i));
+    uint8_t status = buttons[i].status;
+    status &= ~(_BV(B_BIT_OLD) | _BV(B_BIT_DOUBLE_CLICK) |
+                _BV(B_BIT_CLICK) | _BV(B_BIT_LONG_CLICK));
+    if (status & _BV(B_BIT_CURRENT)) {
+      status |= _BV(B_BIT_OLD);
+    }
+    buttons[i].status = status;
   }
 }
 
@@ -156,7 +147,8 @@ void ButtonsClass::poll(uint8_t but) {
   uint8_t but_tmp = but;
 
   for (uint8_t i = 0; i < GUI_NUM_BUTTONS; i++) {
-    STORE_B_CURRENT(i, IS_BIT_SET8(but_tmp, 0));
+    buttons[i].status = (buttons[i].status & ~_BV(B_BIT_CURRENT)) |
+                        (but_tmp & _BV(B_BIT_CURRENT));
 
     // disable button stuff for now
     /*
@@ -208,8 +200,9 @@ void GUIHardware::poll() {
 
   uint16_t sr = SR165.read16();
   if (sr != oldsr) {
-    Buttons.clear();
-    Buttons.poll(sr >> 8);
+    // Button state is consumed through the global Buttons object/macros.
+    ::Buttons.clear();
+    ::Buttons.poll(sr >> 8);
     Encoders.poll(sr);
     oldsr = sr;
     GUI.events.pollEvents();
@@ -220,14 +213,14 @@ void GUIHardware::poll() {
 void GUIHardware::init() {
   SR165.init();
   uint16_t sr = SR165.read16();
-  Buttons.clear();
-  Buttons.poll(sr >> 8);
+  ::Buttons.clear();
+  ::Buttons.poll(sr >> 8);
   Encoders.poll(sr);
   oldsr = sr;
 }
 
 void GUIHardware::clear() {
-   Buttons.clear();
+   ::Buttons.clear();
    Encoders.clearEncoders();
 }
 
@@ -235,4 +228,3 @@ GUIHardware GUI_hardware;
 SR165Class SR165;
 EncodersClass Encoders;
 ButtonsClass Buttons;
-

@@ -1,6 +1,12 @@
 #include "platform.h"
 #include "ElektronPattern.h"
 
+// The base ElektronPattern storage (lockTracks, lockParams, locks) is sized
+// at 64 rows. Subclasses may report a larger maxLocks (MDPattern uses 544 to
+// describe the total addressable range including its ext_locks extension),
+// but the inherited methods can only safely iterate the base 64 slots.
+#define EP_BASE_LOCK_SLOTS 64
+
 bool ElektronPattern::isParamLocked(uint8_t track, uint8_t param) {
 	return getLockIdx(track, param) != -1;
 }
@@ -23,7 +29,7 @@ bool ElektronPattern::isLockEmpty(uint8_t idx) {
 }
 
 void ElektronPattern::clearParamLocks(uint8_t track, uint8_t param) {
-	int8_t idx = getLockIdx(track, param);
+	ep_lock_idx_t idx = getLockIdx(track, param);
 	if (idx != -1) {
 		clearLockPattern(idx);
 	}
@@ -35,8 +41,10 @@ void ElektronPattern::clearTrackLocks(uint8_t track) {
 	}
 }
 
-void ElektronPattern::clearLockPattern(int8_t lock) {
-	if (lock >= maxLocks)
+void ElektronPattern::clearLockPattern(ep_lock_idx_t lock) {
+	// Bound by base storage, not maxLocks: subclasses (MDPattern) can declare
+	// maxLocks > 64 but the base lockTracks/lockParams/locks arrays are 64-wide.
+	if (lock < 0 || lock >= EP_BASE_LOCK_SLOTS)
 		return;
 
 	for (uint8_t i = 0; i < maxSteps; i++) {
@@ -50,7 +58,7 @@ void ElektronPattern::clearLockPattern(int8_t lock) {
 }
 
 bool ElektronPattern::addLock(uint8_t track, uint8_t step, uint8_t param, uint8_t value) {
-	int8_t idx = getLockIdx(track, param);
+	ep_lock_idx_t idx = getLockIdx(track, param);
 	if (idx == -1) {
 		idx = getNextEmptyLock();
 		if (idx == -1)
@@ -67,7 +75,7 @@ bool ElektronPattern::addLock(uint8_t track, uint8_t step, uint8_t param, uint8_
 }
 
 void ElektronPattern::clearLock(uint8_t track, uint8_t step, uint8_t param) {
-	int8_t idx = getLockIdx(track, param);
+	ep_lock_idx_t idx = getLockIdx(track, param);
 	if (idx == -1)
 		return;
 	locks[idx][step] = 255;
@@ -77,23 +85,28 @@ void ElektronPattern::clearLock(uint8_t track, uint8_t step, uint8_t param) {
 }
 
 uint8_t ElektronPattern::getLock(uint8_t track, uint8_t step, uint8_t param) {
-	int8_t idx = getLockIdx(track, param);
+	ep_lock_idx_t idx = getLockIdx(track, param);
 	if (idx == -1)
 		return 255;
 	return locks[idx][step];
 }
 
-int8_t ElektronPattern::getNextEmptyLock() {
-	for (uint8_t i = 0; i < maxLocks; i++) {
+ep_lock_idx_t ElektronPattern::getNextEmptyLock() {
+	// Search only the base storage (lockTracks/lockParams sized [64]).
+	// MDPattern's ext_lockTracks live in a separate array and would need an
+	// override here to be allocatable from this API.
+	ep_lock_max_t cap = maxLocks < EP_BASE_LOCK_SLOTS ? maxLocks : EP_BASE_LOCK_SLOTS;
+	for (ep_lock_max_t i = 0; i < cap; i++) {
 		if ((lockTracks[i] == -1) && (lockParams[i] == -1)) {
-			return i;
+			return (ep_lock_idx_t)i;
 		}
 	}
 	return -1;
 }
 
 void ElektronPattern::cleanupLocks() {
-	for (uint8_t i = 0; i < maxLocks; i++) {
+	ep_lock_max_t cap = maxLocks < EP_BASE_LOCK_SLOTS ? maxLocks : EP_BASE_LOCK_SLOTS;
+	for (ep_lock_max_t i = 0; i < cap; i++) {
 		if (lockTracks[i] != -1) {
 			uint8_t lockTrack = lockTracks[i];
 			if (isLockEmpty(i)) {

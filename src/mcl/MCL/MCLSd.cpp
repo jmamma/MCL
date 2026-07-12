@@ -1,8 +1,139 @@
-#include "MCLSD.h"
+#include "MCLSd.h"
 #include "ResourceManager.h"
 #include "MCLGUI.h"
 #include "StackMonitor.h"
 #include "Project.h"
+#include "Sequencer/PtcGroups.h"
+#include "platform.h"
+#include <string.h>
+
+namespace {
+
+constexpr uint8_t kSdPathLen = 128;
+
+#ifdef __AVR__
+constexpr uint8_t kRemoveDirMaxDepth = 8;
+
+bool is_root_path(const char *path) {
+  if (path == nullptr || path[0] == '\0') {
+    return true;
+  }
+  while (*path == '/') {
+    path++;
+  }
+  return *path == '\0';
+}
+#else
+bool copy_sd_path(char *dst, uint8_t dst_len, const char *src) {
+  if (dst_len == 0) {
+    return false;
+  }
+  char *write = dst;
+  char *end = dst + dst_len - 1;
+  while (*src != '\0') {
+    if (write == end) {
+      *dst = '\0';
+      return false;
+    }
+    *write++ = *src++;
+  }
+  *write = '\0';
+  return true;
+}
+
+void trim_trailing_slashes(char *path) {
+  size_t len = strlen(path);
+  while (len > 1 && path[len - 1] == '/') {
+    path[--len] = '\0';
+  }
+}
+
+bool parent_path(char *path) {
+  trim_trailing_slashes(path);
+  char *slash = strrchr(path, '/');
+  if (slash == nullptr) {
+    return false;
+  }
+  if (slash == path) {
+    path[1] = '\0';
+  } else {
+    *slash = '\0';
+  }
+  return true;
+}
+#endif
+
+#ifdef MCL_HAS_PLATFORM_HEADLESS_BOOT
+bool load_headless_project() {
+  static const char kHeadlessProjectName[] = "project000";
+
+  if (mcl_cfg.project[0] != '\0' && proj.load_project(mcl_cfg.project)) {
+    return true;
+  }
+  if (proj.load_project(kHeadlessProjectName)) {
+    return true;
+  }
+  if (!proj.new_project(kHeadlessProjectName)) {
+    return proj.load_project(kHeadlessProjectName);
+  }
+  return proj.load_project(kHeadlessProjectName);
+}
+
+bool wait_for_project_or_headless_boot() {
+  if (mcl_platform_headless_boot()) {
+    bool ok = load_headless_project();
+    DEBUG_PRINTLN(ok ? F("Headless project loaded")
+                     : F("Headless project load failed"));
+    return ok;
+  }
+
+  mcl_gui.wait_for_project();
+  return true;
+}
+#else
+#define wait_for_project_or_headless_boot() (mcl_gui.wait_for_project(), true)
+#endif
+
+} // namespace
+
+bool MCLSd::join_path(char *dst, uint8_t dst_len, const char *dir,
+                      const char *entry) {
+  if (dst_len == 0) {
+    return false;
+  }
+  char *write = dst;
+  char *end = dst + dst_len - 1;
+  while (*dir != '\0') {
+    if (write == end) {
+      *dst = '\0';
+      return false;
+    }
+    *write++ = *dir++;
+  }
+  if (write != dst && write[-1] != '/') {
+    if (write == end) {
+      *dst = '\0';
+      return false;
+    }
+    *write++ = '/';
+  }
+  while (*entry != '\0') {
+    if (write == end) {
+      *dst = '\0';
+      return false;
+    }
+    *write++ = *entry++;
+  }
+  *write = '\0';
+  return true;
+}
+
+#ifdef __AVR__
+void mcl_oled_set_sd_dedicated_spi(bool dedicated) {
+  SD.setDedicatedSpi(dedicated);
+}
+#endif
+
 /*
    Function for initialising the SD Card
 */
@@ -28,16 +159,58 @@ bool MCLSd::sd_init() {
   }
   sd_state = true;
 
+#ifndef __AVR__
+  if (SD.exists("/config.mcls")) {
+    strcpy(mcl_root, "");
+    DEBUG_PRINTLN(F("Root is /"));
+  } else {
+    strcpy(mcl_root, "/MCL");
+    DEBUG_PRINTLN(F("Root is /MCL"));
+    if (!SD.exists(mcl_root)) {
+      SD.mkdir(mcl_root, true);
+      char buf[64];
+      strcpy(buf, mcl_root); strcat(buf, "/Projects");
+      SD.mkdir(buf, true);
+      strcpy(buf, mcl_root); strcat(buf, "/Samples");
+      SD.mkdir(buf, true);
+      strcpy(buf, mcl_root); strcat(buf, "/Samples/WAV");
+      SD.mkdir(buf, true);
+      strcpy(buf, mcl_root); strcat(buf, "/Samples/SYX");
+      SD.mkdir(buf, true);
+      strcpy(buf, mcl_root); strcat(buf, "/Sounds");
+      SD.mkdir(buf, true);
+    }
+  }
+#endif
+
   DEBUG_PRINTLN(F("SD Init okay"));
   return true;
 }
+
+#ifndef __AVR__
+const char *MCLSd::full_path(const char *path, char *buffer, size_t size) {
+  if (mcl_root[0] == '\0') return path;
+  if (path[0] != '/') return path;
+
+  size_t root_len = strlen(mcl_root);
+  if (strncmp(path, mcl_root, root_len) == 0 &&
+      (path[root_len] == '\0' || path[root_len] == '/')) {
+    return path;
+  }
+
+  if (size == 0) return path;
+  strncpy(buffer, mcl_root, size);
+  buffer[size - 1] = '\0';
+  if (path[1] != '\0') {
+    strncat(buffer, path, size - strlen(buffer) - 1);
+  }
+  return buffer;
+}
+#endif
 bool MCLSd::load_init() {
-  bool ret = false;
-  int b;
-
   if (sd_state) {
-
-    if (mcl_cfg.cfgfile.open("/config.mcls", O_RDWR)) {
+    char path[64];
+    if (mcl_cfg.cfgfile.open(full_path("/config.mcls", path, sizeof(path)), O_RDWR)) {
       DEBUG_PRINTLN(F("Config file open: success"));
 
       if (read_data((uint8_t *)&mcl_cfg, sizeof(MCLSysConfigData),
@@ -52,18 +225,27 @@ bool MCLSd::load_init() {
           }
           gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
           oled_display.clearDisplay();
-          mcl_gui.wait_for_project();
-          return true;
+          return wait_for_project_or_headless_boot();
 
         }
 
-        else if (mcl_cfg.number_projects > 0) {
+        if (mcl_cfg.project_config > 1) {
+          mcl_cfg.project_config = 0;
+        }
+        if (mcl_cfg.md_sample_bank > MD_SAMPLE_BANK_FIXED_LAST) {
+          mcl_cfg.md_sample_bank = 0;
+        }
+        if (mcl_cfg.md_sample_bank_capture > 128) {
+          mcl_cfg.md_sample_bank_capture = 0;
+        }
+        ptc_groups.load(mcl_cfg.ptc_group);
+
+        if (mcl_cfg.number_projects > 0) {
           DEBUG_PRINTLN(
               F("Project count greater than 0, try to load existing"));
           if (!proj.load_project(mcl_cfg.project)) {
             DEBUG_PRINTLN(F("error loading project"));
-            mcl_gui.wait_for_project();
-            return true;
+            return wait_for_project_or_headless_boot();
 
           } else {
             DEBUG_PRINTLN(F("Project loaded successfully, load grid"));
@@ -71,8 +253,7 @@ bool MCLSd::load_init() {
           }
           return true;
         } else {
-          mcl_gui.wait_for_project();
-          return true;
+          return wait_for_project_or_headless_boot();
         }
       } else {
         DEBUG_PRINTLN(F("Could not read cfg file."));
@@ -80,8 +261,7 @@ bool MCLSd::load_init() {
         if (!mcl_cfg.cfg_init()) {
           return false;
         }
-        mcl_gui.wait_for_project();
-        return true;
+        return wait_for_project_or_headless_boot();
       }
     } else {
       DEBUG_PRINTLN(F("Could not open cfg file. Let's try to create it"));
@@ -89,8 +269,7 @@ bool MCLSd::load_init() {
         return false;
       }
       oled_display.clearDisplay();
-      mcl_gui.wait_for_project();
-      return true;
+      return wait_for_project_or_headless_boot();
     }
     return true;
   }
@@ -120,7 +299,6 @@ bool MCLSd::seek(uint32_t pos, File *filep) {
 }
 
 bool MCLSd::write_data(void *data, size_t len, File *filep) {
-  bool ret;
   uint32_t pos = filep->curPosition();
   uint8_t n = 0;
 
@@ -132,7 +310,7 @@ bool MCLSd::write_data(void *data, size_t len, File *filep) {
     DEBUG_PRINTLN("write retry");
     delay(20);
     write_fail++;
-    ret = filep->seekSet(pos);
+    filep->seekSet(pos);
     n++;
   } while (n < SD_MAX_RETRIES);
 
@@ -143,7 +321,6 @@ bool MCLSd::write_data(void *data, size_t len, File *filep) {
    Function for reading from the project file
 */
 bool MCLSd::read_data(void *data, size_t len, File *filep) {
-  bool ret;
   uint32_t pos = filep->curPosition();
   uint8_t n = 0;
 
@@ -155,11 +332,242 @@ bool MCLSd::read_data(void *data, size_t len, File *filep) {
     DEBUG_PRINTLN("read retry");
     delay(20);
     read_fail++;
-    ret = filep->seekSet(pos);
+    filep->seekSet(pos);
     n++;
   } while (n < SD_MAX_RETRIES);
 
   return false;
 }
+
+bool MCLSd::copy_file(const char *src, const char *dst, uint8_t progress_base,
+                      uint8_t progress_span, uint8_t progress_max) {
+  File in;
+  File out;
+  if (!in.open(src, O_READ)) {
+    return false;
+  }
+  if (!out.open(dst, O_RDWR | O_CREAT | O_EXCL)) {
+    in.close();
+    return false;
+  }
+
+  bool ok = true;
+  uint32_t size = in.size();
+  if (size > 0 && !out.preAllocate(size)) {
+    ok = false;
+  }
+
+  uint8_t buf[512];
+  uint32_t copied = 0;
+  uint8_t progress_end = progress_base + progress_span;
+  while (ok) {
+    int n = in.read(buf, sizeof(buf));
+    if (n < 0) {
+      ok = false;
+      break;
+    }
+    if (n == 0) {
+      break;
+    }
+    ok = write_data(buf, (size_t)n, &out);
+    copied += n;
+    if (ok && progress_span > 0 && progress_max > 0 && size > 0) {
+      uint8_t progress =
+          progress_base + ((uint32_t)copied * progress_span) / size;
+      if (progress > progress_end) {
+        progress = progress_end;
+      }
+      mcl_gui.draw_progress_bar(progress, progress_max, false, 31, 21);
+    }
+  }
+  if (ok) {
+    ok = out.sync();
+  }
+
+  out.close();
+  in.close();
+  if (!ok) {
+    SD.remove(dst);
+  }
+  return ok;
+}
+
+bool MCLSd::remove_dir(const char *dir) {
+#ifdef __AVR__
+  if (is_root_path(dir)) {
+    return false;
+  }
+
+  struct Remover {
+    static bool remove(const char *path, uint8_t depth) {
+      if (depth > kRemoveDirMaxDepth) {
+        return false;
+      }
+
+      File d;
+      if (!d.open(path, O_READ) || !d.isDirectory()) {
+        d.close();
+        return false;
+      }
+      d.rewind();
+
+      File entry_file;
+      char entry[FILE_ENTRY_SIZE];
+      char child[kSdPathLen];
+
+      while (entry_file.openNext(&d, O_READ)) {
+        entry_file.getName(entry, sizeof(entry));
+        bool is_dir = entry_file.isDirectory();
+        entry_file.close();
+
+        if (entry[0] == '\0' || entry[0] == '.') {
+          continue;
+        }
+        if (!MCLSd::join_path(child, sizeof(child), path, entry)) {
+          d.close();
+          return false;
+        }
+        if (is_dir) {
+          if (!remove(child, depth + 1)) {
+            d.close();
+            return false;
+          }
+        } else if (!SD.remove(child)) {
+          d.close();
+          return false;
+        }
+      }
+
+      entry_file.close();
+      d.close();
+      return SD.rmdir(path);
+    }
+  };
+
+  return Remover::remove(dir, 0);
+#else
+  char root[kSdPathLen];
+  char path[kSdPathLen];
+  if (!copy_sd_path(root, sizeof(root), dir)) {
+    return false;
+  }
+  trim_trailing_slashes(root);
+  if (root[0] == '\0' || strcmp(root, "/") == 0) {
+    return false;
+  }
+  if (!copy_sd_path(path, sizeof(path), root)) {
+    return false;
+  }
+
+  while (true) {
+    File d;
+    if (!d.open(path, O_READ) || !d.isDirectory()) {
+      d.close();
+      return false;
+    }
+    d.rewind();
+
+    File entry_file;
+    char entry[FILE_ENTRY_SIZE];
+    char child[kSdPathLen];
+    bool found_child = false;
+
+    while (entry_file.openNext(&d, O_READ)) {
+      entry_file.getName(entry, sizeof(entry));
+      bool is_dir = entry_file.isDirectory();
+      entry_file.close();
+
+      if (entry[0] == '\0' || entry[0] == '.') {
+        continue;
+      }
+      if (!join_path(child, sizeof(child), path, entry)) {
+        d.close();
+        return false;
+      }
+      if (is_dir) {
+        if (!copy_sd_path(path, sizeof(path), child)) {
+          d.close();
+          return false;
+        }
+        found_child = true;
+        break;
+      }
+      if (!SD.remove(child)) {
+        d.close();
+        return false;
+      }
+      found_child = true;
+      break;
+    }
+
+    entry_file.close();
+    d.close();
+    if (found_child) {
+      continue;
+    }
+    if (!SD.rmdir(path)) {
+      return false;
+    }
+    if (strcmp(path, root) == 0) {
+      return true;
+    }
+    if (!parent_path(path)) {
+      return false;
+    }
+  }
+#endif
+}
+
+#ifndef __AVR__
+bool MCLSd::copy_dir(const char *src, const char *dst, uint8_t progress_base,
+                     uint8_t progress_span, uint8_t progress_max) {
+  if (SD.exists(dst)) {
+    return false;
+  }
+  if (!SD.mkdir(dst, true)) {
+    return false;
+  }
+
+  File dir;
+  if (!dir.open(src, O_READ) || !dir.isDirectory()) {
+    dir.close();
+    remove_dir(dst);
+    return false;
+  }
+  dir.rewind();
+
+  File entry_file;
+  char entry[FILE_ENTRY_SIZE];
+  char src_path[128];
+  char dst_path[128];
+  bool ok = true;
+
+  while (ok && entry_file.openNext(&dir, O_READ)) {
+    entry_file.getName(entry, sizeof(entry));
+    bool is_dir = entry_file.isDirectory();
+    entry_file.close();
+
+    if (entry[0] == '\0' || entry[0] == '.') {
+      continue;
+    }
+    if (!join_path(src_path, sizeof(src_path), src, entry) ||
+        !join_path(dst_path, sizeof(dst_path), dst, entry)) {
+      ok = false;
+      break;
+    }
+    ok = is_dir ? copy_dir(src_path, dst_path, progress_base, progress_span,
+                           progress_max)
+                : copy_file(src_path, dst_path, progress_base, progress_span,
+                            progress_max);
+  }
+
+  entry_file.close();
+  dir.close();
+  if (!ok) {
+    remove_dir(dst);
+  }
+  return ok;
+}
+#endif
 
 MCLSd mcl_sd;

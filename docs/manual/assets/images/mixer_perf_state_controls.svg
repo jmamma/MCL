@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 560" role="img" aria-labelledby="title desc">
+  <title id="title">Mixer Page performance state controls</title>
+  <desc id="desc">Mixer Page performance-state controls. Arrow keys preview states, YES applies the preview, NO edits performance locks, Bank A toggles Mute Enable, Bank B toggles State Autoload, and Bank C and Bank D are unused for performance states.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f7f8fa; }
+      .panel { fill: #ffffff; stroke: #8d99a6; stroke-width: 2; }
+      .key { fill: #232a31; stroke: #11161b; stroke-width: 2; }
+      .key-mid { fill: #35414b; stroke: #11161b; stroke-width: 2; }
+      .key-text { fill: #ffffff; font: 700 15px Arial, Helvetica, sans-serif; text-anchor: middle; dominant-baseline: middle; }
+      .title { fill: #20262d; font: 700 26px Arial, Helvetica, sans-serif; }
+      .badge { fill: #eef2f5; stroke: #c2cad3; stroke-width: 1.5; }
+      .badge-text { fill: #20262d; font: 700 13px Arial, Helvetica, sans-serif; text-anchor: middle; dominant-baseline: middle; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="980" height="560"/>
+  <text class="title" x="40" y="44">Mixer Page Performance State Controls</text>
+
+  <rect class="panel" x="40" y="80" width="900" height="370" rx="6"/>
+
+  <g id="top-row">
+    <rect class="key-mid" x="506" y="150" width="84" height="54" rx="8"/>
+    <text class="key-text" x="548" y="177">YES</text>
+    <rect class="badge" x="496" y="217" width="104" height="28" rx="5"/>
+    <text class="badge-text" x="548" y="232">Apply state</text>
+
+    <rect class="key" x="738" y="150" width="84" height="54" rx="8"/>
+    <text class="key-text" x="780" y="177">UP</text>
+    <rect class="badge" x="728" y="217" width="104" height="28" rx="5"/>
+    <text class="badge-text" x="780" y="232">State 3</text>
+  </g>
+
+  <g id="bottom-row">
+    <rect class="key-mid" x="80" y="270" width="84" height="54" rx="8"/>
+    <text class="key-text" x="122" y="297">BANK A</text>
+    <rect class="badge" x="70" y="337" width="104" height="28" rx="5"/>
+    <text class="badge-text" x="122" y="352">Mute Enable</text>
+
+    <rect class="key-mid" x="188" y="270" width="84" height="54" rx="8"/>
+    <text class="key-text" x="230" y="297">BANK B</text>
+    <rect class="badge" x="178" y="337" width="104" height="28" rx="5"/>
+    <text class="badge-text" x="230" y="352">State Autoload</text>
+
+    <rect class="key-mid" x="296" y="270" width="84" height="54" rx="8"/>
+    <text class="key-text" x="338" y="297">BANK C</text>
+    <rect class="badge" x="286" y="337" width="104" height="28" rx="5"/>
+    <text class="badge-text" x="338" y="352">Unused</text>
+
+    <rect class="key-mid" x="404" y="270" width="84" height="54" rx="8"/>
+    <text class="key-text" x="446" y="297">BANK D</text>
+    <rect class="badge" x="394" y="337" width="104" height="28" rx="5"/>
+    <text class="badge-text" x="446" y="352">Unused</text>
+
+    <rect class="key-mid" x="506" y="270" width="84" height="54" rx="8"/>
+    <text class="key-text" x="548" y="297">NO</text>
+    <rect class="badge" x="496" y="337" width="104" height="28" rx="5"/>
+    <text class="badge-text" x="548" y="352">Perf locks</text>
+
+    <rect class="key" x="630" y="270" width="84" height="54" rx="8"/>
+    <text class="key-text" x="672" y="297">LEFT</text>
+    <rect class="badge" x="620" y="337" width="104" height="28" rx="5"/>
+    <text class="badge-text" x="672" y="352">State 2</text>
+
+    <rect class="key" x="738" y="270" width="84" height="54" rx="8"/>
+    <text class="key-text" x="780" y="297">DOWN</text>
+    <rect class="badge" x="728" y="337" width="104" height="28" rx="5"/>
+    <text class="badge-text" x="780" y="352">State 1</text>
+
+    <rect class="key" x="846" y="270" width="84" height="54" rx="8"/>
+    <text class="key-text" x="888" y="297">RIGHT</text>
+    <rect class="badge" x="836" y="337" width="104" height="28" rx="5"/>
+    <text class="badge-text" x="888" y="352">State 4</text>
+  </g>
+</svg>

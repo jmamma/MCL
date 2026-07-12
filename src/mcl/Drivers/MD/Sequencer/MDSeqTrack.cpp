@@ -1,0 +1,1471 @@
+#include "MDSeqTrack.h"
+#include "MD.h"
+#include "MDTrack.h"
+#include "MidiUart.h"
+#include "MidiClock.h"
+#include "GUI/Pages/CommonPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
+#include "Sequencer/SeqPtcTrackRef.h"
+#include "Grid/GridTask.h"
+#include "Sequencer/MCLSeq.h"
+#include "Sequencer/SeqTrackUtil.h"
+#include "Sequencer/SeqTrackTransition.h"
+#if !defined(__AVR__)
+#include "Host/SpsHostSeqBridge.h"  // SPS host step-grid dirty notifications
+#endif
+
+uint16_t MDSeqTrack::gui_update = 0;
+uint16_t MDSeqTrack::md_trig_mask = 0;
+uint32_t MDSeqTrack::load_machine_cache = 0;
+volatile uint16_t MDSeqTrack::pending_swing_change_mask = 0;
+volatile uint8_t MDSeqTrack::pending_swing_amount = 0;
+
+static uint8_t md_swing_q14_to_amount(uint32_t swing_q14) {
+  uint32_t amount = (swing_q14 * 50UL + 8192UL) >> 14;
+  return amount > 30 ? 30 : (uint8_t)amount;
+}
+
+static bool md_step_descriptor_has_data(const MDSeqStepDescriptor &step) {
+  const uint8_t *bytes = reinterpret_cast<const uint8_t *>(&step);
+  return (bytes[0] | bytes[1]) != 0;
+}
+
+static bool md_track_is_midi_model(uint8_t track_number) NOINLINE();
+static bool md_track_is_midi_model(uint8_t track_number) {
+  return (MD.kit.models[track_number] & 0xF0) == MID_01_MODEL;
+}
+
+static uint8_t md_track_midi_channel(uint8_t track_number) NOINLINE();
+static uint8_t md_track_midi_channel(uint8_t track_number) {
+  return MD.kit.models[track_number] - MID_01_MODEL;
+}
+
+static uint16_t md_note_count_down(uint8_t len, uint8_t ticks_per_step)
+    NOINLINE();
+static uint16_t md_note_count_down(uint8_t len, uint8_t ticks_per_step) {
+  return len == 0 ? ticks_per_step / 4 : (len * ticks_per_step / 2);
+}
+
+static void md_rotate_track_data(uint8_t *locks, MDSeqStepDescriptor *steps,
+                                 int8_t *microtiming, uint8_t length,
+                                 uint16_t total_nlock, uint8_t ncopy,
+                                 uint8_t dir) NOINLINE();
+static void md_rotate_track_data(uint8_t *locks, MDSeqStepDescriptor *steps,
+                                 int8_t *microtiming, uint8_t length,
+                                 uint16_t total_nlock, uint8_t ncopy,
+                                 uint8_t dir) {
+  uint8_t lock_buf[NUM_LOCKS];
+  MDSeqStepDescriptor step_buf;
+  int8_t microtiming_buf;
+  if (dir == DIR_LEFT) {
+    uint8_t nlock = popcount(steps[0].locks);
+    memcpy(lock_buf, locks, nlock);
+    memmove(locks, locks + nlock, total_nlock - nlock);
+    memcpy(locks + total_nlock - nlock, lock_buf, nlock);
+
+    step_buf = steps[0];
+    microtiming_buf = microtiming[0];
+    memmove(steps, steps + 1, ncopy);
+    memmove(microtiming, microtiming + 1, length - 1);
+    steps[length - 1] = step_buf;
+    microtiming[length - 1] = microtiming_buf;
+  } else {
+    uint8_t nlock = popcount(steps[length - 1].locks);
+    memcpy(lock_buf, locks + total_nlock - nlock, nlock);
+    memmove(locks + nlock, locks, total_nlock - nlock);
+    memcpy(locks, lock_buf, nlock);
+
+    step_buf = steps[length - 1];
+    microtiming_buf = microtiming[length - 1];
+    memmove(steps + 1, steps, ncopy);
+    memmove(microtiming + 1, microtiming, length - 1);
+    steps[0] = step_buf;
+    microtiming[0] = microtiming_buf;
+  }
+}
+
+#if defined(__AVR__)
+static void md_swap_mask_bits(uint64_t &mask, uint8_t i, uint8_t j) {
+  uint8_t *bytes = reinterpret_cast<uint8_t *>(&mask);
+  uint8_t ib = i >> 3;
+  uint8_t jb = j >> 3;
+  uint8_t im = _bvmasks[i & 7];
+  uint8_t jm = _bvmasks[j & 7];
+  if ((bytes[ib] & im) != (bytes[jb] & jm)) {
+    bytes[ib] ^= im;
+    bytes[jb] ^= jm;
+  }
+}
+
+static void md_rotate_mask(uint64_t &mask, uint8_t length, uint8_t dir)
+    NOINLINE();
+static void md_rotate_mask(uint64_t &mask, uint8_t length, uint8_t dir) {
+  if (dir == DIR_LEFT) {
+    ROTATE_LEFT(mask, length);
+  } else {
+    ROTATE_RIGHT(mask, length);
+  }
+}
+#define MD_ROTATE_MASK(mask, length, dir) md_rotate_mask(mask, length, dir)
+#define MD_SWAP_MASK_BITS(mask, i, j) md_swap_mask_bits(mask, i, j)
+#else
+static uint64_t md_swap_mask_bits(uint64_t mask, uint8_t i, uint8_t j) {
+  uint8_t *bytes = reinterpret_cast<uint8_t *>(&mask);
+  uint8_t ib = i >> 3;
+  uint8_t jb = j >> 3;
+  uint8_t im = _bvmasks[i & 7];
+  uint8_t jm = _bvmasks[j & 7];
+  if ((bytes[ib] & im) != (bytes[jb] & jm)) {
+    bytes[ib] ^= im;
+    bytes[jb] ^= jm;
+  }
+  return mask;
+}
+
+static uint64_t md_rotate_mask(uint64_t mask, uint8_t length, uint8_t dir)
+    NOINLINE();
+static uint64_t md_rotate_mask(uint64_t mask, uint8_t length, uint8_t dir) {
+  if (dir == DIR_LEFT) {
+    ROTATE_LEFT(mask, length);
+  } else {
+    ROTATE_RIGHT(mask, length);
+  }
+  return mask;
+}
+#define MD_ROTATE_MASK(mask, length, dir)                                      \
+  do {                                                                         \
+    mask = md_rotate_mask(mask, length, dir);                                  \
+  } while (false)
+#define MD_SWAP_MASK_BITS(mask, i, j)                                          \
+  do {                                                                         \
+    mask = md_swap_mask_bits(mask, i, j);                                      \
+  } while (false)
+#endif
+
+#if !defined(__AVR__)
+static int16_t md_div_round_closest(int32_t numerator, int32_t denominator) {
+  if (denominator == 0) {
+    return 0;
+  }
+  if (numerator >= 0) {
+    return (int16_t)((numerator + denominator / 2) / denominator);
+  }
+  return (int16_t)(-(((-numerator) + denominator / 2) / denominator));
+}
+
+static int8_t spsx_microtiming_to_md_microtiming(int8_t microtiming,
+                                                 uint16_t ticks_per_step) {
+  if (microtiming == 0) {
+    return 0;
+  }
+  int16_t ticks =
+      md_div_round_closest((int32_t)microtiming * ticks_per_step, 512);
+  return SeqTrack::ticks_to_microtiming(ticks, ticks_per_step);
+}
+#endif
+
+uint8_t MDSeqTrackDataV1::remove_step_locks(uint8_t step) {
+  uint8_t idx = get_lockidx(step);
+  uint8_t cnt = popcount(steps[step].locks);
+  if (cnt != 0) {
+    memmove(locks + idx, locks + idx + cnt, NUM_MD_LOCK_SLOTS - idx - cnt);
+  }
+  steps[step].locks = 0;
+  return cnt;
+}
+
+bool MDSeqTrackDataV1::set_track_locks_i(uint8_t step, uint8_t lockidx,
+                                         uint8_t value) {
+  auto lock_slot = get_lockidx(step, lockidx);
+  if (lock_slot == NUM_MD_LOCK_SLOTS) {
+    auto idx = get_lockidx(step);
+    auto nlock = popcount(steps[step].locks & ((1 << lockidx) - 1));
+    lock_slot = idx + nlock;
+
+    if (lock_slot >= NUM_MD_LOCK_SLOTS) {
+      return false; // memory full!
+    }
+
+    memmove(locks + lock_slot + 1, locks + lock_slot,
+            NUM_MD_LOCK_SLOTS - lock_slot - 1);
+    steps[step].locks |= (1 << lockidx);
+  }
+  locks[lock_slot] = min(127, value);
+  return true;
+}
+
+void MDSeqTrack::init_notes() {
+  // Copy 3 notes, len and vel from kit to notes structure;
+  memcpy(&notes.note1, MD.kit.params[track_number], 5);
+  notes.count_down = 0;
+}
+
+uint8_t MDSeqTrack::effective_timing(uint8_t step, uint8_t ticks_per_step) const {
+  int8_t mt = microtiming[step];
+  if (mt == 0) {
+    if (swing_amount && IS_BIT_SET64(swing_mask, step)) {
+      return ticks_per_step +
+             (((uint16_t)swing_amount * ticks_per_step + 25) / 50);
+    }
+    return ticks_per_step;
+  }
+  return SeqTrack::microtiming_to_timing(mt, ticks_per_step);
+}
+
+void MDSeqTrack::set_length(uint8_t len, bool expand) {
+  uint8_t old_length = length;
+  if (len == 0) {
+    len = 1;
+  }
+  if (len > 64) {
+    len = 16;
+  }
+  length = len;
+
+  uint8_t step = step_count;
+  if (step >= length) {
+    step = step % length;
+  }
+
+  uint8_t idx = get_lockidx(step);
+
+  USE_LOCK();
+  SET_LOCK();
+  cur_event_idx = idx;
+  step_count = step;
+  CLEAR_LOCK();
+  if (expand && old_length <= 16 && length >= 16) {
+    for (uint8_t n = old_length; n < 64; n++) {
+      if (md_step_descriptor_has_data(steps[n]) ||
+          IS_BIT_SET64(slide_mask, n)) {
+        expand = false;
+        return;
+      }
+    }
+    MDSeqStep empty_step;
+    memset(&empty_step, 0, sizeof(empty_step));
+    uint8_t a = 0;
+    for (uint8_t n = old_length; n < NUM_MD_STEPS; n++) {
+      copy_step(a++, &empty_step);
+      paste_step(n, &empty_step);
+      if (a == old_length) {
+        a = 0;
+      }
+    }
+  }
+}
+
+void MDSeqTrack::set_speed(uint8_t new_speed, uint8_t old_speed,
+                           bool timing_adjust) {
+  (void)old_speed;
+  (void)timing_adjust;
+  speed = new_speed;
+  uint8_t ticks_per_step = get_ticks_per_step();
+  if (ticks_per_step && mod12_counter >= ticks_per_step) {
+    mod12_counter = mod12_counter % ticks_per_step;
+    // step_count_inc();
+  }
+  re_sync();
+}
+
+void MDSeqTrack::request_swing_amount_change(uint8_t amount) {
+  if (amount > 30) {
+    amount = 30;
+  }
+
+  if (!MidiClock.isStarted()) {
+    swing_amount = amount;
+    pending_swing_change_mask = 0;
+    return;
+  }
+
+  if (pending_swing_amount != amount) {
+    pending_swing_change_mask = 0;
+    pending_swing_amount = amount;
+  }
+  SET_BIT16(pending_swing_change_mask, track_number);
+}
+
+void MDSeqTrack::re_sync() {
+  //  uint32_t q = length * 12;
+  //  count_down = (MidiClock.div192th_counter / q) * q + q;
+}
+
+void MDSeqTrack::load_cache() {
+  /*  MDTrackChunk t;
+    DEBUG_PRINTLN("lc");
+    for (uint8_t n = 0; n < t.get_chunk_count(); n++) {
+      t.load_from_mem_chunk(track_number, n);
+      t.load_chunk(data(), n);
+    }*/
+
+  MDTrack t;
+  t.load_from_mem(track_number, MD_TRACK_TYPE);
+  t.load_seq_data(this);
+  if (load_sound) {
+    MD.insertMachineInKit(track_number, &(t.machine), false);
+    SET_BIT32(load_machine_cache, track_number);
+    load_sound = 0;
+  }
+}
+
+void MDSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
+  MidiUartClass *uart_old = uart;
+  MidiUartClass *uart2_old = uart2;
+
+  uart = uart_;
+  uart2 = uart2_;
+
+  if (mod12_counter == 0) {
+    uint8_t pending_speed;
+    if (consume_pending_speed_change(pending_speed)) {
+      set_speed(pending_speed, speed, true);
+    }
+  }
+
+  uint8_t ticks_per_step = get_ticks_per_step();
+
+  mod12_counter++;
+
+  if (mod12_counter == ticks_per_step) {
+    mod12_counter = 0;
+    cur_event_idx += popcount(steps[step_count].locks);
+    if (ignore_step == step_count) {
+      ignore_step = 255;
+    }
+    step_count_inc();
+    if (IS_BIT_SET16(pending_swing_change_mask, track_number)) {
+      swing_amount = pending_swing_amount;
+      CLEAR_BIT16(pending_swing_change_mask, track_number);
+    }
+  }
+
+  if (notes.count_down) {
+    notes.count_down--;
+    if (notes.count_down == 0) {
+      send_notes_off();
+    }
+  }
+
+  if (count_down) {
+    count_down--;
+    if (count_down == 0) {
+      reset();
+      mod12_counter = 0;
+      SET_BIT16(gui_update, track_number);
+    } else if (SeqTrackTransition::in_cache_window(
+                   SEQ_TRANSITION_CACHE_MD_MACHINE, count_down, track_number)) {
+      if (!cache_loaded) {
+        load_cache();
+        cache_loaded = true;
+      }
+      goto end;
+    }
+  }
+
+  if (record_mutes) {
+    uint8_t u = 0;
+    uint8_t q = 0;
+    uint8_t s = get_quantized_step(u, q);
+    SET_BIT64(mute_mask, s);
+  }
+
+  if ((mute_state == SEQ_MUTE_OFF) && (ignore_step != step_count)) {
+
+    uint8_t next_step = 0;
+    if (step_count == (length - 1)) {
+      next_step = 0;
+    } else {
+      next_step = step_count + 1;
+    }
+    uint8_t current_step;
+
+    send_slides(locks_params);
+
+    uint8_t timing_current = effective_timing(step_count, ticks_per_step);
+    uint8_t timing_next = effective_timing(next_step, ticks_per_step);
+
+    bool current_due = (timing_current >= ticks_per_step) &&
+                       (timing_current - ticks_per_step == mod12_counter);
+    bool next_due = (timing_next < ticks_per_step) &&
+                    (timing_next == mod12_counter);
+    if (current_due || next_due) {
+      current_step = current_due ? step_count : next_step;
+
+      uint16_t lock_idx = cur_event_idx;
+      if (current_step == next_step) {
+        if (current_step == 0) {
+          lock_idx = 0;
+        } else {
+          lock_idx += popcount(steps[step_count].locks);
+        }
+      }
+      auto &step = steps[current_step];
+      uint8_t send_trig = trig_conditional(step.cond_id);
+      bool is_midi_model = md_track_is_midi_model(track_number);
+      bool step_fired = send_trig == TRIG_TRUE && step.trig;
+      if (send_trig == TRIG_TRUE ||
+          (!step.cond_plock && send_trig != TRIG_ONESHOT)) {
+        if (is_midi_model && step_fired) {
+          send_notes_off();
+          init_notes();
+        }
+        send_parameter_locks_inline(current_step, step.trig, lock_idx);
+        if (IS_BIT_SET64(slide_mask, current_step)) {
+          locks_slides_recalc = current_step;
+          locks_slides_idx = lock_idx;
+        }
+        if (step_fired) {
+          bool arp_triggered = mcl_seq.md_arp_tracks[track_number].trigger();
+          if (!arp_triggered && is_midi_model) {
+            notes.count_down = md_note_count_down(notes.len, ticks_per_step);
+            send_notes_on();
+          }
+          if (!arp_triggered) {
+            send_trig_inline();
+          }
+        }
+      }
+      record_trig_result(step_fired);
+    }
+  }
+end:
+  uart = uart_old;
+  uart2 = uart2_old;
+}
+
+void MDSeqTrack::pre_seq(MidiUartClass *uart_) {
+  MDSeqTrack::md_trig_mask = 0;
+  MDSeqTrack::load_machine_cache = 0;
+}
+
+void MDSeqTrack::post_seq(MidiUartClass *uart_) {
+  if (MDSeqTrack::load_machine_cache) {
+    MD.loadMachinesCache(MDSeqTrack::load_machine_cache, uart_);
+    if (grid_task.send_kit_name) {
+      grid_task.send_kit_name = false;
+      MD.setKitName(grid_task.kit_names[0], uart_);
+    }
+  }
+  if (MDSeqTrack::gui_update) {
+    if (last_primary_track < NUM_MD_TRACKS && mcl.currentPage() == SEQ_STEP_PAGE && IS_BIT_SET16(MDSeqTrack::gui_update,last_primary_track)) {
+      SeqTrackUtil::with_md_track(last_primary_track, [uart_](auto &t) {
+        MD.sync_seqtrack(t.length, t.speed, t.length - 1, t.swing_amount,
+                         0x7F, uart_);
+      });
+    }
+#if !defined(__AVR__)
+    // Reuse the per-track gui_update dirty mask to tell the SPS host which
+    // tracks changed (grid loads, length/speed edits, ...) — ungated by page,
+    // unlike the MD.sync_seqtrack call above which is active-track + step-page.
+    sps_host_seq_bridge.notifyTracksDirty(MDSeqTrack::gui_update,
+        (uint8_t)(spsseq::DIRTY_SUMMARY | spsseq::DIRTY_DETAIL | spsseq::DIRTY_LOCKS));
+#endif
+    MDSeqTrack::gui_update = 0;
+    grid_task.update = true;
+  }
+}
+
+
+bool MDSeqTrack::is_param(uint8_t param_id) {
+  for (uint8_t c = 0; c < NUM_LOCKS; c++) {
+    if (locks_params[c] > 0) {
+      if (locks_params[c] - 1 == param_id) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+void MDSeqTrack::recalc_slides() {
+  if (locks_slides_recalc == 255) {
+    return;
+  }
+  DEBUG_PRINT_FN();
+  int16_t x0, x1;
+  int8_t y0, y1;
+  uint8_t step = locks_slides_recalc;
+  uint8_t ticks_per_step = get_ticks_per_step();
+
+  // Build mask of active lock params, then AND with step's locks
+  uint8_t find_mask = 0;
+  for (uint8_t i = 0; i < NUM_LOCKS; i++) {
+    if (locks_params[i]) {
+      find_mask |= (1 << i);
+    }
+  }
+  find_mask &= steps[step].locks;
+
+  auto lockidx = locks_slides_idx;
+  if (find_mask == 0) {
+    goto end;
+  }
+  find_next_locks(lockidx, step, find_mask);
+
+  for (uint8_t c = 0; c < NUM_LOCKS; c++) {
+    if (!locks_params[c] || !steps[step].is_lock_bit(c)) {
+      continue;
+    }
+    auto cur_lockidx = lockidx++;
+    // Skip params where find_next_locks found no target
+    if (find_mask & (1 << c)) {
+      locks_slide_data[c].init();
+      continue;
+    }
+    auto next_lockstep = locks_slide_next_lock_step[c];
+    if (step == next_lockstep) {
+      locks_slide_data[c].init();
+      continue;
+    }
+    x0 = step * ticks_per_step + effective_timing(step, ticks_per_step) - ticks_per_step +
+         1;
+    if (next_lockstep < step) {
+      x1 = (length + next_lockstep) * ticks_per_step +
+           effective_timing(next_lockstep, ticks_per_step) - ticks_per_step -
+           1;
+    } else {
+      x1 = next_lockstep * ticks_per_step +
+           effective_timing(next_lockstep, ticks_per_step) - ticks_per_step -
+           1;
+    }
+    DEBUG_DUMP(microtiming[step]);
+    DEBUG_DUMP(ticks_per_step);
+    y0 = locks[cur_lockidx];
+    y1 = locks_slide_next_lock_val[c];
+    prepare_slide(c, x0, x1, y0, y1);
+  }
+end:
+  locks_slides_recalc = 255;
+}
+
+void MDSeqTrack::find_next_locks(uint8_t curidx, uint8_t step, uint8_t &mask) {
+  DEBUG_PRINT_FN();
+  DEBUG_DUMP(step);
+  // caller ensures step < length
+  uint8_t next_step = step + 1;
+  uint8_t max_len = length;
+  curidx += popcount(steps[step].locks);
+
+again:
+  for (; next_step < max_len; next_step++) {
+    auto lcks = get_step_locks(next_step);
+
+    // Early skip if no locks and no trig
+    if (!lcks && !steps[next_step].trig) {
+      continue;
+    }
+
+    uint8_t cur_mask = 1;
+    for (uint8_t i = 0; i < NUM_LOCKS; ++i) {
+
+      if (mask & cur_mask) {
+        if (lcks & cur_mask) {
+          locks_slide_next_lock_val[i] = locks[curidx];
+          locks_slide_next_lock_step[i] = next_step;
+          mask &= ~cur_mask;
+          // all targets hit?
+        } else if (steps[next_step].trig) {
+          locks_slide_next_lock_val[i] =
+              MD.kit.params[track_number][locks_params[i] - 1];
+          locks_slide_next_lock_step[i] = next_step;
+          mask &= ~cur_mask;
+        }
+        if (!mask)
+          return;
+      }
+      if (lcks & cur_mask) {
+        curidx++;
+      }
+      cur_mask <<= 1;
+    }
+  }
+
+  if (next_step >= length) {
+    next_step = 0;
+    curidx = 0;
+    max_len = step;
+    goto again;
+  }
+}
+
+void MDSeqTrack::get_mask(uint64_t *_pmask, uint8_t mask_type) const {
+  if (mask_type == MASK_MUTE) {
+    *_pmask = mute_mask;
+    return;
+  }
+  if (mask_type == MASK_SLIDE) {
+    *_pmask = slide_mask;
+    return;
+  }
+  if (mask_type == MASK_SWING) {
+    *_pmask = swing_mask;
+    return;
+  }
+  *_pmask = 0;
+  uint8_t type = mask_type == MASK_LOCKS_ON_STEP ? MASK_LOCK : mask_type;
+  for (uint8_t i = 0; i < NUM_MD_STEPS; i++) {
+    if (get_step(i, type)) {
+      SET_BIT64_P(_pmask, i);
+    }
+  }
+}
+
+bool MDSeqTrack::get_step(uint8_t step, uint8_t mask_type) const {
+  switch (mask_type) {
+  case MASK_PATTERN:
+    return steps[step].trig;
+  case MASK_LOCK:
+    return steps[step].locks != 0;
+  case MASK_MUTE:
+    return IS_BIT_SET64(mute_mask, step);
+  case MASK_SLIDE:
+    return IS_BIT_SET64(slide_mask, step);
+  case MASK_SWING:
+    return IS_BIT_SET64(swing_mask, step);
+  default:
+    return false;
+  }
+}
+
+void MDSeqTrack::set_step(uint8_t step, uint8_t mask_type, bool val) {
+  switch (mask_type) {
+  case MASK_PATTERN:
+    steps[step].trig = val;
+    break;
+  case MASK_LOCK:
+    break;
+  case MASK_MUTE:
+    if (val) {
+      SET_BIT64(mute_mask, step);
+    } else {
+      CLEAR_BIT64(mute_mask, step);
+    }
+    break;
+  case MASK_SLIDE:
+    if (val) {
+      SET_BIT64(slide_mask, step);
+    } else {
+      CLEAR_BIT64(slide_mask, step);
+    }
+    break;
+  case MASK_SWING:
+    if (val) {
+      SET_BIT64(swing_mask, step);
+    } else {
+      CLEAR_BIT64(swing_mask, step);
+    }
+    break;
+  }
+}
+
+void MDSeqTrack::rotate_mask(uint8_t mask_type, uint8_t dir) {
+#if defined(__AVR__)
+  uint64_t *mask;
+  switch (mask_type) {
+  case MASK_MUTE:
+    mask = &mute_mask;
+    break;
+  case MASK_SLIDE:
+    mask = &slide_mask;
+    break;
+  case MASK_SWING:
+    mask = &swing_mask;
+    break;
+  default:
+    return;
+  }
+  MD_ROTATE_MASK(*mask, length, dir);
+#else
+  switch (mask_type) {
+  case MASK_MUTE:
+    MD_ROTATE_MASK(mute_mask, length, dir);
+    break;
+  case MASK_SLIDE:
+    MD_ROTATE_MASK(slide_mask, length, dir);
+    break;
+  case MASK_SWING:
+    MD_ROTATE_MASK(swing_mask, length, dir);
+    break;
+  default:
+    break;
+  }
+#endif
+}
+
+void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig,
+                                      uint16_t lock_idx) {
+  uint16_t idx;
+  if (lock_idx == 0xFFFF) {
+    idx = get_lockidx(step);
+  } else {
+    idx = lock_idx;
+  }
+  send_parameter_locks_inline(step, trig, idx);
+}
+
+void MDSeqTrack::send_notes_ccs(uint8_t *ccs, bool send_ccs) {
+  if (!send_ccs) {
+    return;
+  }
+  uint8_t channel = md_track_midi_channel(track_number);
+  if (ccs[0] != 255) {
+    notes.ccs[0] = ccs[0];
+    uart2->sendProgramChange(channel, ccs[0]);
+  }
+  if (ccs[1] != 255) {
+    uart2->sendPitchBend(channel, ccs[1] << 7);
+  }
+  if (ccs[2] != 255) {
+    uart2->sendCC(channel, 0x1, ccs[2]);
+  }
+  if (ccs[3] != 255) {
+    uart2->sendChannelPressure(channel, ccs[3]);
+  }
+  for (uint8_t n = 5; n < number_midi_cc; n += 2) {
+    if (ccs[n] == 255) {
+      continue;
+    }
+    uint8_t a = ccs[n - 1];
+    if (a > 0 && a != 255) {
+      uint8_t v = ccs[n];
+      // 0 = off; 1 = bank (0); 2 = 2
+      if (a == 1) {
+        a = 0;
+      }
+      uart2->sendCC(channel, a, v);
+      notes.ccs[n] = v;
+    }
+  }
+}
+
+void MDSeqTrack::process_note_locks(uint8_t param, uint8_t val, uint8_t *ccs) {
+  uint8_t i = param - 5;
+  switch (param) {
+  case 0:
+  case 1:
+  case 2:
+  case 3:
+  case 4:
+    //note values are set via init_notes initially.
+    ((uint8_t *)&notes)[param] = val;
+    //ccs[param] = val; not required.
+    break;
+  case 5:
+  case 6:
+  case 7:
+    ccs[i + 1] = val;
+    break;
+  case 20:
+    //if (notes.prog != val || is_lock) {
+    if (notes.ccs[0] != val) {
+      ccs[0] = val;
+    }
+    else {
+      ccs[0] = 255;
+    }
+    break;
+  default:
+    i = param - 8 + 4;
+    if (param < 20) {
+      // If the parameter is CC value and the CC dest is not yet set, use the
+      // kit value for CC dest
+      uint8_t j = i - 1;
+      if ((param & 1) && ccs[j] == 255) {
+        ccs[j] = MD.kit.params[track_number][param - 1];
+      }
+      if ((ccs[j] != notes.ccs[j] || notes.ccs[i] != val)) {
+        ccs[i] = val;
+      }
+      else {
+        ccs[i] = 255;
+      }
+    }
+    break;
+  }
+}
+
+void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
+                                             uint16_t lock_idx) {
+
+  uint8_t ccs[midi_cc_array_size];
+  bool send_ccs = false;
+  bool is_midi_model = md_track_is_midi_model(track_number);
+
+  if (is_midi_model) {
+    if (notes.first_trig) {
+      // first note, we want to send all CCs regardless if they dont have locks.
+      memcpy(ccs + 1, &MD.kit.params[track_number][5], sizeof(ccs) - 1);
+      //prevent re-transmission of program change.
+      //
+      process_note_locks(20, MD.kit.params[track_number][20],ccs);
+      send_ccs = true;
+      notes.first_trig = false;
+    } else {
+      memset(ccs, 255, sizeof(ccs));
+    }
+  }
+  for (uint8_t c = 0; c < NUM_LOCKS; c++) {
+    bool lock_bit = steps[step].is_lock_bit(c);
+    bool lock_present = steps[step].is_lock(c);
+    bool send = false;
+    uint8_t val;
+    uint8_t p = locks_params[c] - 1;
+    if (locks_params[c]) {
+      if (lock_present) {
+        val = locks[lock_idx];
+        send = true;
+      } else if (trig) {
+        val = MD.kit.params[track_number][p];
+        send = true;
+      }
+    }
+    lock_idx += lock_bit;
+    if (send) {
+      if (is_midi_model && p < 21) {
+        process_note_locks(p, val, ccs);
+        send_ccs |= (p > 4 && p < 8) || ((p > 8) && (p & 1)) ||
+                    (p == 20);
+      }
+
+      else {
+        bool update_kit = false;
+        MD.setTrackParam_inline(track_number, p, val, uart, update_kit);
+      }
+    }
+  }
+  if (is_midi_model) {
+    send_notes_ccs(ccs, send_ccs);
+  }
+}
+
+void MDSeqTrack::reset_params() {
+  bool is_midi_model = md_track_is_midi_model(track_number);
+  if (is_midi_model) {
+    uint8_t ccs[midi_cc_array_size];
+    bool send_ccs = true;
+    memcpy(ccs + 1, &MD.kit.params[track_number][5], sizeof(ccs) - 1);
+    ccs[0] = 255; //disable program change
+    //notes.prog = MD.kit.params[track_number][20];
+    //process_note_locks(20, MD.kit.params[track_number][20],ccs);
+    send_notes_ccs(ccs, send_ccs);
+  }
+}
+
+void MDSeqTrack::get_step_locks(uint8_t step, uint8_t *params,
+                                bool ignore_locks_enabled) {
+  (void)ignore_locks_enabled;
+  uint16_t lock_idx = get_lockidx(step);
+  for (uint8_t c = 0; c < NUM_LOCKS; c++) {
+    bool lock_bit = steps[step].is_lock_bit(c);
+    if (locks_params[c]) {
+      uint8_t param = locks_params[c] - 1;
+      if (lock_bit) {
+        params[param] = locks[lock_idx];
+      }
+    }
+    lock_idx += lock_bit;
+  }
+}
+
+void MDSeqTrack::send_notes(uint8_t note1, MidiUartClass *uart2_) {
+  if (!uart2_) { uart2_ = uart2; }
+  if (notes.count_down) {
+    send_notes_off(uart2_);
+  }
+  init_notes();
+  if (note1 != 255) { notes.note1 = note1; }
+  if (notes.first_trig) { reset_params(); notes.first_trig = false; }
+  uint8_t ticks_per_step = get_ticks_per_step();
+  notes.count_down = md_note_count_down(notes.len, ticks_per_step);
+  send_notes_on(uart2_);
+}
+
+void MDSeqTrack::send_notes_on(MidiUartClass *uart2_) {
+  if (!uart2_) { uart2_ = uart2; }
+  TrigNotes *n = &notes;
+  uint8_t channel = md_track_midi_channel(track_number);
+
+  if (n->note1 != 255) {
+#ifdef LFO_TRACKS
+    mcl_seq.report_track_trig(DeviceIdx::Primary, track_number);
+#endif
+    mixer_page.trig(track_number);
+    uart2_->sendNoteOn(channel, n->note1, n->vel);
+    if (n->note2 != 64) {
+      uart2_->sendNoteOn(channel, n->note1 + n->note2 - 64, n->vel);
+    }
+    if (n->note3 != 64) {
+      uart2_->sendNoteOn(channel, n->note1 + n->note3 - 64, n->vel);
+    }
+  }
+}
+
+void MDSeqTrack::send_notes_off(MidiUartClass *uart2_) {
+  if (!uart2_) { uart2_ = uart2; }
+  TrigNotes *n = &notes;
+  uint8_t channel = md_track_midi_channel(track_number);
+
+  if (n->note1 != 255) {
+    uart2_->sendNoteOff(channel, n->note1);
+    if (n->note2 != 64) {
+      uart2_->sendNoteOff(channel, n->note1 + n->note2 - 64);
+    }
+    if (n->note3 != 64) {
+      uart2_->sendNoteOff(channel, n->note1 + n->note3 - 64);
+    }
+    n->note1 = 255;
+  }
+  n->count_down = 0;
+}
+
+void MDSeqTrack::onControlChangeCallback_Midi(uint8_t track_param,
+                                              uint8_t value) {
+  bool is_midi_model = md_track_is_midi_model(track_number);
+  if (!is_midi_model || MD.encoder_interface) {
+    return;
+  }
+  uint8_t ccs[midi_cc_array_size];
+  // memset(ccs, 0, sizeof(ccs));
+  // Ignore notes, len and vel (those will be obtained from kit upon init_notes
+  if (track_param > 4 && track_param < 21) {
+    if (!(track_param & 1) && track_param > 7 && track_param < 20) {
+      return;
+    } // ignore cc destination
+    // memcpy(ccs, &MD.kit.params[track_number][8], sizeof(ccs));
+    memset(ccs, 255, sizeof(ccs));
+    process_note_locks(track_param, value, ccs);
+    send_notes_ccs(ccs, true);
+  }
+}
+
+void MDSeqTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel) {
+  SlideDispatchContext ctx{};
+  ctx.is_midi_model = md_track_is_midi_model(track_number);
+  uint8_t ccs[midi_cc_array_size];
+  if (ctx.is_midi_model) {
+    ctx.ccs = ccs;
+    ctx.send_ccs = false;
+    memset(ccs, 255, sizeof(ccs));
+  } else {
+    ctx.ccs = nullptr;
+  }
+
+  slide_ctx = &ctx;
+  SeqSlideTrack::send_slides(locks_params, channel);
+  slide_ctx = nullptr;
+
+  if (ctx.is_midi_model) {
+    send_notes_ccs(ccs, ctx.send_ccs);
+  }
+}
+
+void MDSeqTrack::dispatch_slide_value(uint8_t param, uint8_t val, uint8_t channel) {
+  if (slide_ctx == nullptr) {
+    SeqSlideTrack::dispatch_slide_value(param, val, channel);
+    return;
+  }
+
+  if (!slide_ctx->is_midi_model) {
+    MD.setTrackParam_inline(track_number, param, val);
+    return;
+  }
+
+  slide_ctx->send_ccs |= ((param > 4 && param < 8) ||
+                          ((param > 8) && (param & 1)) || (param == 20));
+  process_note_locks(param, val, slide_ctx->ccs);
+}
+
+void MDSeqTrack::send_trig() { send_trig_inline(); }
+
+void MDSeqTrack::send_trig_inline() {
+#ifdef LFO_TRACKS
+  mcl_seq.report_track_trig(DeviceIdx::Primary, track_number);
+#endif
+  mixer_page.trig(track_number);
+  // MD.triggerTrack(track_number, 127, uart);
+  // Parallel trig:
+  SET_BIT16(MDSeqTrack::md_trig_mask, track_number);
+}
+
+uint8_t MDSeqTrack::trig_conditional(uint8_t condition) {
+
+  if (IS_BIT_SET64(oneshot_mask, step_count) ||
+      IS_BIT_SET64(mute_mask, step_count)) {
+    return TRIG_ONESHOT;
+  }
+  if (condition == SEQ_COND_ONESHOT) {
+    SET_BIT64(oneshot_mask, step_count);
+    return TRIG_TRUE;
+  }
+  return conditional(condition) ? TRIG_TRUE : TRIG_FALSE;
+}
+
+uint8_t MDSeqTrack::get_track_lock_implicit(uint8_t step, uint8_t param) {
+  uint8_t lock_idx = find_param(param);
+  if (lock_idx < NUM_LOCKS) {
+    return get_track_lock(step, lock_idx);
+  }
+  return 255;
+}
+
+uint8_t MDSeqTrack::get_track_lock(uint8_t step, uint8_t lock_idx) {
+  auto idx = get_lockidx(step, lock_idx);
+  if (idx < NUM_MD_LOCK_SLOTS) {
+    return locks[idx];
+  } else {
+    return 255;
+  }
+}
+
+bool MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
+                                 uint8_t value) {
+  // Stopwatch sw;
+
+  // Let's try and find an existing param
+  uint8_t match = find_param(track_param);
+  // Then, we learn first NUM_LOCKS params then stop.
+  for (uint8_t c = 0; c < NUM_LOCKS && match == 255; c++) {
+    if (locks_params[c] == 0) {
+      locks_params[c] = track_param + 1;
+      match = c;
+    }
+  }
+
+  if (match != 255) {
+    auto ret = set_track_locks_i(step, match, value);
+    // auto set_lock = sw.elapsed();
+    // DIAG_MEASURE(1, set_lock);
+    return ret;
+  } else {
+    return false;
+  }
+}
+
+bool MDSeqTrack::set_track_locks_i(uint8_t step, uint8_t lockidx,
+                                   uint8_t value) {
+  bool inserted = !steps[step].is_lock_bit(lockidx);
+  bool ret = MDSeqTrackDataV1::set_track_locks_i(step, lockidx, value);
+  if (ret && inserted) {
+    if (step < step_count) {
+      cur_event_idx++;
+    }
+  }
+  return ret;
+}
+
+void MDSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
+
+  if (step_count >= length) {
+    return;
+  }
+  uint8_t utiming = 0;
+  set_track_locks(get_quantized_step(utiming), track_param, value);
+}
+
+void MDSeqTrack::set_track_pitch(uint8_t step, uint8_t pitch) {
+  set_track_locks(step, 0, pitch);
+}
+
+void MDSeqTrack::record_track_pitch(uint8_t pitch) {
+
+  if (step_count >= length) {
+    return;
+  }
+  uint8_t utiming = 0;
+  set_track_pitch(get_quantized_step(utiming), pitch);
+}
+
+void MDSeqTrack::record_track(uint8_t velocity) {
+
+  if (step_count >= length) {
+    return;
+  }
+  uint8_t utiming = 0;
+  uint8_t step = get_quantized_step(utiming);
+  ignore_step = step;
+
+  set_track_step(step, utiming, velocity);
+}
+
+void MDSeqTrack::set_track_step(uint8_t step, uint8_t utiming,
+                                uint8_t velocity) {
+  //  timing = 3;
+  // condition = 3;
+  if (MidiClock.state != 2) {
+    return;
+  }
+
+  CLEAR_BIT64(oneshot_mask, step);
+  steps[step].trig = true;
+  // TODO cond value?
+  steps[step].cond_id = 0;
+  steps[step].cond_plock = false;
+  microtiming[step] =
+      SeqTrack::timing_to_microtiming(utiming, get_ticks_per_step());
+  if (velocity < 127) {
+    set_track_locks(step, MODEL_VOL, velocity);
+  }
+}
+
+void MDSeqTrack::clear_slide_data() {
+  slide_mask = 0;
+}
+
+void MDSeqTrack::clear_step_lock(uint8_t step, uint8_t param_id) {
+  uint8_t match = find_param(param_id);
+
+  if (match == 255)
+    return;
+
+  uint8_t mask = (1 << match);
+  uint16_t idx = get_lockidx(step);
+  uint8_t locks_ = steps[step].locks;
+
+  if (!(steps[step].locks & mask)) {
+    return;
+  }
+
+  uint8_t offset = popcount(locks_ & (mask - 1));
+
+  memmove(locks + idx + offset, locks + idx + offset + 1,
+          NUM_MD_LOCK_SLOTS - idx - offset - 1);
+
+  steps[step].locks &= ~(mask);
+
+  if (step < step_count) {
+    cur_event_idx -= 1;
+  }
+
+  clean_params();
+}
+
+void MDSeqTrack::clear_param_locks(uint8_t param_id) {
+  uint8_t match = find_param(param_id);
+  if (match == 255)
+    return;
+
+  uint8_t mask = 1 << match;
+  uint8_t nmask = ~mask;
+  uint8_t rmask = mask - 1;
+  bool remove[NUM_MD_STEPS];
+
+  // pass1, mark
+  for (uint8_t x = 0; x < NUM_MD_STEPS; x++) {
+    if (steps[x].locks & mask) {
+      remove[x] = true;
+      steps[x].locks &= nmask;
+    } else {
+      remove[x] = false;
+    }
+  }
+
+  // pass2, sweep
+  uint16_t rd = 0;
+  uint16_t wr = 0;
+  for (uint8_t i = 0; i < NUM_MD_STEPS; ++i) {
+    uint8_t _locks = steps[i].locks;
+    uint8_t nlocks = popcount(_locks);
+    uint8_t n_src = nlocks + (remove[i] ? 1 : 0);
+    uint8_t skip = NUM_LOCKS;
+    if (remove[i]) {
+      // how many before me?
+      skip = popcount(_locks & rmask);
+    }
+    for (uint8_t j = 0; j < n_src; ++j) {
+      if (skip == j) {
+        ++rd;
+      } else {
+        locks[wr++] = locks[rd++];
+      }
+    }
+  }
+
+  MD.setTrackParam(track_number, param_id,
+                   MD.kit.params[track_number][locks_params[match] - 1]);
+  cur_event_idx = get_lockidx(step_count);
+  clean_params();
+}
+
+void MDSeqTrack::clear_step_locks(uint8_t step) {
+  uint8_t cnt = remove_step_locks(step);
+  if (cnt != 0 && step < step_count) {
+    cur_event_idx -= cnt;
+  }
+}
+
+void MDSeqTrack::disable_step_locks(uint8_t step) {
+  (void)step;
+}
+
+void MDSeqTrack::enable_step_locks(uint8_t step) {
+  (void)step;
+}
+
+uint8_t MDSeqTrack::get_step_locks(uint8_t step) {
+  return steps[step].locks;
+}
+
+void MDSeqTrack::clear_mute() { mute_mask = 0; }
+
+void MDSeqTrack::clear_mutes() {
+  oneshot_mask = 0;
+  mute_mask = 0;
+}
+
+void MDSeqTrack::clear_oneshot() { oneshot_mask = 0; }
+
+void MDSeqTrack::clear_conditional() {
+  for (uint8_t c = 0; c < NUM_MD_STEPS; c++) {
+    steps[c].cond_id = 0;
+    steps[c].cond_plock = 0;
+    microtiming[c] = 0;
+  }
+  clear_mutes();
+  ignore_step = 255;
+}
+
+void MDSeqTrack::clear_locks() {
+  // Need to buffer this, as we dont want sequencer interrupt
+  // to access it whilst we're cleaning up
+  DEBUG_DUMP("Clear these locks");
+  for (uint8_t i = 0; i < NUM_MD_STEPS; i++) {
+    steps[i].locks = 0;
+  }
+  // locks_params and locks are adjacent in MDSeqTrackData storage.
+  memset(locks_params, 0, sizeof(locks_params) + sizeof(locks));
+  for (uint8_t i = 0; i < NUM_LOCKS; i++) {
+    locks_slide_data[i].init();
+  }
+  cur_event_idx = 0;
+  locks_slides_recalc = 255;
+  locks_slides_idx = 0;
+  //notes.first_trig = true;
+}
+
+void MDSeqTrack::clear_track(bool locks) {
+  // steps and microtiming are adjacent in MDSeqTrackData storage.
+  memset(steps, 0, sizeof(steps) + sizeof(microtiming));
+  swing_amount = 0;
+  slide_mask = 0;
+  set_default_swing();
+  clear_mutes();
+  ignore_step = 255;
+  if (locks) {
+    DEBUG_DUMP("clear locks");
+    clear_locks();
+  }
+  //notes.first_trig = true;
+}
+
+void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
+  DEBUG_PRINT_FN();
+  // trigPatterns / lockPatterns / paramLocks are all sized 16; an
+  // out-of-range track_number reads adjacent memory and crashes
+  // (seen during sysex processing when track lookup returned 0xFF).
+  if (track_number >= 16 || pattern == nullptr) return;
+  uint8_t merge_length = length;
+  if (merge_length > NUM_MD_STEPS) {
+    merge_length = NUM_MD_STEPS;
+  }
+
+#if !defined(__AVR__)
+  uint8_t num_params = pattern->version >= 0x40 ? SPS_PARAMS_PER_TRACK : 24;
+#else
+  uint8_t num_params = 24;
+#endif
+
+  for (uint8_t i = 0; i < num_params; i++) {
+#if !defined(__AVR__)
+    if (!IS_BIT_SET64(pattern->lockPatterns[track_number], i)) {
+#else
+    if (!IS_BIT_SET32(pattern->lockPatterns[track_number], i)) {
+#endif
+      continue;
+    }
+#if !defined(__AVR__)
+    int16_t idx = pattern->paramLocks[track_number][i];
+#else
+    int8_t idx = pattern->paramLocks[track_number][i];
+#endif
+    if (idx < 0) {
+      continue;
+    }
+    for (uint8_t s = 0; s < 64; s++) {
+#if !defined(__AVR__)
+      int8_t lockval = pattern->lock_row((uint16_t)idx)[s];
+#else
+      int8_t lockval = pattern->locks[idx][s];
+#endif
+      if (lockval >= 0 &&
+          IS_BIT_SET64(pattern->trigPatterns[track_number], s)) {
+        set_track_locks(s, i, lockval);
+      }
+    }
+  }
+
+  uint8_t *ppattern = (uint8_t *)&pattern->trigPatterns[track_number];
+  uint8_t *pslide;
+
+  if (pattern->slideEditAll > 0) {
+    pslide = (uint8_t *)&pattern->slidePattern;
+  } else {
+    pslide = (uint8_t *)&pattern->slidePatterns[track_number];
+  }
+
+  // 16385 ≈ 2^14; use shift to avoid float arithmetic
+  uint32_t swing_q14 = pattern->swingAmount;
+
+  uint8_t *pswingpattern;
+  if (pattern->swingEditAll > 0) {
+    pswingpattern = (uint8_t *)&pattern->swingPattern;
+  } else {
+    pswingpattern = (uint8_t *)&pattern->swingPatterns[track_number];
+  }
+  set_swing_from_mask(pswingpattern);
+  swing_amount = md_swing_q14_to_amount(swing_q14);
+
+  for (uint8_t a = 0; a < merge_length; a++) {
+    if (IS_BIT_SET64_P(pslide, a)) {
+      SET_BIT64(slide_mask, a);
+    }
+    if (IS_BIT_SET64_P(ppattern, a)) {
+      steps[a].trig = true;
+      steps[a].cond_id = 0;
+      steps[a].cond_plock = false;
+      microtiming[a] = 0;
+    }
+  }
+
+#if !defined(__AVR__)
+  // Apply SPSX step flags (conditionals) and microtiming
+  if (pattern->version >= 0x40) {
+    uint8_t ticks_per_step = get_ticks_per_step();
+    for (uint8_t a = 0; a < merge_length; a++) {
+      if (steps[a].trig) {
+        uint8_t flags = pattern->ext_step_flags[track_number][a];
+        steps[a].cond_id = flags >> 2;
+        steps[a].cond_plock = (flags >> 1) & 1;
+        int8_t mt = pattern->ext_microtiming[track_number][a];
+        if (mt != 0) {
+          microtiming[a] = spsx_microtiming_to_md_microtiming(mt, ticks_per_step);
+        }
+      }
+    }
+  }
+#endif
+}
+
+void MDSeqTrack::modify_track(uint8_t dir) {
+
+  uint8_t old_mute_state = mute_state;
+
+  oneshot_mask = 0;
+  constexpr uint8_t ncopy = sizeof(steps) - sizeof(MDSeqStepDescriptor);
+  MDSeqStepDescriptor step_buf;
+  int8_t microtiming_buf;
+  uint16_t total_nlock = get_lockidx(length);
+
+  mute_state = SEQ_MUTE_ON;
+  switch (dir) {
+  case DIR_LEFT:
+  case DIR_RIGHT: {
+    md_rotate_track_data(locks, steps, microtiming, length, total_nlock, ncopy,
+                         dir);
+    MD_ROTATE_MASK(mute_mask, length, dir);
+    MD_ROTATE_MASK(slide_mask, length, dir);
+    MD_ROTATE_MASK(swing_mask, length, dir);
+    break;
+  }
+  case DIR_REVERSE: {
+    uint8_t rev_locks[NUM_MD_LOCK_SLOTS];
+    memcpy(rev_locks, locks, sizeof(locks));
+    uint16_t l = 0, r = 0;
+    // mute_mask = 0; //unimplemented
+    //  reverse steps & locks
+    for (uint8_t i = 0; i < (length + 1) / 2; ++i) {
+      uint8_t j = length - i - 1;
+      uint8_t ni = popcount(steps[i].locks);
+      uint8_t nj = popcount(steps[j].locks);
+      memcpy(locks + l, rev_locks + total_nlock - l - nj, nj);
+      memcpy(locks + total_nlock - r - ni, rev_locks + r, ni);
+      l += nj;
+      r += ni;
+      step_buf = steps[i];
+      steps[i] = steps[j];
+      steps[j] = step_buf;
+      microtiming_buf = microtiming[i];
+      microtiming[i] = microtiming[j];
+      microtiming[j] = microtiming_buf;
+      MD_SWAP_MASK_BITS(mute_mask, i, j);
+      MD_SWAP_MASK_BITS(slide_mask, i, j);
+      MD_SWAP_MASK_BITS(swing_mask, i, j);
+    }
+    break;
+  }
+  }
+  cur_event_idx = get_lockidx(step_count);
+  mute_state = old_mute_state;
+}
+
+void MDSeqTrack::copy_step(uint8_t n, MDSeqStep *step) {
+  step->microtiming = microtiming[n];
+  step->swing = get_step(n, MASK_SWING);
+  step->slide = get_step(n, MASK_SLIDE);
+  step->mute = get_step(n, MASK_MUTE);
+
+  uint8_t idx = get_lockidx(n);
+  uint8_t lcks = steps[n].locks;
+  uint8_t mask = 1;
+  for (uint8_t a = 0; a < NUM_LOCKS; a++) {
+    if (lcks & mask) {
+      step->locks[a] = locks[idx++] + 1;
+    } else {
+      step->locks[a] = 0;
+    }
+    mask <<= 1;
+  }
+
+  memcpy(&step->data, &(steps[n]), sizeof(MDSeqStepDescriptor));
+}
+
+void MDSeqTrack::paste_step(uint8_t n, MDSeqStep *step) {
+  clear_step_locks(n);
+  microtiming[n] = step->microtiming;
+
+  for (uint8_t a = 0; a < NUM_LOCKS; a++) {
+    if (step->locks[a] != 0) {
+      set_track_locks(n, locks_params[a] - 1, step->locks[a] - 1);
+    }
+  }
+  memcpy(&(steps[n]), &step->data, sizeof(MDSeqStepDescriptor));
+  set_step(n, MASK_SWING, step->swing);
+  set_step(n, MASK_SLIDE, step->slide);
+  set_step(n, MASK_MUTE, step->mute);
+}
+
+uint8_t MDSeqTrack::transpose_pitch(uint8_t pitch, int8_t offset) {
+ uint8_t note_num = SeqPtcTrackRef::note_from_pitch(track_number, pitch);
+ if (note_num == 255) { return pitch; }
+ int16_t new_note = note_num + offset;
+ if (new_note < 0) {
+   new_note = 0;
+ } else if (new_note > 127) {
+   new_note = 127;
+ }
+ uint8_t new_pitch = SeqPtcTrackRef::pitch_from_note(track_number, new_note);
+ if (new_pitch == 255) { new_pitch = pitch; }
+ return new_pitch;
+}
+
+void MDSeqTrack::transpose(int8_t offset) {
+ bool is_midi_model = md_track_is_midi_model(track_number);
+ tuning_t const *tuning = MD.getKitModelTuning(track_number);
+ if (!tuning && !is_midi_model) { return; }
+ for (uint8_t n = 0; n < 64; n++) {
+   uint8_t pitch = get_track_lock_implicit(n, 0);
+   if (pitch == 255) { continue; }
+   set_track_pitch(n, transpose_pitch(pitch, offset));
+ }
+ MD.setTrackParam(track_number,0,transpose_pitch(MD.kit.params[track_number][0], offset), nullptr, true);
+}

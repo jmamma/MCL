@@ -4,6 +4,7 @@
 #include "RingBuffer.h"
 #include "helpers.h"
 #include "platform.h"
+#include "MCLDefines.h"
 #include "GUI_hardware.h"
 
 // Event type definitions
@@ -11,8 +12,18 @@
 #define EVENT_BUTTON_RELEASED _BV(1)
 #define EVENT_BUTTON_LONG_PRESS _BV(2)
 
+#define EVENT_MODIFIER_FUNC _BV(0)
+
 #define MAX_BUTTONS GUI_NUM_BUTTONS
 #define MAX_EVENTS 32
+
+#if GUI_NUM_BUTTONS > 8
+typedef uint64_t event_ignore_mask_t;
+#else
+typedef uint8_t event_ignore_mask_t;
+#endif
+static_assert(GUI_NUM_BUTTONS <= sizeof(event_ignore_mask_t) * 8,
+              "event_ignore_mask_t cannot represent all GUI buttons");
 
 #define EVENT_PRESSED(event, button) ((event)->mask & EVENT_BUTTON_PRESSED && (event)->source == button)
 #define EVENT_RELEASED(event, button) ((event)->mask & EVENT_BUTTON_RELEASED && (event)->source == button)
@@ -36,13 +47,18 @@ typedef struct gui_event_s {
   uint8_t mask;
   uint8_t source;
   uint8_t port;
+  uint8_t modifiers;
   EventType type;
 } gui_event_t;
 
 class EventManager {
 private:
-  volatile uint8_t ignoreMask;
+  volatile event_ignore_mask_t ignoreMask = 0;
   volatile CRingBuffer<gui_event_t, MAX_EVENTS> eventBuffer;
+
+  static event_ignore_mask_t buttonMask(uint8_t button) {
+    return ((event_ignore_mask_t)1) << button;
+  }
 
   // --- Generic/default implementation ---
   void pollEvents_() {
@@ -51,11 +67,13 @@ private:
       bool released = BUTTON_RELEASED(i);
 
       if (pressed || released) {
-        if (!isIgnored(i)) {
+        bool ignored = isIgnored(i);
+        if (!ignored) {
           gui_event_t event;
           event.source = i;
           event.type = BUTTON;
           event.mask = pressed ? EVENT_BUTTON_PRESSED : EVENT_BUTTON_RELEASED;
+          event.modifiers = 0;
           eventBuffer.putp(&event);
         } else {
           clearIgnoreMask(i);
@@ -63,24 +81,25 @@ private:
       }
     }
   }
-#if defined(PLATFORM_TBD)
-  // --- State variables needed only for the TBD platform ---
+#if defined(MCL_HAS_EXTENDED_PANEL_INPUT)
+  // --- State variables needed for extended panel arrow repeat ---
   uint16_t long_press_start_time[NUM_ARROW_KEYS];
   uint16_t last_repeat_clock[NUM_ARROW_KEYS];
   bool is_repeating[NUM_ARROW_KEYS];
-  // --- Platform-specific implementation for TBD with key repeats ---
-  void pollEventsTBD() {
+  void pollEventsExtendedPanel() {
     // Poll for standard button presses and releases
     for (uint8_t i = 0; i < MAX_BUTTONS; i++) {
       bool pressed = BUTTON_PRESSED(i);
       bool released = BUTTON_RELEASED(i);
 
       if (pressed || released) {
-        if (!isIgnored(i)) {
+        bool ignored = isIgnored(i);
+        if (!ignored) {
           gui_event_t event;
           event.source = i;
           event.type = BUTTON;
           event.mask = pressed ? EVENT_BUTTON_PRESSED : EVENT_BUTTON_RELEASED;
+          event.modifiers = 0;
           eventBuffer.putp(&event);
         } else {
           clearIgnoreMask(i);
@@ -91,7 +110,7 @@ private:
             i < (ARROW_KEY_START_ID + NUM_ARROW_KEYS)) {
           uint8_t arrow_key_index = i - ARROW_KEY_START_ID;
 
-          if (pressed && !isIgnored(i)) {
+          if (pressed && !ignored) {
             // Start tracking for repeats on press
             long_press_start_time[arrow_key_index] = read_clock_ms();
             is_repeating[arrow_key_index] = false;
@@ -133,6 +152,7 @@ private:
           event.source = button_id;
           event.type = BUTTON;
           event.mask = EVENT_BUTTON_PRESSED;
+          event.modifiers = 0;
           eventBuffer.putp(&event);
           last_repeat_clock[i] = current_time;
         }
@@ -141,11 +161,11 @@ private:
   }
 #endif
 public:
-  EventManager() : ignoreMask(0) {}
+  EventManager() = default;
 
   void init() {
     eventBuffer.init();
-#if defined(PLATFORM_TBD)
+#if defined(MCL_HAS_EXTENDED_PANEL_INPUT)
     for (int i = 0; i < NUM_ARROW_KEYS; i++) {
       long_press_start_time[i] = 0;
       is_repeating[i] = false;
@@ -156,25 +176,25 @@ public:
 
   void setIgnoreMask(uint8_t button) {
     if (button < MAX_BUTTONS) {
-      ignoreMask |= _BV(button);
+      ignoreMask |= buttonMask(button);
     }
   }
 
   void clearIgnoreMask(uint8_t button) {
     if (button < MAX_BUTTONS) {
-      ignoreMask &= ~_BV(button);
+      ignoreMask &= ~buttonMask(button);
     }
   }
 
   bool isIgnored(uint8_t button) {
-    return (button < MAX_BUTTONS) && (ignoreMask & _BV(button));
+    return (button < MAX_BUTTONS) && (ignoreMask & buttonMask(button));
   }
 
   // --- Public dispatcher function ---
   // Calls the correct underlying implementation at compile time.
   void pollEvents() {
-#if defined(PLATFORM_TBD)
-    pollEventsTBD();
+#if defined(MCL_HAS_EXTENDED_PANEL_INPUT)
+    pollEventsExtendedPanel();
 #else
     pollEvents_();
 #endif

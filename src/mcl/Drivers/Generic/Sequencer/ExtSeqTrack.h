@@ -1,0 +1,282 @@
+/* Justin Mammarella jmamma@gmail.com 2018 */
+
+#ifndef EXTSEQTRACK_H__
+#define EXTSEQTRACK_H__
+
+//#include "MidiUartClass.h"
+#include "MidiUart.h"
+#include "NibbleArray.h"
+#include "GridTrack.h"
+#include "MCL.h"
+#include "Sequencer/SeqTrack.h"
+#include "MidiClock.h"
+#include "platform.h"
+#include <stddef.h>
+
+#define NUM_EXT_STEPS 128
+#define NUM_EXT_EVENTS 512
+#define NUM_NOTES_ON 16 // number of notes that can be recorded simultaneously.
+
+#define SEQ_NOTEBUF_SIZE 8
+#define SEQ_MUTE_ON 1
+#define SEQ_MUTE_OFF 0
+
+#define PARAM_PRG 128
+#define PARAM_PB 129
+#define PARAM_CHP 130
+#define PARAM_OFF 131
+#define PARAM_LEARN 132
+
+// EXT Track speed
+#define EXT_SPEED_270_1X 2
+#define EXT_SPEED_270_2X 1
+#define EXT_SPEED_270_3_4X 3
+#define EXT_SPEED_270_3_2X 4
+#define EXT_SPEED_270_1_2X 5
+#define EXT_SPEED_270_1_4X 6
+#define EXT_SPEED_270_1_8X 7
+#define NUM_EXT_NOTES_270 4
+#define NUM_LOCKS_270 4
+#define NUM_EXT_STEPS_270 128
+
+/// 24-bit ext track event descriptor
+struct ATTR_PACKED() ext_event_t {
+  /// true for lock, false for Midi note
+  bool is_lock : 1;
+  /// effective when is_lock is true
+  uint8_t lock_idx : 3;
+  uint8_t cond_id : 4;
+  /// for Midi note: note on/off
+  /// for plock: lock slide engage/disengage
+  bool event_on : 1;
+  /// for Midi note: pitch value
+  /// for plock & lock engage: lock value
+  /// for plock & lock disengage: ignored
+  uint8_t event_value : 7;
+  /// micro timing value
+  int8_t micro_timing;
+
+  bool operator<(const ext_event_t &that) {
+    // order by micro_timing
+    if (this->micro_timing != that.micro_timing) {
+      return this->micro_timing < that.micro_timing;
+    }
+    /*
+    // order by lock
+
+    if (this->is_lock != that.is_lock) {
+      return this.is_lock;
+    }
+    */
+    // off < on
+    if (this->event_on != that.event_on) {
+      return that.event_on;
+    }
+
+    return false;
+  }
+};
+
+inline uint8_t ext_event_condition(const ext_event_t &event) {
+  uint8_t condition = event.cond_id;
+  if (!event.is_lock) {
+    condition |= (event.lock_idx & 0x03) << 4;
+  }
+  return condition;
+}
+
+inline void ext_event_set_condition(ext_event_t &event, uint8_t condition) {
+  event.cond_id = condition & 0x0F;
+  if (!event.is_lock) {
+    event.lock_idx = (condition >> 4) & 0x03;
+  }
+}
+
+class NoteVector {
+public:
+  uint8_t step;
+  int16_t utiming;
+  uint8_t value;
+  uint8_t velocity;
+};
+
+class ATTR_PACKED() ExtSeqTrackData {
+public:
+  NibbleArray<NUM_EXT_STEPS> event_buckets;
+  uint8_t locks_params[NUM_LOCKS];
+  uint16_t event_count;
+  uint8_t velocities[NUM_EXT_STEPS];
+  uint8_t locks_params_orig[NUM_LOCKS];
+  uint8_t channel;
+  ext_event_t events[NUM_EXT_EVENTS];
+  void set_channel(uint8_t channel_) { channel = channel_; }
+  uint8_t *data() const { return (uint8_t *)&event_buckets; }
+  uint16_t store_size() const {
+    uint16_t used_events = event_count;
+    if (used_events > NUM_EXT_EVENTS) {
+      used_events = NUM_EXT_EVENTS;
+    }
+    return offsetof(ExtSeqTrackData, events) +
+           used_events * sizeof(ext_event_t);
+  }
+  void clear() {
+    event_count = 0;
+    event_buckets.clear();
+  }
+};
+
+class ExtSeqTrack : public ExtSeqTrackData, public SeqSlideTrack {
+
+public:
+  static constexpr uint8_t MAX_EVENTS_PER_STEP = 15;
+  bool is_generic_midi = true;
+  uint64_t note_buffer[2] = {
+      0}; // 2 x 64 bit masks to store state of 128 notes.
+  uint64_t oneshot_mask[2];
+  uint64_t mute_mask[2];
+  uint64_t ignore_notes[2];
+  bool pgm_oneshot;
+
+  static uint8_t epoch;
+  NoteVector notes_on[NUM_NOTES_ON];
+  uint8_t notes_on_count;
+  volatile bool mute_state_pending;
+  volatile bool notesoff_pending;
+
+  int8_t locks_slide_next_lock_utiming[NUM_LOCKS];
+
+  ExtSeqTrack() : SeqSlideTrack() { active = EXT_TRACK_TYPE; }
+
+  ALWAYS_INLINE() void reset() {
+    SeqSlideTrack::reset();
+    memset(oneshot_mask,0,sizeof(oneshot_mask));
+    memset(ignore_notes,0, sizeof(ignore_notes));
+    pgm_oneshot = 0;
+    mute_state_pending = false;
+    notesoff_pending = false;
+  }
+
+  void seq(MidiUartClass *uart_);
+
+  MidiUartClass *resolve_uart(MidiUartClass *uart_) NOINLINE();
+  ALWAYS_INLINE() void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
+  void note_on(uint8_t note, uint8_t velocity = 100, MidiUartClass *uart_ = nullptr);
+  void note_off(uint8_t note, uint8_t velocity = 100, MidiUartClass *uart_ = nullptr);
+  void load_cache();
+  void pitch_bend(uint16_t value, MidiUartClass *uart_ = nullptr);
+  void after_touch(uint8_t note, uint8_t pressure, MidiUartClass *uart_ = nullptr);
+  void send_cc(uint8_t cc, uint8_t value, MidiUartClass *uart_ = nullptr);
+  void channel_pressure(uint8_t pressure, MidiUartClass *uart_ = nullptr);
+  ALWAYS_INLINE() void noteon_conditional(uint8_t condition, uint8_t note,
+                          uint8_t velocity = 100);
+  void find_next_locks(uint16_t curidx, uint8_t step, uint8_t *find_array);
+  uint8_t find_next_lock(uint8_t step, uint8_t lock_idx, uint16_t &curidx,
+                         uint16_t &end);
+
+  void update_param(uint8_t param_id, uint8_t value);
+
+  uint8_t find_lock_idx(uint8_t param_id);
+  uint16_t find_lock(uint8_t step, uint8_t lock_idx, uint16_t &start_idx);
+  uint8_t count_lock_event(uint8_t step, uint8_t lock_idx);
+
+  bool set_track_locks(uint8_t step, uint8_t utiming, uint8_t track_param,
+                       uint8_t value, bool slide = true,
+                       uint8_t lock_idx = 255);
+  void recalc_slides();
+
+  void record_track_locks(uint8_t track_param, uint8_t value,
+                          bool slide = false);
+  void record_track_noteon(uint8_t note_num, uint8_t velocity);
+  void record_track_noteoff(uint8_t note_num);
+
+  bool set_track_step(uint8_t step, uint8_t utiming, uint8_t note_num,
+                      uint8_t event_on, uint8_t velocity, uint8_t cond);
+  void clear_step(uint8_t step);
+
+  void clear_ext_conditional();
+  void clear_ext_notes();
+
+  // clear_track_locks: if value != 255, delete specific lock event of value.
+  // otherwise delete all locks matching track_param of any value
+  bool del_track_locks(int16_t cur_x, uint8_t lock_idx, uint8_t value);
+  void clear_mute();
+  void clear_mutes();
+  void clear_track_locks();
+  void clear_track_locks(uint8_t idx);
+  bool clear_track_locks(uint8_t step, uint8_t track_param,
+                         uint8_t value = 255);
+  bool clear_track_locks_idx(uint8_t step, uint8_t lock_idx, uint8_t value = 255);
+  virtual void clear_track(bool locks = true) override;
+  void store_mute_state();
+  virtual void set_length(uint8_t len, bool expand = false) override;
+  void re_sync();
+  void reset_params();
+  void handle_event(uint16_t index, uint8_t step);
+  void remove_event(uint16_t index);
+  uint16_t add_event(uint8_t step, ext_event_t *e);
+
+  void init_notes_on();
+  void add_notes_on(uint8_t step, int8_t utiming, uint8_t value, uint8_t velocity);
+  uint8_t find_notes_on(uint8_t value);
+  void remove_notes_on(uint8_t value);
+
+  bool del_note(uint16_t cur_x, uint16_t cur_w = 0, uint8_t cur_y = 0);
+  bool del_notes(uint16_t cur_x, uint16_t cur_w, uint8_t note_min = 0,
+                 uint8_t note_max = 127);
+  void add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y, uint8_t velocity,
+                uint8_t cond = 0);
+
+  // find midi note within the given step.
+  // returns: note index & step start index.
+  uint16_t find_midi_note(uint8_t step, uint8_t note_num, uint16_t &start_idx,
+                          bool event_on);
+  uint16_t find_midi_note(uint8_t step, uint8_t note_num, uint16_t &start_idx);
+
+  // search forward, then wrap around
+  // caller pass in note_idx of the note on event, and end index for current
+  // bucket. returns: step index & note index
+  uint8_t search_note_off(int8_t note_val, uint8_t step, uint16_t &note_idx,
+                          uint16_t ev_end, uint8_t _length = 0);
+  uint8_t search_lock_idx(uint8_t lock_idx, uint8_t step, uint16_t &ev_idx,
+                          uint16_t &ev_end);
+  void locate(uint8_t step, uint16_t &ev_idx, uint16_t &ev_end) {
+    ev_idx = 0;
+    ev_end = event_buckets.get(step);
+    for (uint8_t i = 0; i < step; ++i) {
+      ev_idx += event_buckets.get(i);
+    }
+
+    ev_end += ev_idx;
+  }
+  void toggle_mute();
+
+  void buffer_notesoff();
+  void buffer_notesoff8(uint8_t *buf, uint8_t offset);
+
+  virtual void rotate_left() override { modify_track(DIR_LEFT); }
+  virtual void rotate_right() override { modify_track(DIR_RIGHT); }
+  virtual void reverse() override { modify_track(DIR_REVERSE); }
+
+  void modify_track(uint8_t dir);
+
+  void set_speed(uint8_t new_speed, uint8_t old_speed = 255, bool timing_adjust = true);
+  ALWAYS_INLINE() bool request_speed_change(uint8_t new_speed) {
+    if (count_down) {
+      return false;
+    }
+    if (!MidiClock.isStarted()) {
+      if (speed == new_speed && !has_pending_speed_change()) {
+        return false;
+      }
+      clear_pending_speed_change();
+      set_speed(new_speed, speed, true);
+      return true;
+    }
+    return SeqTrack::request_speed_change(new_speed);
+  }
+  void apply_pending_mute();
+  void mute_on();
+  virtual void transpose(int8_t offset) override;
+};
+
+#endif /* EXTSEQTRACK_H__ */

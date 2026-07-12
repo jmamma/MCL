@@ -1,0 +1,77 @@
+{
+  "id": "mcl",
+  "name": "MCL",
+  "runtime": {
+    "type": "wamr-aot",
+    "artifact": "mcl.aot",
+    "stack_bytes": 2097152,
+    "heap_bytes": 1048576
+  },
+  "abi": {
+    "id": "sps.panel_device.v1",
+    "version": 1,
+    "min_minor": 8,
+    "import_module": "env"
+  },
+  "service": {
+    "gui_hz": 60
+  },
+  "storage": {
+    "root": "data"
+  },
+  "build": {
+    "script": "tools/build_mcl_wasm.sh",
+    "package": "build_wasm/package/mcl"
+  },
+  "framebuffer": {
+    "source": "mcl",
+    "packing": "row_major_msb_1bpp"
+  },
+  "exports": @MCL_WASM_EXPORTS@,
+  "midi": {
+    "sps_port": 0,
+    "daw_port": 1
+  },
+  "controls": {
+    "buttons": {
+      "button1": 4,
+      "button2": 5,
+      "button3": 6,
+      "button4": 7,
+      "page": 5,
+      "bank_group": 5,
+      "patsong": 6,
+      "global": 6,
+      "record": 8,
+      "play": 9,
+      "stop": 10,
+      "func": 12,
+      "up": 13,
+      "left": 14,
+      "down": 15,
+      "right": 16,
+      "trig_1": 17,
+      "scale": 36
+    },
+    "mappings": {
+      "record": "record",
+      "play": "play",
+      "stop": "stop",
+      "func": "func",
+      "up": "up",
+      "left": "left",
+      "down": "down",
+      "right": "right",
+      "enter": "button4",
+      "escape": "button1",
+      "scale": "scale",
+      "bank_group": "page",
+      "bankgroup": "page",
+      "page": "page",
+      "global": "global",
+      "patsong": "patsong",
+      "trig_1..16": "trig_1..16",
+      "func_trig_1..16": "trig_1..16"
+    }
+  }
+}

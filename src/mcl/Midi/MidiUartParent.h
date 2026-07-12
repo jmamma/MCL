@@ -44,15 +44,15 @@ public:
 
   uint8_t mode;
 
+  // UART-level receive state (for ISR performance)
+  // Placed early in parent structure for efficient offset access in ISR
+  midi_state_t live_state;
+
   MidiClass *midi;
 
   MidiID device;
 
-  MidiUartParent() {
-    activeSenseEnabled = 0;
-    recvActiveSenseTimer = 0;
-    sendActiveSenseTimer = 0;
-  }
+  MidiUartParent() = default;
 
   void setActiveSenseTimer(uint16_t timeout) {
     if (timeout == 0) {
@@ -70,7 +70,7 @@ public:
     }
     if (activeSenseEnabled) {
       if (sendActiveSenseTimer == 0) {
-        m_putc(MIDI_ACTIVE_SENSE);
+        m_putc_realtime(MIDI_ACTIVE_SENSE);
         sendActiveSenseTimer = sendActiveSenseTimeout;
       } else {
         sendActiveSenseTimer--;
@@ -82,6 +82,7 @@ public:
   virtual uint8_t m_getc() = 0;
   virtual void m_putc(uint8_t *src, uint16_t size) = 0;
   virtual void m_putc(uint8_t c) = 0;
+  virtual void m_putc_realtime(uint8_t c) = 0;
   virtual void m_putc_immediate(uint8_t c) { m_putc(c); }
   virtual void m_recv(uint8_t *src, uint16_t size) = 0;
   virtual bool avail() { return false; }
@@ -193,6 +194,7 @@ public:
   }
   void sendRaw(uint8_t *msg, uint16_t cnt) { m_putc(msg, cnt); }
   void sendRaw(uint8_t byte) { m_putc(byte); }
+  void sendRealtime(uint8_t byte) { m_putc_realtime(byte); }
 
   void sendString(const char *data) { sendString(data, strlen(data)); }
   void sendString(const char *data, uint16_t cnt);

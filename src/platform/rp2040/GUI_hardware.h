@@ -3,7 +3,7 @@
 #include <inttypes.h>
 #include "hardware.h"
 #include "platform.h"
-#include "LED_Hardware.h"
+#include "LED_hardware.h"
 
 #ifdef PLATFORM_TBD
 #include "Ui.h"
@@ -38,7 +38,7 @@ class EncodersClass {
 public:
   encoder_t encoders[GUI_NUM_ENCODERS];
 
-  EncodersClass();
+  EncodersClass() = default;
 
   void poll(uint16_t sr);
   void clearEncoders();
@@ -151,6 +151,15 @@ public:
   static const uint8_t FUNC_BUTTON9 = 16;
   static const uint8_t TRIG_BUTTON1 = 17;
 
+#ifdef PLATFORM_TBD
+  // TBD-only panel slots. Numbered after TRIG_BUTTON16 (= 32). Most TBD
+  // controls are mapped onto the legacy MCL button namespace below; only
+  // panel controls with no legacy slot need their own IDs here.
+  static const uint8_t TBD_BUTTON_B  = 36;
+  static const uint8_t TBD_BUTTON_TR = 37;
+  static const uint16_t TBD_TAP_MAX_MS = 200;
+#endif
+
   static const uint16_t ENCODER1_MASK = _BV(ENCODER1);
   static const uint16_t ENCODER2_MASK = _BV(ENCODER2);
   static const uint16_t ENCODER3_MASK = _BV(ENCODER3);
@@ -160,11 +169,30 @@ public:
   static const uint16_t BUTTON3_MASK = _BV(BUTTON3);
   static const uint16_t BUTTON4_MASK = _BV(BUTTON4);
 
-  ButtonsClass();
+  ButtonsClass() = default;
 
   ALWAYS_INLINE() void clear();
   ALWAYS_INLINE() void poll(uint8_t sr);
 #ifdef PLATFORM_TBD
+  // Per-press latches for encoder click tap gates.
+  // *_long_press_seen: panel flagged the held press (f_btns_long_press).
+  // *_rotated_while_held: encoder rotated at any point during the press.
+  // enc_press_ms: event press-edge timestamp used by is_encoder_tap().
+  // A long hold, rotation, or release after max_ms suppresses the tap.
+  // Cleared on press edge.
+  uint16_t enc_press_ms[GUI_NUM_ENCODERS];
+  bool enc_tap_armed[GUI_NUM_ENCODERS];
+  bool enc1_long_press_seen;
+  bool enc1_rotated_while_held;
+  bool enc2_long_press_seen;
+  bool enc2_rotated_while_held;
+  bool enc3_long_press_seen;
+  bool enc3_rotated_while_held;
+  bool enc4_long_press_seen;
+  bool enc4_rotated_while_held;
+  bool is_encoder_tap(uint8_t encoder_idx, uint16_t max_ms) const;
+  bool handle_encoder_tap(uint8_t encoder_idx, bool is_press,
+                          uint16_t max_ms);
   void pollTBD(const ui_data_t &ui_data);
 #endif
 };
@@ -182,7 +210,7 @@ public:
 
   LEDHardware led;
 
-  GUIHardware() : inGui(false), oldsr(0) {}
+  GUIHardware() = default;
   void init();
   void poll();
   void clear();

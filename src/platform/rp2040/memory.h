@@ -7,24 +7,35 @@
 
 #define RX_BUF_SIZE 0x80UL
 #define TX_BUF_SIZE 0x0C00UL
+#ifdef PLATFORM_TBD
+#define TX_SEQBUF_SIZE 0x400UL
+#else
 #define TX_SEQBUF_SIZE 0x200UL
+#endif
+#define RT_BUF_SIZE 0x08UL
 
 #define UART1_RX_BUFFER_LEN RX_BUF_SIZE
 #define UART1_TX_BUFFER_LEN TX_BUF_SIZE
+#define UART1_RT_BUFFER_LEN RT_BUF_SIZE
 
 #define UART2_RX_BUFFER_LEN RX_BUF_SIZE
 #define UART2_TX_BUFFER_LEN TX_BUF_SIZE
+#define UART2_RT_BUFFER_LEN RT_BUF_SIZE
 
 #define UARTUSB_RX_BUFFER_LEN RX_BUF_SIZE
 #define UARTUSB_TX_BUFFER_LEN TX_BUF_SIZE
+#define UARTUSB_RT_BUFFER_LEN RT_BUF_SIZE
 
-#define SYSEX1_DATA_LEN 0x1830UL //6KB
-#define SYSEX2_DATA_LEN 0x1830UL //6KB
-#define SYSEXUSB_DATA_LEN 0x1830UL //6KB
+#define SYSEX1_DATA_LEN 0x1800UL //6KB
+#define SYSEX2_DATA_LEN 0x1800UL //6KB
+#define SYSEXUSB_DATA_LEN 0x1800UL //6KB
 
 #define MCL_MEMORY_USE_ARRAYS 1
 
 #define NUM_CLOCK_CALLBACKS 4
+#define NUM_MIDI_CALLBACKS 16
+#define NUM_SYSEX_SLAVES 16
+#define NUM_SYSEX_CALLBACKS 4
 
 #define MEMORY_ALIGN(size) (((size) + 3) & ~3)
 
@@ -49,6 +60,15 @@ FORCED_INLINE() extern inline void memcpy_bank1(volatile void *dst, volatile con
 
 FORCED_INLINE() extern inline void put_byte_bank1(volatile uint8_t *dst, uint8_t byte) {
   *dst = byte;
+}
+
+// ISR-optimized version (on RP2040, same as regular put_byte_bank1 since no memory banks)
+FORCED_INLINE() extern inline void put_byte_bank1_isr(volatile uint8_t *dst, uint8_t byte) {
+  *dst = byte;
+}
+
+FORCED_INLINE() extern inline uint8_t get_byte_bank1_isr(volatile uint8_t *src) {
+  return *src;
 }
 
 FORCED_INLINE() extern inline uint8_t get_byte_bank1(volatile uint8_t *dst) {
@@ -96,17 +116,19 @@ FORCED_INLINE() extern inline uint8_t get_byte_bank3(volatile uint8_t *dst) {
   return c;
 }
 
-extern volatile uint8_t *rand_ptr;
+extern volatile uint16_t g_random_state;
 
 FORCED_INLINE() extern inline uint8_t get_random_byte() {
-    // Explicit cast to satisfy pgm_read_byte's const requirement
-    const uint8_t* ptr = const_cast<const uint8_t*>(rand_ptr++);
-    return (pgm_read_byte(ptr) ^ get_byte_bank1(rand_ptr) ^ read_clock_ms());
+    uint16_t state = g_random_state;
+    if (state == 0) {
+        state = read_clock_ms() | 1;
+    }
+    state = (state >> 1) ^ ((state & 1) ? 0xB400U : 0);
+    g_random_state = state;
+    return (uint8_t)(state >> 8);
 }
 
 extern inline uint8_t get_random(uint8_t range) {
     uint8_t randomValue = get_random_byte();
     return (uint8_t)((uint16_t)randomValue * range / 256);
 }
-
-

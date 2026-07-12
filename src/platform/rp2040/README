@@ -1,0 +1,23 @@
+#define OLED_DC 14
+#define OLED_CS 15
+#define OLED_RST 13
+
+const int SPI1_MISO_PIN = 8; (No conversion needed)
+const int SPI1_MOSI_PIN = 11; 5V ->
+const int SPI1_SCK_PIN = 10; 5V ->
+const int SPI1_SS_PIN = 9; 5V ->
+
+#define RP_UART0_RX 1 5V <-
+#define RP_UART0_TX 0 5V ->
+
+#define RP_UART1_RX 5 5V <-
+#define RP_UART1_TX 4 5V ->
+
+#define SR165_OUT    12 5V <-
+#define SR165_SHLOAD 6  5V ->
+#define SR165_CLK    7  5V ->
+
+LED1 -> 5V
+LED2 -> 5V
+
+2xTXS0108E

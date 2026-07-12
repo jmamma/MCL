@@ -3,6 +3,10 @@
 #include "MidiUart.h"
 #include "global.h"
 #include "oled.h"
+#include "GUI/Pages/PlatformPanel.h"
+#if defined(PLATFORM_WASM)
+#include "MCLGUI.h"
+#endif
 
 void GuiClass::setPage(LightPage *page) {
   if (currentPage() != NULL) {
@@ -67,11 +71,65 @@ LightPage *GuiClass::currentPage() {
 }
 
 bool GuiClass::handleTopEvent(gui_event_t *event) {
+#ifdef MCL_HAS_EXTENDED_PANEL_INPUT
+  // Extended panel input (TBD hardware or wasm host buttons) preempts the
+  // active page so raw physical buttons can become MCL/MDX commands first.
+  if (platform_panel_handleEvent(event)) return true;
+#endif
+#ifdef MCL_HAS_TBD_DRIVER
+  // TBD overlays still get a first pass after the physical panel router.
+  if (overlay && overlay->handleEvent(event)) return true;
+#endif
   LightPage *page = currentPage();
   if (page != NULL) {
-    return page->handleEvent(event);
+    if (page->handleEvent(event)) {
+      return true;
+    }
+    return page->handleEncoderKeyControls(event);
   }
   return false;
+}
+
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+bool GuiClass::handleMouseEvent(mcl_mouse_event_t *event) {
+  if (event == NULL) {
+    return false;
+  }
+  wake_screen_saver();
+#ifdef MCL_HAS_TBD_DRIVER
+  if (overlay && overlay->handleEncoderMouseEvent(event)) return true;
+  if (overlay && overlay->handleMouseEvent(event)) return true;
+#endif
+  LightPage *page = currentPage();
+  if (page != NULL) {
+    if (page->handleEncoderMouseEvent(event)) {
+      return true;
+    }
+    return page->handleMouseEvent(event);
+  }
+  return false;
+}
+
+void GuiClass::queueVirtualButton(uint8_t button, bool pressed) {
+  gui_event_t event = {};
+  event.source = button;
+  event.type = BUTTON;
+  event.mask = pressed ? EVENT_BUTTON_PRESSED : EVENT_BUTTON_RELEASED;
+  event.modifiers = 0;
+  putEvent(&event);
+}
+
+void GuiClass::pollMouseEvents() {
+  mcl_mouse_event_t event;
+  uint8_t limit = 16;
+  while (limit-- > 0 && mcl_platform_mouse_pop(&event)) {
+    handleMouseEvent(&event);
+  }
+}
+#endif
+
+void GuiClass::wake_screen_saver() {
+  if (screen_saver) { oled_display.wake(); screen_saver = false; }
 }
 
 void GuiClass::loop() {
@@ -80,7 +138,7 @@ void GuiClass::loop() {
 
   while (!events.isEmpty()) {
     g_clock_minutes = 0;
-    if (screen_saver) { oled_display.wake(); screen_saver = false; }
+    wake_screen_saver();
     gui_event_t event;
     events.getEvent(&event);
 
@@ -95,6 +153,10 @@ void GuiClass::loop() {
     }
   }
 
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+  pollMouseEvents();
+#endif
+
   for (uint8_t i = 0; i < tasks.size; i++) {
     if (tasks.arr[i] != NULL) {
       tasks.arr[i]->checkTask();
@@ -102,14 +164,40 @@ void GuiClass::loop() {
   }
 
   MidiUartParent::handle_midi_lock = 0;
-  PageParent *page = currentPage();
+  LightPage *page = currentPage();
+  bool overlay_captures_encoders = false;
+#ifdef PLATFORM_TBD
+  overlay_captures_encoders = overlayCapturesEncoders();
+#endif
   if (page != NULL) {
-    MidiUartParent::handle_midi_lock = 1;
-    page->update();
-    MidiUartParent::handle_midi_lock = 0;
+    if (!overlay_captures_encoders) {
+      MidiUartParent::handle_midi_lock = 1;
+      page->update();
+      MidiUartParent::handle_midi_lock = 0;
+    }
     page->loop();
-    page->finalize();
+    if (!overlay_captures_encoders) {
+      page->finalize();
+    }
   }
+
+#ifdef PLATFORM_TBD
+  if (overlay_captures_encoders && overlay) {
+    LightPage *active_overlay = overlay;
+    MidiUartParent::handle_midi_lock = 1;
+    active_overlay->update();
+    MidiUartParent::handle_midi_lock = 0;
+  }
+  // Tick the overlay's loop after the active page so it can manage
+  // its own state (LED palette, sub-page repaint, etc.).
+  if (overlay) {
+    LightPage *active_overlay = overlay;
+    active_overlay->loop();
+    if (overlay == active_overlay && overlay_captures_encoders) {
+      active_overlay->finalize();
+    }
+  }
+#endif
 
   if (use_screen_saver && g_clock_minutes >= SCREEN_SAVER_TIMEOUT && !screen_saver) {
     screen_saver = true;
@@ -117,7 +205,10 @@ void GuiClass::loop() {
   }
   MidiUartParent::handle_midi_lock = 0;
 
-  display();
+  if (!skip_display_once) {
+    display();
+  }
+  skip_display_once = false;
   MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 }
 
@@ -154,8 +245,23 @@ void GuiClass::display() {
   LightPage *page = currentPage();
   if (page != NULL) {
     oled_display.setFont();
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+    page->clearPageEncoderHits();
+#endif
     page->display();
   }
+
+#ifdef PLATFORM_TBD
+  // Overlay renders on top of the active page. Lifecycle is owned by
+  // setOverlay / clearOverlay — single render hook here, no state.
+  if (overlay) {
+    oled_display.setFont();
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+    overlay->clearPageEncoderHits();
+#endif
+    overlay->display();
+  }
+#endif
 
 #ifdef DEBUGMODE
   if (g_fps == 0 && g_clock_fps == 0) {
@@ -185,9 +291,41 @@ void GuiClass::display() {
   }
 #endif
 #endif
+#if defined(PLATFORM_WASM)
+  mcl_gui.draw_async_infobox();
+#endif
   oled_display.display();
 }
 
 GuiClass::GuiClass() {
   // Initialize any necessary state
 }
+
+#ifdef PLATFORM_TBD
+void GuiClass::setOverlay(LightPage *p) {
+  if (overlay == p) return;
+  if (overlay) overlay->cleanup();
+  overlay = p;
+  if (overlay) {
+    if (!overlay->isSetup) {
+      overlay->setup();
+      overlay->isSetup = true;
+    }
+    overlay->init();
+  }
+}
+
+void GuiClass::clearOverlay() {
+  if (!overlay) return;
+  overlay->cleanup();
+  overlay = nullptr;
+}
+
+bool GuiClass::overlayCapturesEncoders() const {
+  if (!overlay) return false;
+  for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
+    if (overlay->encoders[i]) return true;
+  }
+  return false;
+}
+#endif

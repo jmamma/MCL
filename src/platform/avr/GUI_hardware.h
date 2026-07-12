@@ -3,7 +3,7 @@
 #include <inttypes.h>
 #include "platform.h"
 #include "hardware.h"
-#include "LED_Hardware.h"
+#include "LED_hardware.h"
 
 class SR165Class {
   inline void rst();
@@ -25,7 +25,7 @@ class EncodersClass {
  public:
   encoder_t encoders[GUI_NUM_ENCODERS];
 
-  EncodersClass();
+  EncodersClass() = default;
 
   void poll(uint16_t sr);
   void clearEncoders();
@@ -138,7 +138,7 @@ class ButtonsClass {
   static const uint16_t BUTTON3_MASK = _BV(BUTTON3);
   static const uint16_t BUTTON4_MASK = _BV(BUTTON4);
 
-  ButtonsClass();
+  ButtonsClass() = default;
 
   ALWAYS_INLINE() void clear();
   ALWAYS_INLINE() void poll(uint8_t sr);
@@ -150,9 +150,8 @@ private:
     bool inGui;
     uint16_t oldsr;
 public:
-    ButtonsClass Buttons;  // Made public for macro access
     LEDHardware led;
-    GUIHardware() : inGui(false), oldsr(0) {}
+    GUIHardware() = default;
     void init();
     void poll();
     void clear();
@@ -163,4 +162,3 @@ extern GUIHardware GUI_hardware;
 extern SR165Class SR165;
 extern EncodersClass Encoders;
 extern ButtonsClass Buttons;
-

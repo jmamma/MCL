@@ -13,15 +13,17 @@
 #include <MidiClock.h>
 #include <avr/io.h>
 
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 
 MidiUartClass::MidiUartClass(volatile uint8_t *udr_, RingBuffer<> *_rxRb,
-                             RingBuffer<> *_txRb) : MidiUartParent() {
+                             RingBuffer<> *_txRb, RingBuffer<> *_txRb_realtime) : MidiUartParent() {
   udr = udr_;
   mode = UART_MIDI;
   rxRb = _rxRb;
   txRb = _txRb;
   txRb_sidechannel = nullptr;
+  txRb_realtime = _txRb_realtime;
+  live_state = midi_wait_status;
 }
 
 void MidiUartClass::init() {
@@ -36,6 +38,11 @@ void MidiUartClass::init() {
 
   *src = (3 << UCSZ00);
   *srb = _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE0);
+
+  // Cache sysex rb pointer for fast ISR path
+  if (midi && midi->midiSysex) {
+    sysex_rb_cache = midi->midiSysex->rb;
+  }
 }
 
 void MidiUartClass::set_speed(uint32_t speed_) {
@@ -46,9 +53,7 @@ void MidiUartClass::set_speed(uint32_t speed_) {
     ;
   while (!(check_empty_tx()));
 
-  uint32_t cpu = (F_CPU / 16);
-  cpu /= speed_;
-  cpu--;
+  uint16_t cpu = (F_CPU / 16) / speed_ - 1;
 
   volatile uint8_t *ubrrh_ = ubrrh();
   volatile uint8_t *ubrrl_ = ubrrl();
@@ -103,31 +108,31 @@ void MidiUartClass::realtime_isr(uint8_t c) {
 }
 
 ISR(USART0_RX_vect) {
-  select_bank(BANK0);
+  select_bank_fast();
   MidiUartUSB.rx_isr();
 }
 
 ISR(USART0_UDRE_vect) {
-  select_bank(BANK0);
+  select_bank_fast();
   MidiUartUSB.tx_isr();
 }
 
 ISR(USART1_RX_vect) {
-  select_bank(BANK0);
+  select_bank_fast();
   MidiUart.rx_isr();
 }
 
 ISR(USART1_UDRE_vect) {
-  select_bank(BANK0);
+  select_bank_fast();
   MidiUart.tx_isr();
 }
 
 ISR(USART2_RX_vect) {
-  select_bank(BANK0);
+  select_bank_fast();
   MidiUart2.rx_isr();
 }
 
 ISR(USART2_UDRE_vect) {
-  select_bank(BANK0);
+  select_bank_fast();
   MidiUart2.tx_isr();
 }

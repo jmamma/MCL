@@ -1,22 +1,31 @@
-// #include "MCLSeq.h"
+// #include "Sequencer/MCLSeq.h"
 #include "Arduino.h"
 #include "ISRTiming.h"
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "Midi.h"
 #include "MidiClock.h"
 #include "MidiUart.h"
+#ifdef PLATFORM_TBD
+#include "TbdP4Realtime.h"
+#endif
 #include "global.h"
 #include "hardware/uart.h"
 #include "pico.h"
 
 MidiUartClass::MidiUartClass(uart_inst_t *uart_hw_, RingBuffer<> *_rxRb,
-                             RingBuffer<> *_txRb)
+                             RingBuffer<> *_txRb, RingBuffer<> *_txRb_realtime)
     : MidiUartParent() {
   uart_hw = uart_hw_;
   mode = UART_MIDI;
+#ifdef PLATFORM_TBD
+  p4_transport = nullptr;
+#endif
   rxRb = _rxRb;
   txRb = _txRb;
   txRb_sidechannel = nullptr;
+  txRb_realtime = _txRb_realtime;
+  in_message_tx = 0;
+  live_state = midi_wait_status;
 }
 
 void MidiUartClass::init() {
@@ -59,6 +68,10 @@ void MidiUartClass::init() {
 }
 
 void MidiUartClass::set_speed(uint32_t speed_) {
+  if (!uart_hw) {
+    speed = speed_;
+    return;
+  }
   // Wait for TX buffer to empty before changing speed
   while (!txRb->isEmpty())
     ;
@@ -69,7 +82,147 @@ void MidiUartClass::set_speed(uint32_t speed_) {
   speed = speed_;
 }
 
-void MidiUartClass::m_putc_immediate(uint8_t c) { uart_putc_raw(uart_hw, c); }
+void MidiUartClass::m_putc_immediate(uint8_t c) {
+#ifdef PLATFORM_TBD
+  if (p4_transport) {
+    m_putc(c);
+    return;
+  }
+#endif
+  if (!uart_hw) return;
+  uart_putc_raw(uart_hw, c);
+}
+
+#ifdef PLATFORM_TBD
+void MidiUartClass::attach_p4_transport(TbdP4RealtimeTransport *transport) {
+  p4_transport = transport;
+  mode = transport ? UART_P4_SPI : UART_MIDI;
+}
+
+static void update_tx_message_state(MidiUartClass *uart, uint8_t c) {
+  if ((uart->in_message_tx > 0) && (c < 128)) {
+    uart->in_message_tx--;
+  }
+  if (c < 0xF0) {
+    switch (c & 0xF0) {
+    case MIDI_CHANNEL_PRESSURE:
+    case MIDI_PROGRAM_CHANGE:
+    case MIDI_MTC_QUARTER_FRAME:
+    case MIDI_SONG_SELECT:
+      uart->in_message_tx = 1;
+      break;
+    case MIDI_NOTE_OFF:
+    case MIDI_NOTE_ON:
+    case MIDI_AFTER_TOUCH:
+    case MIDI_CONTROL_CHANGE:
+    case MIDI_PITCH_WHEEL:
+    case MIDI_SONG_POSITION_PTR:
+      uart->in_message_tx = 2;
+      break;
+    }
+  } else {
+    switch (c) {
+    case MIDI_SYSEX_START:
+      uart->in_message_tx = -1;
+      break;
+    case MIDI_SYSEX_END:
+      uart->in_message_tx = 0;
+      break;
+    }
+  }
+}
+
+void MidiUartClass::flush_p4_transport() {
+  if (!p4_transport) return;
+
+  uint16_t budget = TBD_P4_SPI_MIDI_DATA_SIZE;
+  while (budget-- && p4_transport->can_enqueue_midi_byte()) {
+    if (txRb_realtime && !txRb_realtime->isEmpty_isr()) {
+      sendActiveSenseTimer = sendActiveSenseTimeout;
+      uint8_t c = txRb_realtime->get_h_isr();
+      p4_transport->enqueue_midi_byte_isr(c);
+      continue;
+    }
+
+    if ((txRb_sidechannel != nullptr) && (in_message_tx == 0)) {
+      if (!txRb_sidechannel->isEmpty_isr()) {
+        uint8_t c = txRb_sidechannel->get_h_isr();
+        p4_transport->enqueue_midi_byte_isr(c);
+        continue;
+      }
+      txRb_sidechannel = nullptr;
+    }
+
+    if (txRb && !txRb->isEmpty_isr()) {
+      uint8_t c = txRb->get_h_isr();
+      p4_transport->enqueue_midi_byte_isr(c);
+      update_tx_message_state(this, c);
+      continue;
+    }
+
+    break;
+  }
+}
+
+void MidiUartP4Class::init() {
+  speed = UART_BAUDRATE;
+  attach_p4_transport(&tbd_p4_realtime);
+  tbd_p4_realtime.init();
+}
+
+void MidiUartP4Class::poll() {
+  service_irq();
+}
+
+void MidiUartP4Class::m_putc(uint8_t *src, uint16_t size) {
+  if (!src || size == 0) return;
+
+  LOCK();
+  for (uint16_t i = 0; i < size; i++) {
+    if (!tbd_p4_realtime.enqueue_midi_byte_isr(src[i])) {
+      break;
+    }
+  }
+  CLEAR_LOCK();
+}
+
+void MidiUartP4Class::m_putc(uint8_t c) {
+  LOCK();
+  tbd_p4_realtime.enqueue_midi_byte_isr(c);
+  CLEAR_LOCK();
+}
+
+void MidiUartP4Class::m_putc_realtime(uint8_t c) {
+  LOCK();
+  sendActiveSenseTimer = sendActiveSenseTimeout;
+  tbd_p4_realtime.enqueue_midi_byte_isr(c);
+  CLEAR_LOCK();
+}
+
+void MidiUartP4Class::m_putc_immediate(uint8_t c) {
+  m_putc(c);
+}
+
+void MidiUartP4Class::service_irq() {
+  tx_flush();
+  tbd_p4_realtime.poll();
+
+  uint8_t c = 0;
+  uint16_t budget = TBD_P4_SPI_USB_MIDI_DATA_SIZE;
+  while (budget-- && tbd_p4_realtime.pop_rx_midi_byte_isr(c)) {
+    handle_rx_byte(c);
+  }
+}
+
+void MidiUartP4Class::service_background() {
+  float tempo = MidiClock.get_tempo();
+  if (tempo > 0.0f) {
+    tbd_p4_realtime.set_tempo_centi((uint32_t)(tempo * 100.0f));
+  }
+  tbd_p4_realtime.poll();
+  tbd_p4_realtime.recover_blocking();
+}
+#endif
 
 void __not_in_flash_func(MidiUartClass::handle_realtime_message)(uint8_t c) {
   if (c == MIDI_CLOCK) {
@@ -104,6 +257,40 @@ void __not_in_flash_func(MidiUartClass::handle_realtime_message)(uint8_t c) {
   }
 }
 
+void __not_in_flash_func(MidiUartClass::handle_rx_byte)(uint8_t c) {
+  recvActiveSenseTimer = 0;
+  if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
+    handle_realtime_message(c);
+    return;
+  }
+  switch (live_state) {
+  case midi_wait_sysex:
+    if (MIDI_IS_STATUS_BYTE(c)) {
+      if (c != MIDI_SYSEX_END) {
+        midi->midiSysex->abort();
+        rxRb->put_h_isr(c);
+      } else {
+        midi->midiSysex->end_immediate();
+      }
+      live_state = midi_wait_status;
+    } else {
+      midi->midiSysex->handleByte(c);
+    }
+    break;
+
+  case midi_wait_status:
+    if (c == MIDI_SYSEX_START) {
+      live_state = midi_wait_sysex;
+      midi->midiSysex->reset();
+      break;
+    }
+    [[fallthrough]];
+  default:
+    rxRb->put_h_isr(c);
+    break;
+  }
+}
+
 void __not_in_flash_func(MidiUartClass::rx_isr)() {
   uint32_t dr = uart_get_hw(uart_hw)->dr;
   uint8_t c = dr & 0xff; // Get the actual data byte
@@ -128,37 +315,7 @@ void __not_in_flash_func(MidiUartClass::rx_isr)() {
 #endif
     return;
   }
-  recvActiveSenseTimer = 0;
-  if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
-    handle_realtime_message(c);
-    return;
-  }
-  switch (midi->live_state) {
-  case midi_wait_sysex:
-    if (MIDI_IS_STATUS_BYTE(c)) {
-      if (c != MIDI_SYSEX_END) {
-        midi->midiSysex->abort();
-        rxRb->put_h_isr(c);
-      } else {
-        midi->midiSysex->end_immediate();
-      }
-      midi->live_state = midi_wait_status;
-    } else {
-      midi->midiSysex->handleByte(c);
-    }
-    break;
-
-  case midi_wait_status:
-    if (c == MIDI_SYSEX_START) {
-      midi->live_state = midi_wait_sysex;
-      midi->midiSysex->reset();
-      break;
-    }
-    [[fallthrough]];
-  default:
-    rxRb->put_h_isr(c);
-    break;
-  }
+  handle_rx_byte(c);
 }
 void __not_in_flash_func(MidiUartClass::tx_isr)() {
   if (!uart_is_writable(uart_hw)) { return; } //race condition
@@ -166,7 +323,12 @@ void __not_in_flash_func(MidiUartClass::tx_isr)() {
   bool rs = 1;
 again:
 #endif
-  if ((txRb_sidechannel != nullptr) && (in_message_tx == 0)) {
+  if (!txRb_realtime->isEmpty_isr()) {
+    sendActiveSenseTimer = sendActiveSenseTimeout;
+    uint8_t c = txRb_realtime->get_h_isr();
+    write_char(c);
+  }
+  else if ((txRb_sidechannel != nullptr) && (in_message_tx == 0)) {
     if (!txRb_sidechannel->isEmpty()) {
       uint8_t c = txRb_sidechannel->get();
 #ifdef RUNNING_STATUS_OUT
@@ -233,7 +395,7 @@ again:
     goto again;
   }
 #endif
-  if (txRb->isEmpty() && (txRb_sidechannel == nullptr)) {
+  if (txRb_realtime->isEmpty_isr() && txRb->isEmpty() && (txRb_sidechannel == nullptr)) {
     disable_tx_irq();
   } else {
     enable_tx_irq();

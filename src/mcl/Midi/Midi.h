@@ -6,6 +6,7 @@
 #include <inttypes.h>
 #include "Callback.h"
 #include "Vector.h"
+#include "memory.h"
 
 // Forward declarations
 class MidiUartParent;
@@ -35,11 +36,14 @@ extern "C" {
 #define MIDI_PRG_CHG_CB 4
 #define MIDI_CHAN_PRESS_CB 5
 #define MIDI_PITCH_WHEEL_CB 6
+#define MIDI_MTC_QUARTER_FRAME_CB 7
+#define MIDI_SONG_POSITION_PTR_CB 8
+#define MIDI_SONG_SELECT_CB 9
+#define MIDI_TUNE_REQUEST_CB 10
 
-typedef struct {
-  uint8_t midi_status;
-  midi_state_t next_state;
-} midi_parse_t;
+#ifndef NUM_MIDI_CALLBACKS
+#define NUM_MIDI_CALLBACKS 8
+#endif
 
 typedef void (MidiCallback::*midi_callback_ptr_t)(uint8_t *msg);
 typedef void (MidiCallback::*midi_callback_ptr2_t)(uint8_t *msg, uint8_t len);
@@ -56,10 +60,7 @@ class MidiClass {
 
 public:
   midi_state_t in_state;
-  midi_state_t live_state; // state used for MIDI messages received on UART (not
-                           // processed by loop)
   uint8_t last_status;
-  uint8_t running_status;
   uint8_t in_msg_len;
   uint8_t msg[3];
 
@@ -69,9 +70,10 @@ public:
 
   uint8_t callback;
   //  midi_callback_t callbacks[7];
-  CallbackVector1<MidiCallback, 8, uint8_t *> midiCallbacks[7];
+  CallbackVector1<MidiCallback, NUM_MIDI_CALLBACKS, uint8_t *> midiCallbacks[7];
 #ifdef HOST_MIDIDUINO
-  CallbackVector2<MidiCallback, 8, uint8_t *, uint8_t> messageCallback;
+  CallbackVector2<MidiCallback, NUM_MIDI_CALLBACKS, uint8_t *, uint8_t>
+      messageCallback;
 #endif
 
   bool midiActive;
@@ -191,4 +193,3 @@ public:
 
   /* @} */
 };
-

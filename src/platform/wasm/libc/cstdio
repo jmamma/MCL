@@ -1,0 +1,9 @@
+// cstdio — C++ wrapper.
+#pragma once
+#include <stdio.h>
+namespace std {
+    using ::FILE;
+    using ::snprintf; using ::vsnprintf; using ::sprintf;
+    using ::printf; using ::fprintf; using ::vfprintf;
+    using ::puts; using ::fputs; using ::fputc; using ::putchar;
+}

@@ -35,8 +35,10 @@
 #define MDX_KEY_CLEAR 0x35
 #define MDX_KEY_PASTE 0x36
 #define MDX_KEY_REALTIME 0x37
+#define MDX_KEY_PAGE 0x38
 #define MDX_KEY_FUNCYES 0x3A
 #define MDX_KEY_FUNCEXTENDED 0x3B
+#define MDX_KEY_SPS 0x3C
 
 #include "Task.h"
 
@@ -68,16 +70,13 @@ class MidiClass;
 class KeyInterface : public MidiSysexListenerClass {
 
 public:
-  bool state = false;
+  bool state;
   uint64_t cmd_key_state;
   uint64_t ignore_next_mask;
   uint16_t last_clock;
   bool throttle;
 
-  KeyInterface() : MidiSysexListenerClass() {
-    ids[0] = 0x7F;
-    ids[1] = 0x0D;
-  }
+  KeyInterface() : MidiSysexListenerClass(NULL, 0x7F, 0x0D) {}
   void setup(MidiClass *_midi);
   void ignoreNextEvent(uint8_t i) {
     SET_BIT64(ignore_next_mask, i);
@@ -85,7 +84,13 @@ public:
   void ignoreNextEventClear(uint8_t i) {
     CLEAR_BIT64(ignore_next_mask, i);
   }
+  void set_key_state(uint8_t key, bool down);
+  void post_key_event(uint8_t key, bool key_release);
   void key_event(uint8_t key, bool key_release);
+  bool event_func_down(const gui_event_t *event) {
+    return is_key_down(MDX_KEY_FUNC) ||
+           (event != NULL && (event->modifiers & EVENT_MODIFIER_FUNC));
+  }
 
   bool on(bool clear_states = true);
   bool off();
@@ -97,6 +102,9 @@ public:
   virtual void end();
   bool is_key_down(uint8_t key) { return IS_BIT_SET64(cmd_key_state, key); }
   void send_md_leds(TrigLEDMode mode = TRIGLED_EXCLUSIVE);
+  void send_trig_leds(TrigLEDMode mode = TRIGLED_EXCLUSIVE) {
+    send_md_leds(mode);
+  }
   void cleanup();
   /* @} */
 };

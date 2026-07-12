@@ -1,0 +1,15 @@
+// new — minimal <new> for placement-new only (MCL doesn't allocate via
+// `new T(...)` on wasm; it just constructs objects into pre-existing
+// storage). The signature must exactly match the standard placement-new.
+#pragma once
+#include <stddef.h>
+
+inline void* operator new  (size_t /*sz*/, void* p) noexcept { return p; }
+inline void* operator new[](size_t /*sz*/, void* p) noexcept { return p; }
+inline void  operator delete  (void*, void*) noexcept {}
+inline void  operator delete[](void*, void*) noexcept {}
+
+namespace std {
+struct nothrow_t { explicit nothrow_t() = default; };
+extern const nothrow_t nothrow;
+}

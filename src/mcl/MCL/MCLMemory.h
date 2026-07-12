@@ -4,6 +4,7 @@
 
 #include "Arduino.h"
 #include "memory.h"
+#include "MCLDefines.h"
 
 #define EXT_TRACKS
 #define LFO_TRACKS
@@ -13,7 +14,19 @@ constexpr size_t GRID_WIDTH = 16;
 constexpr size_t GRID_LENGTH = 128;
 constexpr size_t GRID_SLOT_BYTES = 4096;
 
+using GridIndex = uint8_t;
+using GridColumn = uint8_t;
+using GridRow = uint8_t;
+using GridSlot = uint8_t;
+using GridSpan = uint8_t;
+
+static_assert(GRID_LENGTH < 255,
+              "GridRow must hold all project rows, the clipboard row, and 255 sentinel");
+static_assert(GRID_WIDTH * NUM_GRIDS < 255,
+              "GridSlot must hold the full logical grid width and 255 sentinel");
+
 constexpr size_t PRJ_NAME_LEN = 14;
+constexpr size_t PRJ_PATH_LEN = 64;
 
 constexpr size_t NUM_SLOTS = GRID_WIDTH * NUM_GRIDS;
 
@@ -40,30 +53,39 @@ constexpr size_t NUM_INSTRUMENT_TRACKS = (NUM_MD_TRACKS + NUM_EXT_TRACKS);
 constexpr size_t NUM_AUX_TRACKS = 3;
 
 constexpr size_t GRIDCHAIN_TRACK_NUM = 10;
-constexpr size_t PERF_TRACK_NUM = 11;
+constexpr size_t LEGACY_PERF_TRACK_NUM = 11;
 constexpr size_t MDFX_TRACK_NUM = 12; //position of MDFX track in grid
-constexpr size_t MDLFO_TRACK_NUM = 13; //position of MDLFO track in grid
+constexpr size_t MDLFO_TRACK_NUM = 13; // legacy MD master LFO grid slot
+constexpr size_t PERF_TRACK_NUM = 13;
 constexpr size_t MDROUTE_TRACK_NUM = 14; //position of MDROUTE track in grid
 constexpr size_t MDTEMPO_TRACK_NUM = 15; //position of MDTEMPO track in grid
 
-constexpr size_t NUM_LFO_TRACKS = 1;
+constexpr size_t NUM_GRID_X_LFO_TRACKS = NUM_MD_TRACKS;
+constexpr size_t NUM_GRID_Y_LFO_TRACKS = NUM_EXT_TRACKS;
+
+#if defined(__AVR__)
+constexpr uint8_t EXT_NOTE_CLIP_MAX_NOTES = 128;
+#else
+constexpr uint8_t EXT_NOTE_CLIP_MAX_NOTES = 255;
+#endif
 
 constexpr size_t NUM_PERF_PARAMS = 16;
 constexpr size_t NUM_SCENES = 8;
 
-constexpr size_t NUM_TRIG_CONDITIONS = 14;
+constexpr size_t NUM_TRIG_CONDITIONS = 51;
 constexpr size_t NUM_LOCKS = 8;
 // as of commit  33e243afc758081dc6eb244e42ae61e1e0de09c0
 // the track sizes are:
 // GridTrack 7
 // DeviceTrack 7
-// MDTrack 534
+// MDTrack 534, plus SeqTrackModData 51, native swing/slide storage 16,
+// plus TrackLoadFadeData 8
 // ExtTrack 1754
-// A4Track 2094
-// EmptyTrack 2094
+// A4Track 2153
+// EmptyTrack matches GRID2_TRACK_LEN storage
 //
 // MDLFOTrack 226
-// MDRouteTrack 25
+// MDRouteTrack 39
 // MDFXTrack 43
 // MDTempoTrack 11
 
@@ -71,15 +93,22 @@ constexpr size_t NUM_LOCKS = 8;
 #define MEMORY_ALIGN(size) (size)  // for avr, dont align
 #endif
 
-constexpr size_t GRID1_TRACK_LEN = MEMORY_ALIGN(534);
-constexpr size_t GRID2_TRACK_LEN = MEMORY_ALIGN(2094);
+constexpr size_t GRID1_TRACK_LEN = MEMORY_ALIGN(619); // MDTrack + SeqTrackModData + masks + load fade
+#if !defined(__AVR__)
+// Non-AVR grid-2 cache slots can carry enhanced MIDI/TBD tracks. Hosted
+// builds also need the enlarged slot because native pointers grow several
+// MCL structs past the 2128-byte budget that AVR assumes.
+constexpr size_t GRID2_TRACK_LEN = MEMORY_ALIGN(GRID_SLOT_BYTES);
+#else
+constexpr size_t GRID2_TRACK_LEN = MEMORY_ALIGN(2160);
+#endif
 
 constexpr size_t DEVICE_TRACK_LEN = MEMORY_ALIGN(7);
 constexpr size_t MDLFO_TRACK_LEN = MEMORY_ALIGN(226);
-constexpr size_t MDROUTE_TRACK_LEN = MEMORY_ALIGN(25);
+constexpr size_t MDROUTE_TRACK_LEN = MEMORY_ALIGN(39);
 constexpr size_t MDFX_TRACK_LEN = MEMORY_ALIGN(43);
 constexpr size_t MDTEMPO_TRACK_LEN = MEMORY_ALIGN(11);
-constexpr size_t PERF_TRACK_LEN = MEMORY_ALIGN(491);
+constexpr size_t PERF_TRACK_LEN = MEMORY_ALIGN(509);
 constexpr size_t GRIDCHAIN_TRACK_LEN = MEMORY_ALIGN(551);
 
 #ifdef EXT_TRACKS
@@ -90,6 +119,19 @@ constexpr size_t EMPTY_TRACK_LEN = GRID1_TRACK_LEN - DEVICE_TRACK_LEN;
 
 // Total size of main grid cache for MD tracks
 constexpr size_t MD_CACHE_LEN = GRID1_TRACK_LEN * NUM_MD_TRACKS;
+
+#ifdef MCL_HAS_SPSX_TRACKS
+// SPSX tracks carry SPSMachine (34 params + 2 LFOs) + SeqDataUnion + extras.
+// Sized with headroom; static_assert in SPSXTrack.h enforces fit.
+constexpr size_t SPSX_TRACK_LEN = MEMORY_ALIGN(1160);
+constexpr size_t SPSX_CACHE_LEN = SPSX_TRACK_LEN * NUM_MD_TRACKS;
+#endif
+
+#if defined(PLATFORM_TBD)
+// DEV1 TBD tracks carry StepSeqTrackData plus the authoritative P4 sound map.
+constexpr size_t TBD_TRACK_LEN = MEMORY_ALIGN(2048);
+constexpr size_t TBD_CACHE_LEN = TBD_TRACK_LEN * 16;
+#endif
 
 // Total size of auxiliary tracks cache
 constexpr size_t AUX_CACHE_LEN = GRIDCHAIN_TRACK_LEN +
@@ -115,6 +157,12 @@ extern uint8_t md_cache[MD_CACHE_LEN];
 extern uint8_t aux_cache[AUX_CACHE_LEN];
 extern uint8_t ext_cache[EXT_CACHE_LEN];
 extern uint8_t filebrowser_cache[FILEBROWSER_CACHE_LEN];
+#ifdef MCL_HAS_SPSX_TRACKS
+extern uint8_t spsx_cache[SPSX_CACHE_LEN];
+#endif
+#if defined(PLATFORM_TBD)
+extern uint8_t tbd_cache[TBD_CACHE_LEN];
+#endif
 
 // Declare the start addresses as external constants. They are not `constexpr` because their
 // values (the array addresses) are resolved at link-time. We use `uintptr_t` as it is
@@ -122,6 +170,12 @@ extern uint8_t filebrowser_cache[FILEBROWSER_CACHE_LEN];
 extern const uintptr_t BANK1_MD_TRACKS_START;
 extern const uintptr_t BANK1_AUX_TRACKS_START;
 extern const uintptr_t BANK1_EXT_TRACKS_START;
+#ifdef MCL_HAS_SPSX_TRACKS
+extern const uintptr_t BANK1_SPSX_TRACKS_START;
+#endif
+#if defined(PLATFORM_TBD)
+extern const uintptr_t BANK1_TBD_TRACKS_START;
+#endif
 
 extern const uintptr_t BANK1_GRIDCHAIN_TRACK_START;
 extern const uintptr_t BANK1_PERF_TRACK_START;
@@ -141,6 +195,9 @@ extern const uintptr_t BANK3_FILE_ENTRIES_END;
 constexpr size_t BANK1_MD_TRACKS_START = (BANK1_SYSEX3_DATA_START + SYSEX3_DATA_LEN);
 constexpr size_t BANK1_AUX_TRACKS_START = BANK1_MD_TRACKS_START + MD_CACHE_LEN;
 constexpr size_t BANK1_EXT_TRACKS_START = BANK1_AUX_TRACKS_START + AUX_CACHE_LEN;
+#if defined(PLATFORM_TBD)
+constexpr size_t BANK1_TBD_TRACKS_START = BANK1_EXT_TRACKS_START + EXT_CACHE_LEN;
+#endif
 
 // Define track starts as offsets within the contiguous auxiliary region.
 constexpr size_t BANK1_GRIDCHAIN_TRACK_START = BANK1_AUX_TRACKS_START;

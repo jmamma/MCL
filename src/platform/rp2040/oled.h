@@ -63,14 +63,17 @@ public:
   Oled(uint16_t w, uint16_t h, SPIClass *spi, int8_t dc_pin, int8_t rst_pin,
        int8_t cs_pin, uint32_t bitrate = 8000000UL)
       : DISPLAY_TYPE(w, h, spi, dc_pin, rst_pin, cs_pin, bitrate) {}
-  uint16_t textbox_delay;
   uint16_t textbox_clock;
   char textbox_str[17];
   char textbox_str2[17];
   bool textbox_enabled = false;
 
-  virtual void textbox(const char *text, const char *text2,
-                       uint16_t delay = 800);
+  static constexpr uint16_t delay_time = 800;
+
+  void init_textbox();
+  void textbox(const char *text, const char *text2);
+  void textbox_P(const char *text_P, const char *text2_P);
+  void textbox_P(const char *text_P);
 
   void init_display();
   void display();

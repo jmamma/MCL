@@ -7,6 +7,7 @@
 
 #ifdef PLATFORM_TBD
 #include "Ui.h"
+#include "oled.h"
 #endif
 
 // Pin definitions - keeping original pins
@@ -70,14 +71,6 @@ ALWAYS_INLINE() uint16_t SR165Class::read16() {
 
 /**********************************************/
 
-EncodersClass::EncodersClass() {
-    clearEncoders();
-    for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
-        sr_old2s[i] = 0;
-    }
-    sr_old = 0;
-}
-
 void EncodersClass::clearEncoders() {
     for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
         ENCODER_NORMAL(i) = ENCODER_BUTTON(i) = 0;
@@ -112,27 +105,22 @@ void EncodersClass::poll(uint16_t sr) {
 
 void EncodersClass::pollTBD(const ui_data_t& ui_data) {
    for (uint8_t i = 0; i < GUI_NUM_ENCODERS && i < 4; i++) {
-        uint16_t current_pos = ui_data.pot_positions[i];
         volatile int8_t *val = &(ENCODER_NORMAL(i));
         volatile int8_t *button = &(ENCODER_BUTTON(i));
         *button = BUTTON_DOWN(i);
 
-        if (current_pos > pot_old_positions[i]) {
-          (*val)++;
+        // rev_c: use pot_states bits (BIT0=fwd, BIT1=bwd)
+        if (ui_data.pot_states[i] & (1 << 0)) {
+          if (*val < 64) (*val)++;
         }
-        if (current_pos < pot_old_positions[i]) {
-          (*val)--;
+        if (ui_data.pot_states[i] & (1 << 1)) {
+          if (*val > -64) (*val)--;
         }
-        pot_old_positions[i] = current_pos;
    }
 }
 
 
 /**********************************************/
-
-ButtonsClass::ButtonsClass() {
-    clear();
-}
 
 void ButtonsClass::clear() {
     for (uint8_t i = 0; i < GUI_NUM_BUTTONS; i++) {
@@ -150,54 +138,117 @@ void ButtonsClass::poll(uint8_t but) {
         but_tmp >>= 1;
     }
 }
+
+#ifdef PLATFORM_TBD
+bool ButtonsClass::is_encoder_tap(uint8_t encoder_idx, uint16_t max_ms) const {
+  if (encoder_idx >= GUI_NUM_ENCODERS) return false;
+  if (!enc_tap_armed[encoder_idx]) return false;
+  const bool long_seen[4] = {enc1_long_press_seen, enc2_long_press_seen,
+                             enc3_long_press_seen, enc4_long_press_seen};
+  const bool rot_seen[4] = {enc1_rotated_while_held, enc2_rotated_while_held,
+                            enc3_rotated_while_held, enc4_rotated_while_held};
+  if (long_seen[encoder_idx] || rot_seen[encoder_idx]) return false;
+  return clock_diff(enc_press_ms[encoder_idx], read_clock_ms()) <= max_ms;
+}
+
+bool ButtonsClass::handle_encoder_tap(uint8_t encoder_idx, bool is_press,
+                                      uint16_t max_ms) {
+  if (encoder_idx >= GUI_NUM_ENCODERS) return false;
+  if (is_press) {
+    enc_press_ms[encoder_idx] = read_clock_ms();
+    enc_tap_armed[encoder_idx] = true;
+    return false;
+  }
+
+  const bool tap = is_encoder_tap(encoder_idx, max_ms);
+  enc_tap_armed[encoder_idx] = false;
+  return tap;
+}
+#endif
+
+// TBD ui_data bits are set when the physical button is pressed. MCL's
+// button store is active-low, so these helpers return true when released.
+#define TBD_BUTTON_TOP_LEFT(ui)   (!((ui).f_btns   & (1 << 0)))
+#define TBD_BUTTON_TOP_RIGHT(ui)  (!((ui).f_btns   & (1 << 1)))
+#define TBD_BUTTON_ENC(ui, n)     (!((ui).f_btns   & (1 << ((n) + 2)))) // n=0..3
+#define TBD_BUTTON_LEFT(ui)       (!((ui).mcl_btns & (1 << 0)))
+#define TBD_BUTTON_DOWN(ui)       (!((ui).mcl_btns & (1 << 1)))
+#define TBD_BUTTON_RIGHT(ui)      (!((ui).mcl_btns & (1 << 2)))
+#define TBD_BUTTON_UP(ui)         (!((ui).mcl_btns & (1 << 3)))
+#define TBD_BUTTON_A(ui)          (!((ui).mcl_btns & (1 << 4)))
+#define TBD_BUTTON_B(ui)          (!((ui).mcl_btns & (1 << 5)))
+#define TBD_BUTTON_X(ui)          (!((ui).mcl_btns & (1 << 6)))
+#define TBD_BUTTON_Y(ui)          (!((ui).mcl_btns & (1 << 7)))
+#define TBD_BUTTON_PLAY(ui)       (!((ui).mcl_btns & (1 << 8)))
+#define TBD_BUTTON_REC(ui)        (!((ui).mcl_btns & (1 << 9)))
+#define TBD_BUTTON_STOP(ui)       (!((ui).mcl_btns & (1 << 10)))
+#define TBD_BUTTON_FUNC(ui)       (!((ui).mcl_btns & (1 << 11)))
+#define TBD_BUTTON_TRIG(ui, n)    (!((ui).d_btns  & (1 << (n)))) // n=0..15
+
 void ButtonsClass::pollTBD(const ui_data_t& ui_data) {
-  //MCL Buttons
+  // Per-press tap-detection latches for all 4 encoders. Each clears on
+  // the press edge, then latches if (a) the panel flagged a long-press
+  // or (b) the encoder rotated while held. Both must remain false at
+  // release for tbd_handleEvent to honor the tap. Must run BEFORE
+  // STORE_B_CURRENT so B_OLD still reflects last cycle.
+  // f_btns_long_press bit (n+2) for ENCn; pot_states[n] for rotation.
+  // TBD_BUTTON_ENC follows MCL's stored convention (1 = released, 0 = pressed),
+  // so a pressed predicate negates it. B_OLD likewise: !B_OLD == pressed.
+  {
+    bool *long_seen[4]  = {&enc1_long_press_seen,    &enc2_long_press_seen,
+                           &enc3_long_press_seen,    &enc4_long_press_seen};
+    bool *rot_seen[4]   = {&enc1_rotated_while_held, &enc2_rotated_while_held,
+                           &enc3_rotated_while_held, &enc4_rotated_while_held};
+    for (uint8_t n = 0; n < 4; n++) {
+      const bool was_pressed = !B_OLD(ENCODER1 + n);
+      const bool is_pressed  = !TBD_BUTTON_ENC(ui_data, n);
+      if (is_pressed && !was_pressed) {
+        *long_seen[n] = false;
+        *rot_seen[n]  = false;
+      }
+      if (is_pressed) {
+        if (ui_data.f_btns_long_press & (1 << (n + 2))) *long_seen[n] = true;
+        if (ui_data.pot_states[n] & 0x03)               *rot_seen[n]  = true;
+      }
+    }
+  }
 
+  // Encoder click buttons. ENC1 click no longer drives BUTTON2 — BUTTON2
+  // is sourced from the TOP_LEFT button below.
   for (uint8_t i = 0; i < 4; i++) {
-    bool state = ui_data.f_btns & (1 << i);
-    uint8_t button_id = BUTTON1 + i;
-    switch (button_id) {
-      case BUTTON1:
-      case BUTTON2:
-        break;
-      case BUTTON3:
-        button_id = BUTTON4;
-        break;
-      case BUTTON4:
-        button_id = BUTTON3;
-        break;
-    }
-    STORE_B_CURRENT(button_id, !state);
+    STORE_B_CURRENT(ENCODER1 + i, TBD_BUTTON_ENC(ui_data, i));
   }
 
-  for(int i=0;i<13;i++){
-    bool state = ui_data.mcl_btns & (1 << i);
-    bool long_press = ui_data.mcl_btns_long_press & (1 << i);
-    //9 Function Buttons
-    if (i < 9) {
-      //Arrow Key
-      uint8_t button_id = i + FUNC_BUTTON1;
-      if (button_id >= FUNC_BUTTON6) {
-          STORE_B_CURRENT(button_id, !state);
-        if (long_press) {
-          SET_B_LONG_CLICK(button_id);
-        }
-      }
-      else {
-        STORE_B_CURRENT(button_id, !state);
-      }
-    }
-    //4 Encoder Buttons
-    else {
-      STORE_B_CURRENT(i - 9 + ENCODER1, !state);
-    }
-  }
-  //Sequencer Buttons
-  for(int i=0;i<16;i++){
-     bool state = ui_data.d_btns & (1 << i);
-     STORE_B_CURRENT(i + TRIG_BUTTON1, !state);
-  }
+  // Arrow cluster (left -> up -> down -> right)
+  STORE_B_CURRENT(FUNC_BUTTON7, TBD_BUTTON_LEFT(ui_data));
+  STORE_B_CURRENT(FUNC_BUTTON6, TBD_BUTTON_UP(ui_data));
+  STORE_B_CURRENT(FUNC_BUTTON8, TBD_BUTTON_DOWN(ui_data));
+  STORE_B_CURRENT(FUNC_BUTTON9, TBD_BUTTON_RIGHT(ui_data));
 
+  // Transport row (play / rec / stop / func)
+  STORE_B_CURRENT(FUNC_BUTTON2, TBD_BUTTON_PLAY(ui_data));
+  STORE_B_CURRENT(FUNC_BUTTON1, TBD_BUTTON_REC(ui_data));
+  STORE_B_CURRENT(FUNC_BUTTON3, TBD_BUTTON_STOP(ui_data));
+  STORE_B_CURRENT(FUNC_BUTTON5, TBD_BUTTON_FUNC(ui_data));
+
+  // Universal MCL slots and 2x2 cluster, post-remap:
+  //   TOP_LEFT  -> BUTTON2 (TBD panel: opens PageSelect)
+  //   TOP_RIGHT -> TBD_BUTTON_TR (mode/action button; SPS currently uses it)
+  //   MCL_Y     -> BUTTON1 (universal NO/save/cancel; SPS-latched: MD NO)
+  //   MCL_X     -> BUTTON4 (universal YES/load/confirm; SPS-latched: MD YES)
+  //   MCL_A     -> BUTTON3 (MCL shift; SPS-latched: MD NO)
+  //   MCL_B     -> TBD_BUTTON_B (cluster B; SPS-latched: MD SCALE)
+  STORE_B_CURRENT(BUTTON2, TBD_BUTTON_TOP_LEFT(ui_data));
+  STORE_B_CURRENT(TBD_BUTTON_TR, TBD_BUTTON_TOP_RIGHT(ui_data));
+  STORE_B_CURRENT(BUTTON3, TBD_BUTTON_A(ui_data));
+  STORE_B_CURRENT(BUTTON4, TBD_BUTTON_X(ui_data));
+  STORE_B_CURRENT(BUTTON1, TBD_BUTTON_Y(ui_data));
+  STORE_B_CURRENT(TBD_BUTTON_B, TBD_BUTTON_B(ui_data));
+
+  // Sequencer Buttons
+  for (int i = 0; i < 16; i++) {
+    STORE_B_CURRENT(i + TRIG_BUTTON1, TBD_BUTTON_TRIG(ui_data, i));
+  }
 }
 
 void GUIHardware::poll() {
@@ -216,7 +267,6 @@ void GUIHardware::poll() {
         GUI.events.pollEvents();
     }
 #else
-    //tbd_ui.Poll();
     if (tbd_ui.UpdateUIInputs()) {
       ui_data_t ui_data_current = tbd_ui.CopyUiData();
       if (ui_data_current.systicks != last_ui_systicks) {
@@ -255,6 +305,13 @@ void GUIHardware::init() {
     tbd_ui.InitLeds();
     tbd_ui.strip.show();
     tbd_ui.strip.setBrightness(5);
+    // InitHardware primes a stable copy before starting the async read loop.
+    ui_data_t ui_data_current = tbd_ui.CopyUiData();
+    Buttons.clear();
+    Buttons.pollTBD(ui_data_current);
+    Encoders.pollTBD(ui_data_current);
+    last_ui_systicks = ui_data_current.systicks;
+    tbd_ui.UpdateUIInputs();
 #endif
 }
 

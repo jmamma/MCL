@@ -5,11 +5,13 @@
 #include "platform.h"
 #include "irqs.h"
 #include "StackMonitor.h"
+#if !defined(PLATFORM_WASM)
 #include "MidiTest.h"
+#endif
 #include "ISRTiming.h"
 #include "oled.h"
 #include "SdFat.h"
-#include "PageSelectPage.h"
+#include "GUI/Pages/PageSelectPage.h"
 #include "SdFat.h"
 
 void setup() {
@@ -17,7 +19,7 @@ void setup() {
   DEBUG_PRINTLN("debug mode online");
   GUI_hardware.init();
   delay(2000);
-#ifndef DEBUGMODE
+#if !defined(DEBUGMODE) || !defined(__AVR__)
   MidiUartUSB.init();
   #ifdef RUNNING_STATUS_OUT
   MidiUartUSB.running_status_out = 0;
@@ -25,6 +27,9 @@ void setup() {
 #endif
   MidiUart.init();
   MidiUart2.init();
+#ifdef PLATFORM_TBD
+  MidiUartP4.init();
+#endif
   setup_irqs();
 
 #if !defined(PLATFORM_TBD) && !defined(__AVR__)
@@ -34,7 +39,7 @@ void setup() {
 }
 
 void loop() {
-#if defined(DEBUGMODE) && !defined(__AVR__)
+#if defined(DEBUGMODE) && !defined(__AVR__) && !defined(PLATFORM_WASM)
    debugBuffer.transmit();
    ISRTiming::print_stats();
 #endif

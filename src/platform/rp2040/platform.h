@@ -58,6 +58,7 @@ extern volatile uint32_t interrupt_lock_count;
 
 #define ALWAYS_INLINE() __attribute__((always_inline))
 #define FORCED_INLINE() __attribute__((always_inline))
+#define NOINLINE() __attribute__((noinline))
 
 extern uint8_t SW_IRQ1;
 extern uint8_t SW_IRQ2;
@@ -110,6 +111,9 @@ inline bool isInInterrupt() {
     __asm volatile ("mrs %0, IPSR" : "=r" (ipsr));
     return ipsr != 0;  // Non-zero value means we're in an exception/interrupt handler
 }
+
+inline void platform_poll() {}
+inline void platform_wait_poll() {}
 
 // Debug macros - only active when DEBUGMODE is defined
 #ifdef DEBUGMODE

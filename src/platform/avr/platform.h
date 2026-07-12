@@ -52,6 +52,7 @@ extern volatile uint32_t interrupt_lock_count;
     #define ALWAYS_INLINE() __attribute__((always_inline))
     #define FORCED_INLINE() __attribute__((always_inline))
 #endif
+#define NOINLINE() __attribute__((noinline))
 
 // C++ specific functionality
 #ifdef __cplusplus
@@ -64,6 +65,9 @@ extern DebugBuffer debugBuffer;
 inline bool isInInterrupt() {
     return !(SREG & (1 << SREG_I));  // Return true if Global Interrupt Enable bit is cleared
 }
+
+inline void platform_poll() {}
+inline void platform_wait_poll() {}
 
 // Debug macros - only active when DEBUGMODE is defined
 #ifdef DEBUGMODE
@@ -131,4 +135,3 @@ inline bool isInInterrupt() {
 #define DEBUG_PRINT_FN(fmt)
 
 #endif // __cplusplus
-

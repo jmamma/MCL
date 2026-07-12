@@ -4,24 +4,35 @@
 #define MCLSYSCONFIG_H__
 
 #include "MCLSd.h"
+#include "MCLMemory.h"
+#include "Sequencer/PtcGroups.h"
 
-#define CONFIG_VERSION 4011
+#define CONFIG_VERSION_SAMPLE_BANK_LINK 4021
+#define CONFIG_VERSION CONFIG_VERSION_SAMPLE_BANK_LINK
+
+#define MD_SAMPLE_BANK_OFF 0
+#define MD_SAMPLE_BANK_FIXED_FIRST 1
+#define MD_SAMPLE_BANK_FIXED_LAST 128
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
+#define MD_POLY_MODE_INT 0
+#define MD_POLY_MODE_INT_EXT 1
 
 extern void mclsys_apply_config();
 extern void mclsys_apply_config_midi();
+extern void mclsys_normalize_midi_config();
 
 extern void usb_os_update();
 extern void usb_dfu_mode();
 extern void usb_disk_mode();
 extern void mcl_setup();
 
-class MCLSysConfigData {
+// Persisted verbatim in config.mcls and ProjectHeader.
+class ATTR_PACKED() MCLSysConfigData {
 public:
   uint32_t version;
-  char project[16];
+  char project[PRJ_PATH_LEN];
   uint8_t number_projects;
   uint8_t uart1_turbo_speed;
   uint8_t uart2_turbo_speed;
@@ -30,12 +41,13 @@ public:
   uint8_t clock_rec;
   uint8_t drumRouting[16];
   uint8_t routing[24];
-  uint8_t row;
-  uint8_t col;
-  uint8_t cur_row;
-  uint8_t cur_col;
+  GridRow row;
+  GridColumn col;
+  GridRow cur_row;
+  GridColumn cur_col;
   uint16_t poly_mask;
   uint8_t uart2_ctrl_chan;
+  // Legacy poly-channel byte: 0 = INT; nonzero legacy channel/1 = INT+EXT.
   uint8_t uart2_poly_chan;
   uint8_t uart2_prg_in;
   uint8_t uart2_prg_out;
@@ -59,7 +71,7 @@ public:
   uint8_t track_select;
   uint16_t track_type_select;
   uint8_t uart2_device;
-  uint8_t uart_cc_loopback;
+  uint8_t uart_cc_fwd;
   uint8_t usb_mode;
   uint8_t midi_transport_rec;
   uint8_t midi_transport_send;
@@ -70,11 +82,25 @@ public:
   uint8_t uart2_cc_level;
   uint8_t uart1_device;
   uint8_t grid_page_mode;
+  uint8_t uart_note_fwd;
+  uint8_t usb_device;
+  uint8_t grid_x_device;
+  uint8_t grid_x_port;
+  uint8_t grid_y_device;
+  uint8_t grid_y_port;
+  uint8_t ptc_group[PTC_GROUP_TRACKS];
+  uint8_t project_config;
+  uint8_t md_sample_bank;
+  uint8_t md_sample_bank_capture;
+  uint8_t active_arrangement_idx;
 };
+
+static_assert(sizeof(MCLSysConfigData) == 185,
+              "persisted system config layout changed");
 
 class MCLSysConfig : public MCLSysConfigData {
 public:
-  uint16_t cfg_save_lastclock = 0;
+  uint16_t cfg_save_lastclock;
   File cfgfile;
   bool write_cfg();
   bool cfg_init();

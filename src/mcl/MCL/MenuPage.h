@@ -5,7 +5,11 @@
 
 #include "GUI.h"
 #include "Menu.h"
-#include "MCLGfx.h"
+#include "GUI/MCLGfx.h"
+#include "MCLStrings.h"
+
+// Forward declaration for mcl_print_P used in template
+void mcl_print_P(const char* str_P);
 
 #ifdef OLED_DISPLAY
 #define MAX_VISIBLE_ROWS 4
@@ -27,28 +31,37 @@ public:
       : LightPage(e1, e2, e3, e4) {}
 
   void draw_scrollbar(uint8_t x_offset);
-  void draw_item(uint8_t item_n, uint8_t row);
-  void draw_menu(uint8_t x_offset, uint8_t y_offset,
-                 uint8_t width = MENU_WIDTH);
+  void draw_item(MenuBase *menu, uint8_t item_n);
+  uint8_t draw_menu(uint8_t x_offset, uint8_t y_offset,
+                    uint8_t width = MENU_WIDTH, uint8_t scrollbar_width = 0);
+  void draw_right_menu(uint8_t width = 52) NOINLINE();
   void select_item(uint8_t item = 0) {
-  cur_row = 0;
-  encoders[1]->cur = 0;
-  encoders[1]->old = 0;
+    cur_row = 0;
+    selected_item = item;
+    encoders[1]->cur = item;
   }
-  void loop();
-  virtual void display();
-  void setup();
-  void init();
+  void loop() override;
+  void display() override;
+  void init() override;
+  void init(bool generate_row_names);
   bool enter();
   void exit();
-  void cleanup();
+  void cleanup() override;
   void gen_menu_device_names();
-  void gen_menu_row_names();
-  void gen_menu_transpose_names();
-  virtual bool handleEvent(gui_event_t *event);
+  bool handleEvent(gui_event_t *event) override;
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+  virtual bool handleMouseEvent(mcl_mouse_event_t *event) override;
+  bool handleMouseEventAt(mcl_mouse_event_t *event, int16_t x_offset,
+                          int16_t y_offset, int16_t width = MENU_WIDTH);
+#endif
 
 protected:
+  uint8_t selected_item = 0;
+
   virtual MenuBase *get_menu() = 0;
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+  bool selectMouseItem(uint8_t item, uint8_t row);
+#endif
 };
 
 template <int N> class MenuPage : public MenuPageBase {
@@ -88,7 +101,7 @@ public:
 #else
     uint16_t checksum_value = firmware_checksum;
 #endif
-    oled_display.print("0x");
+    mcl_print_P(mclstr_hex_prefix);
     oled_display.print(checksum_value,HEX);
   }
 

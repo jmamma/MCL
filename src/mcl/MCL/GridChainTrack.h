@@ -3,7 +3,7 @@
 #pragma once
 
 #include "AUXTrack.h"
-#include "GridCHain.h"
+#include "Grid/GridChain.h"
 
 class ATTR_PACKED() GridChainTrack : public AUXTrack {
 public:
@@ -18,22 +18,26 @@ public:
     static_assert(sizeof(GridChainTrack) <= GRIDCHAIN_TRACK_LEN);
   }
 
-  void init() {}
+  void init() { chains.init(); }
+  void init_defaults() override { init(); }
 
-  bool store_in_grid(uint8_t column, uint16_t row,
+  virtual void get_online_data(uint8_t merge) override;
+  bool store_in_grid(GridSlot column, GridRow row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false);
 
-  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
+  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) override;
   void get_chains();
   void place_chains();
 
-  virtual uint16_t get_track_size() { return _sizeof(); }
-  virtual uintptr_t get_region() { return BANK1_GRIDCHAIN_TRACK_START; }
+  virtual uint16_t get_track_size() override { return _sizeof(); }
+  virtual uintptr_t get_region() override { return BANK1_GRIDCHAIN_TRACK_START; }
 
-  virtual uint8_t get_model() { return GRIDCHAIN_TRACK_TYPE; }
-  virtual uint8_t get_device_type() { return GRIDCHAIN_TRACK_TYPE; }
-
-  virtual void *get_sound_data_ptr() { return this; }
-  virtual size_t get_sound_data_size() { return sizeof(GridChain); }
+  uint16_t grid_slot_label(GridSlotLabelContext ctx) override {
+    (void)ctx;
+    return make_grid_slot_label('C', 'N');
+  }
+  virtual uint8_t get_model() override { return GRIDCHAIN_TRACK_TYPE; }
+  virtual void *get_sound_data_ptr() override { return &chains; }
+  virtual size_t get_sound_data_size() override { return sizeof(GridChain); }
 };

@@ -71,8 +71,8 @@ public:
     : ElektronSysexDecoder(_data) { 
       mnm_decoder_init();
   }
-  MNMSysexDecoder(MidiClass *_midi = nullptr, uint16_t _offset = 0)
-    : ElektronSysexDecoder(_midi, _offset) {
+  MNMSysexDecoder(const SysexView &_sysexView, uint16_t _offset)
+    : ElektronSysexDecoder(_sysexView, _offset) {
       mnm_decoder_init();
   }
 

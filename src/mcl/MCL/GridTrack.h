@@ -23,60 +23,103 @@
 
 #define GRIDCHAIN_TRACK_TYPE 15
 #define PERF_TRACK_TYPE 16
+#define MDSPSX_TRACK_TYPE 17
+#define TBD_TRACK_TYPE 18
+#define TBD_MIDI_TRACK_TYPE 19
+#define MD_ROUTE_TRACK_TYPE 20
+#define MIDI_TRACK_TYPE 21
+#define A4_MIDI_TRACK_TYPE 22
+#define MNM_MIDI_TRACK_TYPE 23
 
 #define NULL_TRACK_TYPE 128
 #define EMPTY_TRACK_TYPE 0
 
-#include "GridLink.h"
+#include "Grid/GridLink.h"
 #include "MCLMemory.h"
-#include "SeqTrack.h"
+#include "Sequencer/SeqTrack.h"
 
 class Grid;
+class SeqTrack;
+
+struct GridSlotLabelContext {
+  uint8_t model;
+  GridColumn column;
+#if defined(PLATFORM_TBD)
+  GridSlot slot;
+  GridRow row;
+#endif
+};
+
+constexpr uint16_t make_grid_slot_label(char a, char b) {
+  return ((uint16_t)(uint8_t)a << 8) | (uint8_t)b;
+}
+
+class ATTR_PACKED() GridTrackStorageHeader {
+public:
+  uint8_t version = 0;
+  uint8_t reserved = 0;
+  uint8_t active = EMPTY_TRACK_TYPE;
+  GridLink link;
+};
+
+static_assert(sizeof(GridTrackStorageHeader) == 7,
+              "GridTrack storage header layout changed");
 
 class ATTR_PACKED() GridTrack {
 public:
-  uint8_t version[2]; //Padding
+  static constexpr uint8_t FLAG_SKIP_SOUND = 1 << 0;
+  static constexpr uint16_t STORAGE_HEADER_SIZE =
+      sizeof(GridTrackStorageHeader);
+
+  uint8_t version = 0;
+  uint8_t reserved = 0;
   uint8_t active = EMPTY_TRACK_TYPE;
   GridLink link;
 
   size_t _sizeof() const {
-        return sizeof(GridTrack) - sizeof(void*);
+        return STORAGE_HEADER_SIZE;
   }
   void* _this() { return &version; }
 
   bool is_active() { return (active != EMPTY_TRACK_TYPE) && (active != 255); }
-  bool is_ext_track() { return (active == EXT_TRACK_TYPE || active == MNM_TRACK_TYPE || active == A4_TRACK_TYPE); }
+  bool is_ext_track() {
+    return active == EXT_TRACK_TYPE || active == MNM_TRACK_TYPE ||
+           active == A4_TRACK_TYPE || active == TBD_MIDI_TRACK_TYPE ||
+           active == MIDI_TRACK_TYPE
+#if !defined(__AVR__)
+           || active == A4_MIDI_TRACK_TYPE || active == MNM_MIDI_TRACK_TYPE
+#endif
+        ;
+  }
 
   // load header without data from grid
-  bool load_from_grid_512(uint8_t column, uint16_t row, Grid *grid = nullptr);
-  bool load_from_grid(uint8_t column, uint16_t row);
+  bool load_from_grid_512(GridSlot column, GridRow row, Grid *grid = nullptr);
+  bool load_from_grid(GridSlot column, GridRow row);
   // save header without data to grid
-  bool write_grid(void *data, size_t len, uint8_t column, uint16_t row, Grid *grid = nullptr);
+  bool write_grid(void *data, size_t len, GridSlot column, GridRow row, Grid *grid = nullptr);
+  bool storage_version_at_least(uint8_t min_version) const;
+  bool load_sound() const { return (link.speed & 0x80) == 0; }
+  void set_load_sound(bool enabled) {
+    if (enabled) {
+      link.speed &= 0x7F;
+    } else {
+      link.speed |= 0x80;
+    }
+  }
 
-  virtual bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr, uint8_t merge = 0, bool online = false, Grid *grid = nullptr);
+  virtual bool store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track = nullptr, uint8_t merge = 0, bool online = false, Grid *grid = nullptr);
 
   ///  caller guarantees that the type is reconstructed correctly
   ///  uploads from the runtime object to BANK1
-  bool store_in_mem(uint8_t column) {
-    uintptr_t pos = get_region() + static_cast<uintptr_t>(get_region_size() * static_cast<uint32_t>(column));
-    volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
-    memcpy_bank1(ptr, _this(), get_track_size());
-    return true;
-  }
+  bool store_in_mem(GridSlot column);
 
   ///  caller guarantees that the type is reconstructed correctly
   ///  downloads from BANK1 to the runtime object
-  bool load_from_mem(uint8_t column, size_t size = 0) {
-          uint16_t bytes = size ? size : get_track_size();
-    uintptr_t pos = get_region() + static_cast<uintptr_t>(get_region_size() * static_cast<uint32_t>(column));
-    volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
-    memcpy_bank1(_this(), ptr, bytes);
-    return true;
-  }
+  bool load_from_mem(GridSlot column, size_t size = 0);
 
  void init() {
     link.length = 16;
-    link.speed = SEQ_SPEED_1X;
+    link.set_speed(SEQ_SPEED_1X);
     link.loops = 0;
  }
 
@@ -88,9 +131,12 @@ public:
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {}
   virtual void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) { load_immediate(tracknumber, seq_track); }
 
-  virtual bool transition_cache(uint8_t tracknumber, uint8_t slotnumber) { return false; }
-  virtual void transition_send(uint8_t tracknumber, uint8_t slotnumber) {}
-  virtual void transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber);
+  virtual bool transition_cache(uint8_t tracknumber, GridSlot slotnumber) { return false; }
+  virtual void transition_send(uint8_t tracknumber, GridSlot slotnumber) {}
+  virtual void transition_load(uint8_t tracknumber, SeqTrack* seq_track, GridSlot slotnumber);
+#if !defined(__AVR__)
+  virtual uint8_t transition_countdown_resolution();
+#endif
   virtual void load_seq_data(SeqTrack *seq_track) {}
 
   virtual void paste_track(uint8_t src_track, uint8_t dest_track, SeqTrack *seq_track) {
@@ -98,14 +144,24 @@ public:
   }
 
   virtual uint16_t get_track_size() { return _sizeof(); }
+#if !defined(__AVR__)
+  virtual uint16_t get_store_size() { return get_track_size(); }
+#endif
   virtual uint16_t get_region_size() { return MEMORY_ALIGN(get_track_size()); }
   virtual uintptr_t get_region() { return BANK1_MD_TRACKS_START; }
   /* Calibrate data members on slot copy */
-  virtual void on_copy(int16_t s_col, int16_t d_col, bool destination_same) { }
+  virtual void on_copy(GridColumn s_col, GridColumn d_col, bool destination_same) { }
+  virtual uint16_t grid_slot_label(GridSlotLabelContext ctx) {
+    (void)ctx;
+    return 0;
+  }
   virtual uint8_t get_model() { return EMPTY_TRACK_TYPE; }
-  virtual uint8_t get_device_type() { return DEVICE_NULL; }
-  virtual uint8_t get_parent_model() { return NULL_TRACK_TYPE; }
-  virtual bool allow_cast_to_parent() { return false; }
+  virtual uint8_t storage_version() const { return 0; }
+  virtual void init_defaults() {}
+
+private:
+  void stamp_storage_version();
+  void repair_loaded_header();
 };
 
 #endif /* GRIDTRACK_H__ */

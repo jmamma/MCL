@@ -25,6 +25,10 @@
 
 #include "MidiUart.h"
 
+#ifndef NUM_CLOCK_CALLBACKS
+#define NUM_CLOCK_CALLBACKS 4
+#endif
+
 class ClockCallback {};
 
 typedef void (ClockCallback::*midi_clock_callback_ptr_t)(uint32_t count);
@@ -52,7 +56,21 @@ public:
 
   volatile uint8_t mod8_free_counter;
   volatile uint16_t div192_time;
+#if !defined(__AVR__)
+  volatile uint16_t div192th_countdown;
+#else
   volatile uint8_t div192th_countdown;
+#endif
+
+#if !defined(__AVR__)
+  volatile uint8_t clock_interpolation = 2; // 2=legacy(48PPQN), 16=SPSX(384PPQN)
+  volatile uint8_t interp_budget = 0;
+#endif
+#ifdef PLATFORM_TBD
+  static constexpr uint32_t INTERNAL_CLOCK_PHASE_TOP = 5000UL * 60UL;
+  volatile uint32_t internal_clock_phase = 0;
+  volatile uint32_t internal_clock_step = 120UL * 24UL;
+#endif
   volatile uint16_t clock_last_time;
 
   volatile uint16_t last_diff_clock8;
@@ -113,10 +131,16 @@ public:
   MidiUartClass *uart_clock_forward1;
   MidiUartClass *uart_clock_forward2;
   MidiUartClass *uart_clock_forward3;
+#ifdef PLATFORM_TBD
+  MidiUartClass *uart_clock_forward4;
+#endif
 
   MidiUartClass *uart_transport_forward1;
   MidiUartClass *uart_transport_forward2;
   MidiUartClass *uart_transport_forward3;
+#ifdef PLATFORM_TBD
+  MidiUartClass *uart_transport_forward4;
+#endif
 
   MidiClockClass();
 
@@ -215,6 +239,71 @@ public:
 
   volatile bool inCallback = false;
 
+  ALWAYS_INLINE() uint16_t div192th_ticks_per_16th() const {
+#if !defined(__AVR__)
+    uint8_t interpolation = clock_interpolation;
+    if (interpolation == 0) {
+      interpolation = 2;
+    }
+    return (uint16_t)(6u * interpolation);
+#else
+    return 12;
+#endif
+  }
+
+#if !defined(__AVR__)
+  ALWAYS_INLINE() void refreshClockInterpolationInterval() {
+#ifdef PLATFORM_TBD
+    if (mode == INTERNAL_MIDI) {
+      updateInternalClockInterval();
+      return;
+    }
+#endif
+    uint8_t interpolation = clock_interpolation;
+    if (interpolation == 0) {
+      interpolation = 2;
+    }
+    uint16_t ticks = diff_clock8 / (8u * interpolation);
+    div192_time = ticks ? ticks : 1;
+  }
+
+  ALWAYS_INLINE() void set_clock_interpolation(uint8_t interpolation) {
+    if (interpolation == 0) {
+      interpolation = 2;
+    }
+    if (clock_interpolation != interpolation) {
+      clock_interpolation = interpolation;
+      interp_budget = 0;
+      div192th_countdown = 0;
+      reset_clock_phase = true;
+    }
+    refreshClockInterpolationInterval();
+  }
+
+  uint32_t host_transport_tick96_to_div192(uint32_t host_tick96) const;
+  void set_transport_position(uint32_t host_tick96);
+#endif
+
+  ALWAYS_INLINE() uint32_t div16th_to_div192(uint32_t div16th,
+                                             uint8_t q12_offset = 0) const {
+#if defined(__AVR__)
+    return div16th * 12u + q12_offset;
+#else
+    const uint32_t ticks_per_16th = div192th_ticks_per_16th();
+    return div16th * ticks_per_16th +
+           ((uint32_t)q12_offset * ticks_per_16th) / 12u;
+#endif
+  }
+
+  ALWAYS_INLINE() uint32_t scale_legacy_div192_to_current(uint32_t ticks) const {
+#if defined(__AVR__)
+    return ticks;
+#else
+    const uint32_t ticks_per_16th = div192th_ticks_per_16th();
+    return (ticks * ticks_per_16th + 11u) / 12u;
+#endif
+  }
+
   /*
   ALWAYS_INLINE() void callCallbacks(bool isMidiEvent = false) {
     if (state != STARTED)
@@ -260,9 +349,12 @@ public:
     clock_last_time = read_clock();
     div192th_countdown = 0;
 
-    if (uart_clock_forward1) { uart_clock_forward1->sendRaw(0xF8); }
-    if (uart_clock_forward2) { uart_clock_forward2->sendRaw(0xF8); }
-    if (uart_clock_forward3) { uart_clock_forward3->sendRaw(0xF8); }
+    if (uart_clock_forward1) { uart_clock_forward1->sendRealtime(0xF8); }
+    if (uart_clock_forward2) { uart_clock_forward2->sendRealtime(0xF8); }
+    if (uart_clock_forward3) { uart_clock_forward3->sendRealtime(0xF8); }
+#ifdef PLATFORM_TBD
+    if (uart_clock_forward4) { uart_clock_forward4->sendRealtime(0xF8); }
+#endif
 
     incrementCounters();
     if ((step_counter == 1) && (state == STARTED)) {
@@ -282,6 +374,54 @@ public:
       return;
     }
   }
+
+#ifdef PLATFORM_TBD
+  ALWAYS_INLINE() void resetInternalClockSource(bool fire_next_tick = false) {
+    updateInternalClockInterval();
+    uint32_t step = internal_clock_step;
+    if (fire_next_tick && step > 0 && step < INTERNAL_CLOCK_PHASE_TOP) {
+      internal_clock_phase = INTERNAL_CLOCK_PHASE_TOP - step;
+    } else {
+      internal_clock_phase = 0;
+    }
+  }
+
+  ALWAYS_INLINE() void updateInternalClockInterval() {
+    uint32_t denom = internal_clock_step * (uint32_t)clock_interpolation;
+    uint32_t ticks = denom > 0 ? INTERNAL_CLOCK_PHASE_TOP / denom : 1;
+    if (ticks == 0) {
+      ticks = 1;
+    } else if (ticks > 0xFFFF) {
+      ticks = 0xFFFF;
+    }
+    div192_time = (uint16_t)ticks;
+  }
+
+  ALWAYS_INLINE() bool handleInternalTimerTick() {
+    if (mode != INTERNAL_MIDI ||
+        (state != STARTING && state != STARTED)) {
+      return false;
+    }
+
+    uint32_t step = internal_clock_step;
+    if (step == 0) {
+      return false;
+    }
+
+    uint32_t phase = internal_clock_phase + step;
+    if (phase < INTERNAL_CLOCK_PHASE_TOP) {
+      internal_clock_phase = phase;
+      return false;
+    }
+
+    do {
+      phase -= INTERNAL_CLOCK_PHASE_TOP;
+    } while (phase >= INTERNAL_CLOCK_PHASE_TOP);
+    internal_clock_phase = phase;
+    handleImmediateClock();
+    return true;
+  }
+#endif
 
   /* in interrupt on 5000Hz internal timer timeout */
   ALWAYS_INLINE() void increment192Counter() {
@@ -353,7 +493,11 @@ public:
     if (mod8_free_counter == 8) {
       diff_clock8 = midi_clock_diff(last_clock8, read_clock());
       last_clock8 = read_clock();
+#if !defined(__AVR__)
+      div192_time = diff_clock8 / (8 * clock_interpolation);
+#else
       div192_time = diff_clock8 / 16;
+#endif
       mod8_free_counter = 0;
     }
     if (state == STARTED) {
@@ -361,6 +505,9 @@ public:
       mod6_counter++;
       mod12_counter++;
       div192th_counter++;
+#if !defined(__AVR__)
+      interp_budget = clock_interpolation - 1;
+#endif
       if (mod6_counter == 6) {
         // one step
         step_counter++;
@@ -407,11 +554,20 @@ public:
     if (uart_transport_forward1) { uart_transport_forward1->sendRaw(MIDI_START); }
     if (uart_transport_forward2) { uart_transport_forward2->sendRaw(MIDI_START); }
     if (uart_transport_forward3) { uart_transport_forward3->sendRaw(MIDI_START); }
+#ifdef PLATFORM_TBD
+    if (uart_transport_forward4) { uart_transport_forward4->sendRaw(MIDI_START); }
+#endif
 
     init();
+#ifdef PLATFORM_TBD
+    if (mode == INTERNAL_MIDI) {
+      resetInternalClockSource(true);
+    }
+#endif
 
     state = STARTING;
     onMidiStartImmediateCallbacks.call(div96th_counter);
+    if (uart_transport_recv1) { uart_transport_recv1->rxRb->put_h_isr(MIDI_START); }
 
     DEBUG_PRINTLN(F("START"));
   }
@@ -421,6 +577,10 @@ public:
     if (uart_transport_forward1) { uart_transport_forward1->sendRaw(MIDI_STOP); }
     if (uart_transport_forward2) { uart_transport_forward2->sendRaw(MIDI_STOP); }
     if (uart_transport_forward3) { uart_transport_forward3->sendRaw(MIDI_STOP); }
+#ifdef PLATFORM_TBD
+    if (uart_transport_forward4) { uart_transport_forward4->sendRaw(MIDI_STOP); }
+#endif
+    if (uart_transport_recv1) { uart_transport_recv1->rxRb->put_h_isr(MIDI_STOP); }
     //  init();
   }
 
@@ -429,10 +589,19 @@ public:
     if (uart_transport_forward1) { uart_transport_forward1->sendRaw(MIDI_CONTINUE); }
     if (uart_transport_forward2) { uart_transport_forward2->sendRaw(MIDI_CONTINUE); }
     if (uart_transport_forward3) { uart_transport_forward3->sendRaw(MIDI_CONTINUE); }
+#ifdef PLATFORM_TBD
+    if (uart_transport_forward4) { uart_transport_forward4->sendRaw(MIDI_CONTINUE); }
+#endif
 
     state = STARTED;
+#ifdef PLATFORM_TBD
+    if (mode == INTERNAL_MIDI) {
+      resetInternalClockSource(true);
+    }
+#endif
 
     isInit = false;
+    if (uart_transport_recv1) { uart_transport_recv1->rxRb->put_h_isr(MIDI_CONTINUE); }
     //  init();
   }
 
@@ -446,7 +615,7 @@ public:
   void start();
   void stop();
   void pause();
-  void setTempo(uint16_t tempo);
+  void setTempo(float tempo);
   bool getBlinkHint(bool onbeat);
 
   bool isStarted() { return state == STARTED; }

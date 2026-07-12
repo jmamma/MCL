@@ -1,25 +1,123 @@
 #include "Elektron.h"
 #include "Project.h"
 #include "ResourceManager.h"
+#include "platform.h"
 
 #define SYSEX_RETRIES 1
 
-void MidiDevice::add_track_to_grid(uint8_t grid_idx, uint8_t track_idx, GridDeviceTrack *gdt) {
-  proj.grids[grid_idx].add_track(track_idx, gdt);
+namespace {
+
+void send_system_command(ElektronDevice *device, uint8_t command,
+                         uint8_t value, uint8_t len = 3) {
+  uint8_t data[3] = {0x70, command, value};
+  device->sendRequest(data, len);
 }
 
-void MidiDevice::cleanup(uint8_t device_idx) {
-  for (uint8_t n = 0; n < NUM_GRIDS; n++) {
-    proj.grids[n].cleanup(device_idx);
-  }
+void send_system_command(ElektronDevice *device, uint8_t command) {
+  send_system_command(device, command, 0, 2);
 }
-uint8_t *MidiDevice::gif_data() { return R.icons_logo->midi_gif_data; }
-MCLGIF *MidiDevice::gif() { return R.icons_logo->midi_gif; }
+
+void send_request_value(ElektronDevice *device, uint8_t request,
+                        uint8_t value) {
+  uint8_t data[2] = {request, (uint8_t)(value & 0x7F)};
+  device->sendRequest(data, sizeof(data));
+}
+
+bool read_system_response(ElektronDevice *device, uint8_t command,
+                          SysexView &sysex, uint8_t &begin) {
+  send_system_command(device, command);
+  uint8_t msgType = device->waitBlocking();
+  begin = device->sysex_protocol.header_size + 1;
+  auto listener = device->getSysexListener();
+  sysex.init(listener->sysex, listener->msg_rd);
+  return msgType == 0x72 && sysex.getByte(begin) == command;
+}
+
+uint16_t read_packed_u16_7bit(const SysexView &sysex, uint8_t offset) {
+  uint16_t value = sysex.getByte(offset);
+  value |= (uint16_t)sysex.getByte(offset + 1) << 7;
+  value |= (uint16_t)sysex.getByte(offset + 2) << 14;
+  return value;
+}
+
+#if !defined(__AVR__) && defined(DEBUGMODE)
+const char *blocking_data_type_name(DataType type) {
+  switch (type) {
+  case DataType::Kit:     return "kit";
+  case DataType::Pattern: return "pattern";
+  case DataType::Global:  return "global";
+  }
+  return "?";
+}
+
+void trace_blocking_data(const char *stage, DataType type, uint8_t index) {
+  DEBUG_PRINT("[mcl-blocking] ");
+  DEBUG_PRINT(stage);
+  DEBUG_PRINT(" type=");
+  DEBUG_PRINT(blocking_data_type_name(type));
+  DEBUG_PRINT(" index=");
+  DEBUG_PRINTLN((unsigned)index);
+}
+
+void trace_blocking_listener(const char *stage,
+                             ElektronSysexListenerClass *listener) {
+  DEBUG_PRINT("[mcl-blocking] ");
+  DEBUG_PRINT(stage);
+  if (!listener) {
+    DEBUG_PRINTLN(" listener=null");
+    return;
+  }
+
+  DEBUG_PRINT(" msgType=");
+  DEBUG_PRINT((unsigned)listener->msgType);
+  DEBUG_PRINT(" msg_rd=");
+  DEBUG_PRINT((unsigned)listener->msg_rd);
+  if (listener->sysex && listener->msg_rd < NUM_SYSEX_MSGS) {
+    const uint8_t msg_rd = listener->msg_rd;
+    DEBUG_PRINT(" state=");
+    DEBUG_PRINT((unsigned)listener->sysex->ledger[msg_rd].state);
+    DEBUG_PRINT(" len=");
+    DEBUG_PRINT((unsigned)listener->sysex->ledger[msg_rd].recordLen);
+  }
+  DEBUG_PRINTLN("");
+}
+#else
+void trace_blocking_data(const char *, DataType, uint8_t) {}
+void trace_blocking_listener(const char *, ElektronSysexListenerClass *) {}
+#endif
+
+} // namespace
+
+ElektronSysexListenerClass::ElektronSysexListenerClass()
+    : MidiSysexListenerClass(NULL, 0, 0x20, 0x3c) {
+}
+
+void ElektronHelper::beginSysexEncode(ElektronDataToSysexEncoder *encoder,
+                                       uint8_t *hdr, uint8_t hdr_size,
+                                       uint8_t msg_id, uint8_t version,
+                                       uint8_t origPosition) {
+  encoder->stop7Bit();
+  encoder->begin();
+  encoder->pack(hdr, hdr_size);
+  encoder->pack8(msg_id);
+  encoder->pack8(version);
+  encoder->pack8(0x01); // revision
+  encoder->startChecksum();
+  encoder->pack8(origPosition);
+}
+
+uint16_t ElektronHelper::finishSysexEncode(ElektronDataToSysexEncoder *encoder) {
+  uint16_t enclen = encoder->finish();
+  encoder->finishChecksum();
+  return enclen + 5;
+}
 
 uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send, MidiUartClass *uart_) {
-   if (!send) {
+    if (!send) {
         return len + sysex_protocol.header_size + 2;
     }
+
+    if (!connected && !in_probe) { return 0; }
 
     uart_ = uart_ ? uart_ : uart;
 
@@ -39,48 +137,19 @@ uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send, Midi
 
     return i;
 }
-/*
-  if (uart_ == nullptr) { uart_ = uart; }
 
-  uint8_t buf[256];
-
-  if (send) {
-    uint8_t i = 0;
-    buf[i++] = 0xF0;
-
-    for (uint8_t n = 0; n < sysex_protocol.header_size; n++) {
-      buf[i++] = sysex_protocol.header[n];
-    }
-
-    for (uint8_t n = 0; n < len; n++) {
-      buf[i++] = data[n] & 0x7F;
-    }
-    buf[i++] = 0xF7;
-    uart_->m_putc(buf, i);
-  }
-  return len + sysex_protocol.header_size + 2;
-}
-*/
 uint16_t ElektronDevice::sendRequest(uint8_t type, uint8_t param, bool send) {
   uint8_t data[] = {type, param};
   return sendRequest(data, 2, send);
 }
 
 bool ElektronDevice::get_tempo(uint16_t &tempo) {
-
-  uint8_t data[2] = {0x70, 0x3F};
-  sendRequest(data, sizeof(data));
-
-  uint8_t msgType = waitBlocking();
-
-  auto begin = sysex_protocol.header_size + 1;
-  auto listener = getSysexListener();
-  listener->sysex->rd_cur = listener->msg_rd;
-
+  uint8_t begin;
+  SysexView sysex;
   tempo = 0;
-  if (msgType == 0x72 && listener->sysex->getByte(begin) == 0x3F) {
-      tempo = listener->sysex->getByte(begin+1) << 7;
-      tempo |= (listener->sysex->getByte(begin+2));
+  if (read_system_response(this, 0x3F, sysex, begin)) {
+      tempo = sysex.getByte(begin+1) << 7;
+      tempo |= (sysex.getByte(begin+2));
       return true;
   }
 
@@ -89,63 +158,93 @@ bool ElektronDevice::get_tempo(uint16_t &tempo) {
 
 
 bool ElektronDevice::get_mute_state(uint16_t &mute_state) {
+  uint16_t fill_state;
+  return get_track_state(mute_state, fill_state) != 0;
+}
 
-  uint8_t data[2] = {0x70, 0x33};
-  sendRequest(data, sizeof(data));
-
-  uint8_t msgType = waitBlocking();
-
-  auto begin = sysex_protocol.header_size + 1;
-  auto listener = getSysexListener();
-  listener->sysex->rd_cur = listener->msg_rd;
+uint8_t ElektronDevice::get_track_state(uint16_t &mute_state,
+                                        uint16_t &fill_state) {
+  uint8_t begin;
+  SysexView sysex;
   mute_state = 0;
-  if (msgType == 0x72 && listener->sysex->getByte(begin) == 0x33) {
-      mute_state = listener->sysex->getByte(begin+1);
-      mute_state |= (listener->sysex->getByte(begin+2) << 7);
-      mute_state |= (listener->sysex->getByte(begin+3) << 14);
-      return true;
+  fill_state = 0;
+  if (!read_system_response(this, 0x33, sysex, begin) ||
+      sysex.get_recordLen() < (uint16_t)(begin + 4)) {
+    return 0;
   }
-
-  return false;
+  mute_state = read_packed_u16_7bit(sysex, begin + 1);
+  if (sysex.get_recordLen() < (uint16_t)(begin + 7)) {
+    return 1;
+  }
+  fill_state = read_packed_u16_7bit(sysex, begin + 4);
+  return 3;
 }
 
 
 bool ElektronDevice::get_fw_caps() {
-
-  uint8_t data[2] = {0x70, 0x30};
-  sendRequest(data, sizeof(data));
+  send_system_command(this, 0x30);
 
   uint8_t msgType = waitBlocking();
 
   fw_caps = 0;
 
-  auto begin = sysex_protocol.header_size + 1;
+  uint8_t begin = sysex_protocol.header_size + 1;
   auto listener = getSysexListener();
-  DEBUG_PRINTLN("caps");
-  listener->sysex->rd_cur = listener->msg_rd;
+  if (!listener || !listener->sysex || listener->msg_rd >= NUM_SYSEX_MSGS) {
+    return false;
+  }
+
+  const uint8_t msg_rd = listener->msg_rd;
+  if (!listener->sysex->ledger[msg_rd].ptr) {
+    return false;
+  }
+  const uint16_t record_len = listener->sysex->ledger[msg_rd].recordLen;
+  if (listener->sysex->ledger[msg_rd].state != SYSEX_STATE_FIN ||
+      record_len <= begin) {
+    return false;
+  }
+
+  SysexView sysex(listener->sysex, msg_rd);
   uint8_t b = 0;
-  if (msgType == 0x72 && listener->sysex->getByte(begin) == 0x30) {
-      begin++;
-      for (uint8_t n = 0; n < 4; n++) {
-        b = listener->sysex->getByte(begin+n);
-        if (b == 0xF7) { break; }
-        ((uint8_t *)&(fw_caps))[n] = b;
-      }
-      return true;
+  if (msgType == 0x72 && sysex.getByte(begin) == 0x30) {
+    if (record_len < begin + 5) {
+      return false;
+    }
+    begin++;
+    uint8_t *caps = (uint8_t *)&fw_caps;
+    for (uint8_t n = 0; n < 4; n++) {
+      b = sysex.getByte(begin++);
+      if (b == 0xF7) { break; }
+      caps[n] = b;
+    }
+    return true;
   }
   return false;
 }
 
-void ElektronDevice::activate_encoder_interface(uint8_t *params) {
+void ElektronDevice::activate_encoder_interface(uint8_t *params, uint8_t count) {
+  static constexpr uint8_t kLegacyParamCount = 24;
+  static constexpr uint8_t kMaxParamCount = 34;
+  if (params == nullptr) {
+    return;
+  }
+  if (count < kLegacyParamCount) {
+    count = kLegacyParamCount;
+  }
+  if (count > kMaxParamCount) {
+    count = kMaxParamCount;
+  }
+
   encoder_interface = true;
-  uint8_t data[3 + 4 + 24] = {0x70, 0x36, 0x01};
+  const uint8_t mask_count = (uint8_t)((count + 6) / 7);
+  uint8_t data[3 + 5 + kMaxParamCount] = {0x70, 0x36, 0x01};
   uint8_t mod7 = 0;
   uint8_t cnt = 0;
 
-  for (uint8_t n = 0; n < 24; n++) {
+  for (uint8_t n = 0; n < count; n++) {
     if (params[n] != 255) {
       data[3 + cnt] |= (1 << mod7);
-      data[3 + 4 + n] = params[n];
+      data[3 + mask_count + n] = params[n];
     }
     mod7++;
     if (mod7 == 7) {
@@ -153,11 +252,14 @@ void ElektronDevice::activate_encoder_interface(uint8_t *params) {
       cnt++;
     }
   }
-  sendRequest(data, sizeof(data));
+  sendRequest(data, (uint8_t)(3 + mask_count + count));
   //waitBlocking();
 }
 
-void ElektronDevice::deactivate_encoder_interface() { sendCommand(ElektronCommand::ActivateEncoderInterface, 0); }
+void ElektronDevice::deactivate_encoder_interface() {
+  encoder_interface = false;
+  send_system_command(this, 0x36, 0);
+}
 
 void ElektronDevice::sendCommand(ElektronCommand command, uint8_t param) {
   uint8_t data[3] = {0x70, 0x00, 0x00};
@@ -166,7 +268,7 @@ void ElektronDevice::sendCommand(ElektronCommand command, uint8_t param) {
   switch (command) {
     case ElektronCommand::ActivateEncoderInterface:
       data[1] = 0x36;
-      data[2] = param;;
+      data[2] = param;
       encoder_interface = param;
       break;
     case ElektronCommand::ActivateEnhancedMidi:
@@ -233,6 +335,21 @@ void ElektronDevice::draw_microtiming(uint8_t speed, uint8_t timing) {
   // waitBlocking();
 }
 
+void ElektronDevice::draw_microtiming_signed(uint8_t speed,
+                                             int8_t microtiming) {
+  int16_t encoded = (int16_t)microtiming + 127;
+  if (encoded < 0) {
+    encoded = 0;
+  } else if (encoded > 254) {
+    encoded = 254;
+  }
+  uint8_t a = (uint8_t)encoded >> 7;
+  uint8_t b = (uint8_t)encoded & 0x7F;
+  uint8_t data[6] = {0x70, 0x3C, 0x27, speed, a, b};
+  sendRequest(data, 6);
+  // waitBlocking();
+}
+
 void ElektronDevice::draw_pattern_idx(uint8_t idx, uint8_t idx_other, uint8_t chain_mask) {
   uint8_t data[6] = {0x70, 0x3C, 0x24, idx, idx_other, chain_mask };
   sendRequest(data, 6);
@@ -247,10 +364,38 @@ void ElektronDevice::popup_text(uint8_t action_string, uint8_t persistent) {
 }
 
 void ElektronDevice::popup_text(char *str, uint8_t persistent) {
-  uint8_t data[67] = {0x70, 0x3B, persistent};
+  uint8_t data[67];
+  data[0] = 0x70;
+  data[1] = 0x3B;
+  data[2] = persistent;
   uint8_t len = strlen(str);
   strcpy((char*) (data + 3), str);
   sendRequest(data, 3 + len + 1);
+  // waitBlocking();
+}
+
+void ElektronDevice::popup_text_P(const char *str_P, uint8_t persistent) {
+  uint8_t data[67];
+  data[0] = 0x70;
+  data[1] = 0x3B;
+  data[2] = persistent;
+  uint8_t len = strlen_P(str_P);
+  strcpy_P((char*) (data + 3), str_P);
+  sendRequest(data, 3 + len + 1);
+  // waitBlocking();
+}
+
+void ElektronDevice::popup_text_P(const char *str1_P, const char *str2_P, uint8_t persistent) {
+  uint8_t data[67];
+  data[0] = 0x70;
+  data[1] = 0x3B;
+  data[2] = persistent;
+  uint8_t len1 = strlen_P(str1_P);
+  uint8_t len2 = strlen_P(str2_P);
+  strcpy_P((char*) (data + 3), str1_P);
+  data[3 + len1] = ' ';
+  strcpy_P((char*) (data + 3 + len1 + 1), str2_P);
+  sendRequest(data, 3 + len1 + 1 + len2 + 1);
   // waitBlocking();
 }
 
@@ -260,23 +405,31 @@ void ElektronDevice::draw_bank(uint8_t bank) {
   // waitBlocking();
 }
 
-// Implement the individual functions using the central sendCommand function
-void ElektronDevice::activate_enhanced_midi() { sendCommand(ElektronCommand::ActivateEnhancedMidi, 1); }
-void ElektronDevice::deactivate_enhanced_midi() { sendCommand(ElektronCommand::ActivateEnhancedMidi, 0); }
-void ElektronDevice::activate_enhanced_gui() { sendCommand(ElektronCommand::ActivateEnhancedGui, 1); }
-void ElektronDevice::deactivate_enhanced_gui() { sendCommand(ElektronCommand::ActivateEnhancedGui, 0); }
-void ElektronDevice::set_seq_page(uint8_t page) { sendCommand(ElektronCommand::SetSeqPage, page); }
-void ElektronDevice::set_rec_mode(uint8_t mode) { sendCommand(ElektronCommand::SetRecMode, mode); }
-void ElektronDevice::set_key_repeat(uint8_t mode) { sendCommand(ElektronCommand::SetKeyRepeat, mode); }
-void ElektronDevice::activate_key_interface() { sendCommand(ElektronCommand::ActivateKeyInterface, 1); }
-void ElektronDevice::deactivate_key_interface() { sendCommand(ElektronCommand::ActivateKeyInterface, 0); }
-void ElektronDevice::activate_track_select() { sendCommand(ElektronCommand::ActivateTrackSelect, 1); }
-void ElektronDevice::deactivate_track_select() { sendCommand(ElektronCommand::ActivateTrackSelect, 0); }
-void ElektronDevice::undokit_sync() { sendCommand(ElektronCommand::UndokitSync, 0); }
-void ElektronDevice::reset_dsp_params() { sendCommand(ElektronCommand::ResetDspParams, 0); }
-void ElektronDevice::draw_close_bank() { sendCommand(ElektronCommand::DrawCloseBank, 0); }
-void ElektronDevice::draw_close_microtiming() { sendCommand(ElektronCommand::DrawCloseMicrotiming, 0); }
-
+void ElektronDevice::activate_enhanced_midi() { send_system_command(this, 0x3E, 1); }
+void ElektronDevice::deactivate_enhanced_midi() { send_system_command(this, 0x3E, 0); }
+void ElektronDevice::activate_enhanced_gui() { send_system_command(this, 0x37, 1); }
+void ElektronDevice::deactivate_enhanced_gui() { send_system_command(this, 0x37, 0); }
+void ElektronDevice::set_seq_page(uint8_t page) { send_system_command(this, 0x38, page); }
+void ElektronDevice::set_rec_mode(uint8_t mode) { send_system_command(this, 0x3A, mode); }
+void ElektronDevice::set_key_repeat(uint8_t mode) { send_system_command(this, 0x4E, mode); }
+void ElektronDevice::activate_key_interface() { send_system_command(this, 0x31, 1); }
+void ElektronDevice::deactivate_key_interface() { send_system_command(this, 0x31, 0); }
+void ElektronDevice::activate_track_select() {
+  send_system_command(this, 0x32, 1);
+  waitBlocking();
+}
+void ElektronDevice::deactivate_track_select() {
+  send_system_command(this, 0x32, 0);
+  waitBlocking();
+}
+void ElektronDevice::undokit_sync() { send_system_command(this, 0x42); }
+void ElektronDevice::reset_dsp_params() { send_system_command(this, 0x43); }
+void ElektronDevice::draw_close_bank() { send_system_command(this, 0x3C, 0x23); }
+void ElektronDevice::draw_close_microtiming() { send_system_command(this, 0x3C, 0x21); }
+void ElektronDevice::draw_open_swing() { send_system_command(this, 0x3C, 0x25); }
+void ElektronDevice::draw_close_swing() { send_system_command(this, 0x3C, 0x26); }
+void ElektronDevice::draw_open_slide() { send_system_command(this, 0x3C, 0x28); }
+void ElektronDevice::draw_close_slide() { send_system_command(this, 0x3C, 0x29); }
 
 void ElektronDevice::set_trigleds(uint16_t bitmask, TrigLEDMode mode,
                                   uint8_t blink) {
@@ -292,34 +445,63 @@ void ElektronDevice::set_trigleds(uint16_t bitmask, TrigLEDMode mode,
 }
 
 uint8_t ElektronDevice::waitBlocking(uint16_t timeout) {
-  DEBUG_PRINTLN("wait block");
   uint16_t start_clock = read_slowclock();
   uint16_t current_clock = start_clock;
   auto listener = getSysexListener();
   listener->start();
   do {
+    platform_wait_poll();
     current_clock = read_slowclock();
     handleIncomingMidi();
   } while ((clock_diff(start_clock, current_clock) < timeout) &&
            (listener->msgType == 255));
-  DEBUG_PRINTLN(listener->msgType);
+#if !defined(__AVR__)
+  // The hosted wasm/desktop path uses a virtual cable with a host-side MIDI
+  // worker. A reply can be queued just as the timeout expires; drain once more
+  // before reporting failure so the next UI loop does not consume a reply that
+  // belonged to this blocking request.
+  if (listener->msgType == 255) {
+    platform_wait_poll();
+    handleIncomingMidi();
+  }
+#endif
   return listener->msgType;
 }
 
 void ElektronDevice::requestKit(uint8_t kit) {
-  sendRequest(sysex_protocol.kitrequest_id, kit);
+#if defined(__AVR__)
+  send_request_value(this, sysex_protocol.kitrequest_id, kit);
+#else
+  uint8_t data[] = {sysex_protocol.kitrequest_id, kit, SYSEX_VERSION_LEGACY};
+  sendRequest(data, sizeof(data));
+#endif
 }
 
 void ElektronDevice::requestPattern(uint8_t pattern) {
-  sendRequest(sysex_protocol.patternrequest_id, pattern);
+#if defined(__AVR__)
+  send_request_value(this, sysex_protocol.patternrequest_id, pattern);
+#else
+  uint8_t data[] = {sysex_protocol.patternrequest_id, pattern, SYSEX_VERSION_LEGACY};
+  sendRequest(data, sizeof(data));
+#endif
 }
 
 void ElektronDevice::requestSong(uint8_t song) {
-  sendRequest(sysex_protocol.songrequest_id, song);
+#if defined(__AVR__)
+  send_request_value(this, sysex_protocol.songrequest_id, song);
+#else
+  uint8_t data[] = {sysex_protocol.songrequest_id, song, SYSEX_VERSION_LEGACY};
+  sendRequest(data, sizeof(data));
+#endif
 }
 
 void ElektronDevice::requestGlobal(uint8_t global) {
-  sendRequest(sysex_protocol.globalrequest_id, global);
+#if defined(__AVR__)
+  send_request_value(this, sysex_protocol.globalrequest_id, global);
+#else
+  uint8_t data[] = {sysex_protocol.globalrequest_id, global, SYSEX_VERSION_LEGACY};
+  sendRequest(data, sizeof(data));
+#endif
 }
 
 uint8_t ElektronDevice::getBlockingStatus(uint8_t type, uint16_t timeout) {
@@ -343,12 +525,14 @@ bool ElektronDevice::getBlockingData(DataType type, uint8_t index, uint16_t time
     bool ret = false;
 
     while ((MidiClock.state == 2) &&
-           ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
-        ;
+           ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0))) {
+        platform_poll();
+    }
 
     while (count--) {
 
         listener->addOnMessageCallback(&cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
+        trace_blocking_data("request", type, index);
         switch (type) {
             case DataType::Kit:
                 requestKit(index);
@@ -362,6 +546,7 @@ bool ElektronDevice::getBlockingData(DataType type, uint8_t index, uint16_t time
         }
 
         ret = cb.waitBlocking(timeout);
+        trace_blocking_listener(ret ? "received" : "timeout", listener);
 
         listener->removeOnMessageCallback(&cb);
 
@@ -381,20 +566,23 @@ bool ElektronDevice::getBlockingData(DataType type, uint8_t index, uint16_t time
             }
             if (data != nullptr && ((ElektronSysexObject*)data)->fromSysex(midi)) {
                 if (type == DataType::Global) connected = true;
+                trace_blocking_data("parse-ok", type, index);
                 return true;
             }
+            trace_blocking_data("parse-failed", type, index);
         }
     }
+    trace_blocking_data("failed", type, index);
     return false;
 }
 
 
 bool ElektronDevice::getBlockingKit(uint8_t kit, uint16_t timeout) {
-  return getBlockingData(DataType::Kit, kit, timeout);;
+  return getBlockingData(DataType::Kit, kit, timeout);
 }
 
 bool ElektronDevice::getBlockingPattern(uint8_t pattern, uint16_t timeout) {
-  return getBlockingData(DataType::Pattern, pattern, timeout);;
+  return getBlockingData(DataType::Pattern, pattern, timeout);
 }
 
 bool ElektronDevice::getBlockingGlobal(uint8_t global, uint16_t timeout) {
@@ -406,10 +594,15 @@ uint8_t ElektronDevice::getCurrentTrack(uint16_t timeout) {
       getBlockingStatus(sysex_protocol.track_index_request_id, timeout);
   if (value == 255) {
     return 255;
-  } else {
-    currentTrack = value;
-    return value;
   }
+  // Stray byte from a noisy reply has been observed to land here as
+  // 24 (= 16 + 8) and propagate through MD.currentTrack into kit /
+  // pattern indexing — guard at the source.
+  if (value >= 16) {
+    return 255;
+  }
+  currentTrack = value;
+  return value;
 }
 uint8_t ElektronDevice::getCurrentKit(uint16_t timeout) {
   uint8_t value =
@@ -464,30 +657,26 @@ void ElektronDevice::setKitName(const char *name, MidiUartClass *uart_) {
 }
 
 uint8_t ElektronDevice::setTempo(float tempo, bool send) {
-  uint16_t qtempo = round(tempo * 24.0f);
+  uint16_t qtempo = (uint16_t)(tempo * 24.0f + 0.5f);
   uint8_t data[3] = {sysex_protocol.tempo_set_id, (uint8_t)(qtempo >> 7),
                      (uint8_t)(qtempo & 0x7F)};
   return sendRequest(data, countof(data), send);
 }
 
 void ElektronDevice::loadGlobal(uint8_t id) {
-  uint8_t data[] = {sysex_protocol.load_global_id, (uint8_t)(id & 0x7F)};
-  sendRequest(data, countof(data));
+  send_request_value(this, sysex_protocol.load_global_id, id);
 }
 
 void ElektronDevice::loadKit(uint8_t kit) {
-  uint8_t data[] = {sysex_protocol.load_kit_id, (uint8_t)(kit & 0x7F)};
-  sendRequest(data, countof(data));
+  send_request_value(this, sysex_protocol.load_kit_id, kit);
 }
 
 void ElektronDevice::loadPattern(uint8_t pattern) {
-  uint8_t data[] = {sysex_protocol.load_pattern_id, (uint8_t)(pattern & 0x7F)};
-  sendRequest(data, countof(data));
+  send_request_value(this, sysex_protocol.load_pattern_id, pattern);
 }
 
 void ElektronDevice::saveCurrentKit(uint8_t pos) {
-  uint8_t data[2] = {sysex_protocol.save_kit_id, (uint8_t)(pos & 0x7F)};
-  sendRequest(data, countof(data));
+  send_request_value(this, sysex_protocol.save_kit_id, pos);
 }
 
 const char *getMachineNameShort(uint8_t machine, uint8_t type,

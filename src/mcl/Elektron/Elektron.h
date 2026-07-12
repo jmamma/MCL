@@ -8,15 +8,18 @@
 #include "MidiID.h"
 #include "MidiSysex.h"
 #include "MCLMemory.h"
-#include "MidiDeviceGrid.h"
-#include "MCLGfx.h"
+#include "Grid/MidiDeviceGrid.h"
+#include "GUI/MCLGfx.h"
 #include "global.h"
 #include "Midi.h"
 #include "MidiUartParent.h"
 #include "ElektronModelTypes.h"
 #include "LED.h"
+#include "../Drivers/MidiDevice.h"
 
 enum class DataType { Kit, Pattern, Global };
+
+class ElektronDataToSysexEncoder;
 
 /**
  * Class grouping various helper functions to convert elektron sysex
@@ -47,15 +50,22 @@ public:
   static void from64Bit(uint64_t num, uint8_t *b);
 
   static bool checkSysexChecksum(uint8_t *data, uint16_t len);
-  static bool checkSysexChecksum(MidiClass *midi, uint16_t offset,
+  static bool checkSysexChecksum(const SysexView &sysex, uint16_t offset,
                                  uint16_t len);
   static void calculateSysexChecksum(uint8_t *data, uint16_t len);
 
   /*Checksum calcs different offsets for Analog4+AnalogRYTM*/
   static bool checkSysexChecksumAnalog(uint8_t *data, uint16_t len);
-  static bool checkSysexChecksumAnalog(MidiClass *midi, uint16_t offset,
+  static bool checkSysexChecksumAnalog(const SysexView &sysex, uint16_t offset,
                                        uint16_t len);
   static void calculateSysexChecksumAnalog(uint8_t *data, uint16_t len);
+
+  /* Sysex encode helpers: factor out repeated toSysex prologue/epilogue */
+  static void beginSysexEncode(ElektronDataToSysexEncoder *encoder,
+                                uint8_t *hdr, uint8_t hdr_size,
+                                uint8_t msg_id, uint8_t version,
+                                uint8_t origPosition);
+  static uint16_t finishSysexEncode(ElektronDataToSysexEncoder *encoder);
 };
 
 class SysexCallback {
@@ -80,6 +90,7 @@ public:
     uint16_t start_clock = read_slowclock();
     uint16_t current_clock = start_clock;
     do {
+      platform_wait_poll();
       // MCl Code, trying to replicate main loop
 
       //    if ((MidiClock.mode == MidiClock.EXTERNAL_UART1 ||
@@ -106,64 +117,25 @@ typedef void (SysexCallback::*sysex_callback_ptr_t)();
 typedef void (SysexCallback::*sysex_status_callback_ptr_t)(uint8_t type,
                                                            uint8_t param);
 
+#ifndef NUM_SYSEX_CALLBACKS
+#define NUM_SYSEX_CALLBACKS 1
+#endif
+
 #include "ElektronDataEncoder.h"
 #include "MNMDataEncoder.h"
-
-/// forward declaration
-class ElektronDevice;
-/// Base class for MIDI-compatible devices
-/// Defines basic device description data and driver interfaces.
-
-class MidiDevice {
-public:
-  bool connected;
-  MidiClass* midi;
-  MidiUartClass* uart;
-  const char* const name;
-  const uint8_t id; // Device identifier
-  const bool isElektronDevice;
-  uint8_t track_type;
-
-  MidiDevice(MidiClass* _midi, const char* _name, const uint8_t _id, const bool _isElektronDevice)
-    : name(_name), id(_id), isElektronDevice(_isElektronDevice)
-  {
-    midi = _midi;
-    uart = midi ? midi->uart : nullptr;
-    track_type = 0;
-    connected = false;
-  }
-
-  void add_track_to_grid(uint8_t grid_idx, uint8_t track_idx, GridDeviceTrack *gdt);
-  void cleanup(uint8_t device_idx);
-
-  ElektronDevice* asElektronDevice() {
-    if (!isElektronDevice) return nullptr;
-    return (ElektronDevice*) this;
-  }
-
-  virtual void init_grid_devices(uint8_t device_idx) {};
-
-  virtual void setup() { };
-
-  virtual void disconnect(uint8_t device_idx) { cleanup(device_idx); connected = false; }
-  virtual bool probe() = 0;
-  virtual uint8_t get_mute_cc() { return 255; }
-  virtual void muteTrack(uint8_t track, bool mute = true, MidiUartClass *uart_ = nullptr) {};
-  // 34x42 bitmap icon of the device
-  virtual uint8_t *icon() { return nullptr; }
-  virtual MCLGIF *gif();
-  virtual uint8_t *gif_data();
-};
 
 /// Base class for Elektron sysex listeners
 class ElektronSysexListenerClass : public MidiSysexListenerClass {
 public:
+  ElektronSysexListenerClass() NOINLINE();
+
   /** Vector storing the onGlobalMessage callbacks (called when a global message
    * is received). **/
-  CallbackVector<SysexCallback, 1> onMessageCallbacks;
+  CallbackVector<SysexCallback, NUM_SYSEX_CALLBACKS> onMessageCallbacks;
   /** Vector storing the onKitMessage callbacks (called when a kit message is
    * received). **/
-  CallbackVector2<SysexCallback, 1, uint8_t, uint8_t> onStatusResponseCallbacks;
+  CallbackVector2<SysexCallback, NUM_SYSEX_CALLBACKS, uint8_t, uint8_t>
+      onStatusResponseCallbacks;
 
   void addOnStatusResponseCallback(SysexCallback *obj,
                                    sysex_status_callback_ptr_t func) {
@@ -203,6 +175,10 @@ enum class ElektronCommand {
   DrawCloseBank,
   DrawCloseMicrotiming
 };
+
+// SPS sysex request version byte: 0 = SPS-X (extended), 1 = legacy
+#define SYSEX_VERSION_SPSX   0x00
+#define SYSEX_VERSION_LEGACY 0x01
 
 /// sysex constants for constructing data frames
 class ElektronSysexProtocol {
@@ -244,10 +220,10 @@ public:
   virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder) = 0;
 };
 
-#define FW_CAP_LOW(x) (1 << x)
-#define FW_CAP_HIGH(x) (FW_CAP_LOW(x + 8))
-#define FW_CAP_HIGHER(x) (FW_CAP_LOW(x + 16))
-#define FW_CAP_HIGHEST(x) (FW_CAP_LOW(x + 24))
+#define FW_CAP_LOW(x) (UINT32_C(1) << (x))
+#define FW_CAP_HIGH(x) (FW_CAP_LOW((x) + 8))
+#define FW_CAP_HIGHER(x) (FW_CAP_LOW((x) + 16))
+#define FW_CAP_HIGHEST(x) (FW_CAP_LOW((x) + 24))
 
 //#define FW_CAP_DEBUG        FW_CAP_LOW(0)
 #define FW_CAP_TRIG_INTERFACE FW_CAP_LOW(1)
@@ -266,6 +242,8 @@ public:
 #define FW_CAP_MID_MACHINE    FW_CAP_HIGH(6)
 
 #define FW_CAPS_LENGTH_CHECK  FW_CAP_HIGHER(0)
+#define FW_CAP_SPSX           FW_CAP_HIGHER(1)
+#define FW_CAP_SAMPLE_BANK    FW_CAP_HIGHER(2)
 
 /// Base class for Elektron MidiDevice
 class ElektronDevice : public MidiDevice {
@@ -289,8 +267,9 @@ public:
   bool encoder_interface;
   ElektronDevice(
       MidiClass* _midi, const char* _name, const uint8_t _id,
-      const ElektronSysexProtocol& protocol)
-    : MidiDevice(_midi, _name, _id, true), sysex_protocol(protocol) {
+      const ElektronSysexProtocol& protocol, const char *_full_name = nullptr)
+    : MidiDevice(_midi, _name, _id, true, _full_name),
+      sysex_protocol(protocol) {
 
       currentGlobal = -1;
       currentKit = -1;
@@ -317,6 +296,7 @@ public:
 
   virtual ElektronSysexObject* getKit() = 0;
   virtual char* getKitName() = 0;
+  const char *getGridRowName() { return getKitName(); }
   virtual ElektronSysexObject* getPattern() = 0;
   virtual ElektronSysexObject* getGlobal() = 0;
   virtual ElektronSysexListenerClass* getSysexListener() = 0;
@@ -343,9 +323,10 @@ public:
 
   bool get_tempo(uint16_t &tempo);
   bool get_mute_state(uint16_t &mute_state);
+  uint8_t get_track_state(uint16_t &mute_state, uint16_t &fill_state);
   bool get_fw_caps();
 
-  void activate_encoder_interface(uint8_t *params);
+  void activate_encoder_interface(uint8_t *params, uint8_t count = 24);
   void deactivate_encoder_interface();
 
   void activate_enhanced_gui();
@@ -360,13 +341,20 @@ public:
 
   void popup_text(uint8_t action_string, uint8_t persistent = 0);
   void popup_text(char *str, uint8_t persistent = 0);
+  void popup_text_P(const char *str_P, uint8_t persistent = 0);
+  void popup_text_P(const char *str1_P, const char *str2_P, uint8_t persistent = 0);
 
   void draw_bank(uint8_t bank);
   void draw_close_bank();
 
   void draw_close_microtiming();
   void draw_microtiming(uint8_t speed, uint8_t timing);
+  void draw_microtiming_signed(uint8_t speed, int8_t microtiming);
   void draw_pattern_idx(uint8_t idx, uint8_t idx_other, uint8_t chain_mask);
+  void draw_open_swing();
+  void draw_close_swing();
+  void draw_open_slide();
+  void draw_close_slide();
   void activate_key_interface();
   void deactivate_key_interface();
 
@@ -383,9 +371,10 @@ public:
    * requestPattern, etc...
    **/
   void sendCommand(ElektronCommand command, uint8_t param);
-  virtual uint16_t sendRequest(uint8_t *data, uint8_t len, bool send = true, MidiUartClass *uart_ = nullptr);
+  uint16_t sendRequest(uint8_t *data, uint8_t len, bool send = true, MidiUartClass *uart_ = nullptr);
   virtual uint16_t sendRequest(uint8_t type, uint8_t param, bool send = true);
-  /**
+
+ /**
    * Wait for a blocking answer to a status request. Timeout is in clock ticks.
    **/
   uint8_t waitBlocking(uint16_t timeout = 1000);
@@ -402,7 +391,7 @@ public:
    *sysex message. Register a callback with the MDSysexListener to act on that
    *message.
    **/
-  void requestPattern(uint8_t pattern);
+  virtual void requestPattern(uint8_t pattern);
   /**
    * Request a song from the machinedrum, which will answer by sending a long
    *sysex message. Register a callback with the MDSysexListener to act on that
@@ -414,7 +403,7 @@ public:
    *sysex message. Register a callback with the MDSysexListener to act on that
    *message.
    **/
-  void requestGlobal(uint8_t global);
+  virtual void requestGlobal(uint8_t global);
 
   bool getBlockingData(DataType type, uint8_t index, uint16_t timeout);
   /**

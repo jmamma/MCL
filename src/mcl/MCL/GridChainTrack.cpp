@@ -1,5 +1,5 @@
 #include "GridChainTrack.h"
-#include "MCLActions.h"
+#include "Grid/MCLActions.h"
 #include "Project.h"
 
 void GridChainTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
@@ -16,13 +16,15 @@ void GridChainTrack::get_chains() {
   memcpy(&chains, &mcl_actions.chains, sizeof(GridChain));
 }
 
-bool GridChainTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
+void GridChainTrack::get_online_data(uint8_t merge) {
+  get_chains();
+}
+
+bool GridChainTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track,
                               uint8_t merge, bool online) {
   active = GRIDCHAIN_TRACK_TYPE;
   bool ret;
-  int b = 0;
   DEBUG_PRINT_FN();
-  uint32_t len;
 
   if (column != 255 && online == true) {
     get_chains();

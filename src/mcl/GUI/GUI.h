@@ -8,6 +8,7 @@
 #include "Task.h"
 #include "Vector.h"
 #include "platform.h"
+#include "MCLDefines.h"
 #include "Stack.h"
 
 #include "Encoders.h"
@@ -22,11 +23,25 @@ protected:
 public:
   EventManager events;
   bool display_mirror = false;
+  bool skip_display_once = false;
   bool use_screen_saver = true;
   bool screen_saver = false;
   Vector<event_handler_t, 4> eventHandlers;
   Vector<Task *, 4> tasks;
   Stack<LightPage *, 8> pageStack;
+
+#ifdef MCL_HAS_TBD_DRIVER
+  // Render-on-top overlay — independent of pageStack. Drawn after the
+  // active page's display() and ticked via its loop() each frame, but
+  // does NOT affect currentPage() or event dispatch. Lets transient UI
+  // (the SPS param-page-select view) layer on top of the active page
+  // while leaving that page fully active for input. AVR builds skip
+  // this entirely.
+  LightPage *overlay = nullptr;
+  void setOverlay(LightPage *p);
+  void clearOverlay();
+  bool overlayCapturesEncoders() const;
+#endif
 
 #ifdef GUI_NUM_ENCODERS
   static const uint8_t NUM_ENCODERS = GUI_NUM_ENCODERS;
@@ -42,6 +57,11 @@ public:
   void popPage(bool re_init = true);
   void popPage(LightPage *page);
   bool handleTopEvent(gui_event_t *event);
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+  bool handleMouseEvent(mcl_mouse_event_t *event);
+  void pollMouseEvents();
+  void queueVirtualButton(uint8_t button, bool pressed);
+#endif
 
   // Event and task management
   void putEvent(gui_event_t* event) {
@@ -54,14 +74,16 @@ public:
   void addTask(Task *task) { tasks.add(task); }
   void removeTask(Task *task) { tasks.remove(task); }
 
-  virtual void loop();
+  void loop();
+  void deferDisplayOnce() { skip_display_once = true; }
+  void wake_screen_saver();
   void mirror();
   void display();
   void init() {
     events.init();
   }
   // Methods previously in Sketch that might be needed
-  virtual void show() {}
-  virtual void hide() {}
-  virtual void setup() {}
+  void show() {}
+  void hide() {}
+  void setup() {}
 };

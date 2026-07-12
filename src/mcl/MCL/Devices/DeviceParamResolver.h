@@ -1,0 +1,98 @@
+#pragma once
+
+#include "platform.h"
+#include "../Drivers/DeviceContext.h"
+#include "../Drivers/MidiDeviceParam.h"
+#include <inttypes.h>
+
+class MidiDevice;
+class MidiUartClass;
+class PerfData;
+
+struct DeviceParamTarget {
+#if defined(__AVR__)
+  DeviceIdx device_idx = DeviceIdx::None;
+  uint8_t target = 0;
+
+  bool valid() const { return device_idx != DeviceIdx::None; }
+  DeviceIdx device_index() const { return device_idx; }
+#else
+  MidiDevice *device = nullptr;
+  DeviceIdx device_idx = DeviceIdx::None;
+  uint8_t target = 0;
+
+  bool valid() const { return device != nullptr; }
+  DeviceIdx device_index() const { return device_idx; }
+  DeviceContext context() const {
+    return DeviceContext::for_device(device, device_idx);
+  }
+#endif
+
+  uint8_t param_count() const;
+  bool target_label(char *out, uint8_t len) const;
+  bool param_label(uint8_t param, char *out, uint8_t len) const;
+  bool get_param(uint8_t param, uint8_t *value) const;
+  bool set_param(uint8_t param, uint8_t value,
+                 MidiUartClass *uart_ = nullptr) const;
+  bool get_base_param(uint8_t param, uint8_t *value) const;
+  bool set_base_param(uint8_t param, uint8_t value,
+                      MidiUartClass *uart_ = nullptr) const;
+  bool send_modulated_param(uint8_t param, uint8_t value,
+                            MidiUartClass *uart_ = nullptr) const;
+
+  uint8_t lock_param_count() const;
+  bool lock_param_info(uint8_t param, MidiDeviceParamInfo *info) const;
+  bool lock_param_label(uint8_t param, char *out, uint8_t len) const;
+  bool lock_current_value(uint8_t param, uint8_t *value) const;
+  bool uses_step_pitch() const;
+  uint8_t pitch_lock_param() const;
+};
+
+struct DevicePerfTarget {
+  DeviceParamTarget params;
+
+  bool valid() const { return params.valid(); }
+  DeviceIdx device_index() const { return params.device_index(); }
+
+  uint8_t param_count() const { return params.param_count(); }
+  bool target_label(char *out, uint8_t len) const {
+    return params.target_label(out, len);
+  }
+  bool param_label(uint8_t param, char *out, uint8_t len) const {
+    return params.param_label(param, out, len);
+  }
+  bool get_param(uint8_t param, uint8_t *value) const {
+    return params.get_param(param, value);
+  }
+  bool set_param(uint8_t param, uint8_t value,
+                 MidiUartClass *uart_ = nullptr) const {
+    return params.set_param(param, value, uart_);
+  }
+
+  bool param_from_key(uint8_t key, uint8_t *param) const;
+  bool key_for_param(uint8_t param, uint8_t *key) const;
+  bool begin_param_editor(uint8_t *params, uint8_t count) const;
+};
+
+namespace DeviceParamResolver {
+
+static constexpr uint8_t INVALID_PERF_DATA_DEST = 255;
+static constexpr uint8_t RESERVED_SECONDARY_TARGETS = 16;
+
+MidiDevice *device_for_idx(DeviceIdx device_idx);
+uint8_t target_count_for_idx(DeviceIdx device_idx);
+uint8_t target_slot_count_for_idx(DeviceIdx device_idx);
+DeviceParamTarget target_for_idx(DeviceIdx device_idx, uint8_t dest);
+
+uint8_t perf_target_count();
+DevicePerfTarget perf(uint8_t dest);
+uint8_t perf_data_dest_for_target(DeviceIdx device_idx, uint8_t target);
+uint8_t perf_dest_for_target(DeviceIdx device_idx, uint8_t target);
+bool perf_dest_to_target(uint8_t perf_dest, DeviceIdx *device_idx,
+                         uint8_t *target);
+uint8_t primary_perf_editor_dest(uint8_t target);
+void end_perf_param_editor();
+void set_perf_rec_mode(uint8_t mode);
+bool perf_scene_autofill(PerfData *data, uint8_t scene);
+
+} // namespace DeviceParamResolver

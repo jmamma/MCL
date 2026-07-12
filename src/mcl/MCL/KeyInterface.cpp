@@ -1,7 +1,7 @@
 #include "KeyInterface.h"
-#include "MD.h"
+#include "../Drivers/MD/MD.h"
+#include "Devices/DeviceManager.h"
 #include "Midi.h"
-#include "MidiActivePeering.h"
 #include "MCLGUI.h"
 /*
 KeyInterfaceTask key_interface_task;
@@ -43,13 +43,7 @@ void KeyInterface::setup(MidiClass *_midi) {
 void KeyInterface::start() {}
 
 void KeyInterface::send_md_leds(TrigLEDMode mode) {
-  uint16_t led_mask = 0;
-  for (uint8_t i = 0; i < 16; i++) {
-    if (note_interface.is_note_on(i)) {
-      SET_BIT16(led_mask, i);
-    }
-  }
-  mcl_gui.set_trigleds(led_mask, mode);
+  mcl_gui.set_trigleds((uint16_t)note_interface.notes_on, mode);
 }
 
 void KeyInterface::enable_listener() {
@@ -62,7 +56,9 @@ void KeyInterface::disable_listener() { sysex->removeSysexListener(this); }
 bool KeyInterface::on(bool clear_states) {
   note_interface.init_notes();
   if (clear_states) {
+    uint64_t func_state = cmd_key_state & (1ULL << MDX_KEY_FUNC);
     cmd_key_state = 0;
+    cmd_key_state |= func_state;
   }
   note_interface.note_proceed = true;
   if (state) {
@@ -101,23 +97,38 @@ bool KeyInterface::check_key_throttle() {
   return false;
 }
 
-void KeyInterface::key_event(uint8_t key, bool key_release) {
-   if (key_release) {
-    CLEAR_BIT64(cmd_key_state, key);
-  } else {
+void KeyInterface::set_key_state(uint8_t key, bool down) {
+  if (down) {
     SET_BIT64(cmd_key_state, key);
+  } else {
+    CLEAR_BIT64(cmd_key_state, key);
   }
+}
 
+namespace {
+
+uint8_t trig_interface_port() {
+  MidiDevice *primary = device_manager.primary_device();
+  if (primary->supports_capability(MidiDeviceCapability::MdTrigInterface)) {
+    return primary->port;
+  }
+  return MD.port;
+}
+
+} // namespace
+
+void KeyInterface::post_key_event(uint8_t key, bool key_release) {
   if (IS_BIT_SET64(ignore_next_mask, key)) {
     CLEAR_BIT64(ignore_next_mask, key);
     return;
   }
 
+  uint8_t md_port = trig_interface_port();
   if (key < 16) {
     if (key_release) {
-      note_interface.note_off_event(key, UART1_PORT);
+      note_interface.note_off_event(key, md_port);
     } else {
-      note_interface.note_on_event(key, UART1_PORT);
+      note_interface.note_on_event(key, md_port);
     }
     return;
   }
@@ -131,8 +142,14 @@ void KeyInterface::key_event(uint8_t key, bool key_release) {
     event.source = key; // EVENT_CMD
   }
   event.mask = key_release ? EVENT_BUTTON_RELEASED : EVENT_BUTTON_PRESSED;
-  event.port = UART1_PORT;
+  event.port = md_port;
+  event.modifiers = is_key_down(MDX_KEY_FUNC) ? EVENT_MODIFIER_FUNC : 0;
   GUI.putEvent(&event);
+}
+
+void KeyInterface::key_event(uint8_t key, bool key_release) {
+  set_key_state(key, !key_release);
+  post_key_event(key, key_release);
 }
 
 void KeyInterface::end() {

@@ -17,7 +17,7 @@ static byte shift(uint16_t &state, byte *&src) {
   return HI_BIT0(state);
 }
 
-int32_t shift_len(uint16_t &state, byte *&src) {
+static int32_t shift_len(uint16_t &state, byte *&src) {
   int32_t len = 1;
   while (!HI_BIT0(state)) {
     auto bit = shift(state, src);
@@ -30,7 +30,6 @@ int32_t shift_len(uint16_t &state, byte *&src) {
 size_t unpack(uint8_t* src, uint8_t* dst) {
   uint16_t state = 0;
   uint16_t dst_lookback = 1;
-  uint8_t* orig_src = src;
   uint8_t* orig_dst = dst;
 
   while (true) {
@@ -42,7 +41,6 @@ size_t unpack(uint8_t* src, uint8_t* dst) {
         ++src;
         dst_lookback = (v - 0x300) + idx * 0x100 + 1;
         if (dst_lookback == 0) {
-          size_t src_len = src - orig_src;
           size_t dst_len = dst - orig_dst;
           return dst_len;
         }

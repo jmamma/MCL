@@ -6,6 +6,7 @@
 
 #include "GUI.h"
 #include "MCLMemory.h"
+#include "Devices/MidiSetup.h"
 #include "midi-common.h"
 #include "MidiID.h"
 
@@ -13,14 +14,18 @@
 
 #define NI_MAX_NOTES NUM_SLOTS
 
+class MidiClass;
+
 class NoteInterfaceMidiEvents : public MidiCallback {
 public:
   bool state;
   void setup_callbacks();
   void remove_callbacks();
 
+#if !defined(__AVR__)
   void onNoteOnCallback_Midi(uint8_t *msg);
   void onNoteOffCallback_Midi(uint8_t *msg);
+#endif
   void onNoteOnCallback_Midi2(uint8_t *msg);
   void onNoteOffCallback_Midi2(uint8_t *msg);
 };
@@ -33,8 +38,8 @@ public:
   uint32_t notes_off;
   uint32_t notes_ignore;
   uint8_t last_note;
-  uint16_t note_hold[NUM_DEVS];
-  bool note_proceed = false;
+  uint16_t note_hold[MIDI_PORT_COUNT + 1];
+  bool note_proceed;
   bool state = true;
   void init_notes();
   void setup();
@@ -47,10 +52,12 @@ public:
   bool is_event(gui_event_t *event) { return event->type == NOTE; }
   bool notes_all_off() { return ((notes_on == 0) && (notes_off > 0)); }
   bool notes_all_off_md() { return (((uint16_t) notes_on == 0) && ((uint16_t)notes_off > 0)); }
+  bool trig_notes_all_released() { return notes_all_off_md(); }
   uint8_t notes_count_on();
   uint8_t notes_count_off();
   uint8_t notes_count();
   uint8_t get_first_md_note();
+  uint8_t get_first_trig_note() { return get_first_md_note(); }
 
   bool is_note(uint8_t note_num);
   bool is_note_on(uint8_t note_num) { return IS_BIT_SET32(notes_on, note_num); }

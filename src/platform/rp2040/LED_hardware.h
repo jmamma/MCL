@@ -7,9 +7,11 @@
 
 #define COLOR(r, g, b) tbd_ui.strip.Color(r, g, b)
 #define STRIP_RED COLOR(255, 0, 0)
+#define STRIP_WHITE COLOR(255, 255, 255)
 #define STRIP_BLACK COLOR(0, 0, 0)
 #define STRIP_LED1 16
 #define STRIP_LED2 17
+#define STRIP_LED3 18  // step-edit indicator
 
 // #define STRIP_LED1 tbd_ui.rgb_led_fbtn_map[2]
 // #define STRIP_LED2 tbd_ui.rgb_led_fbtn_map[1]
@@ -28,19 +30,39 @@ private:
   uint32_t led_flash_start_time[32];
   uint32_t last_render_state;
   uint32_t blink_last_trigger_time;
+  bool last_blink_hint;
+  bool trig_color_override;
+  uint32_t trig_colors[16];
 
 public:
   TrigLEDMode current_led_mode;
   bool updateLeds;
+  bool rec_active;
+  // SPS-mode latch indicator. When true, the second status LED (above
+  // BUTTON_PLAY, fbtn_map[1]) lights amber to signal the user that
+  // arrows now act as bank-select. White was considered but red+amber
+  // is easier to tell apart on the strip than red+white.
+  bool sps_active;
+  bool tbd_driver_left_active;
+  bool tbd_driver_right_active;
+  // SPS param-page select overlay open. Overrides sps_active's amber
+  // tint to white so the LED matches the white "focused sub-page"
+  // trig LED while the overlay is up.
+  bool sps_overlay = false;
   LEDHardware()
       : led_base_state(0), led_blink_mask(0), led_flash_mask(0),
         last_render_state(0), blink_last_trigger_time(0), updateLeds(true),
-        current_led_mode(TRIGLED_OVERLAY) {
+        current_led_mode(TRIGLED_OVERLAY), last_blink_hint(false), rec_active(false),
+        sps_active(false), tbd_driver_left_active(false),
+        tbd_driver_right_active(false), trig_color_override(false) {
     memset(led_flash_start_time, 0, sizeof(led_flash_start_time));
+    memset(trig_colors, 0, sizeof(trig_colors));
   }
 
   void set_trigleds(uint16_t bitmask, TrigLEDMode mode, bool blink = false,
                     bool update = true);
+  void set_trigleds_color(uint16_t bitmask, uint32_t rgb);
+  void set_trigleds_blink_color(uint16_t bitmask, uint32_t rgb);
   void clear_trigleds() {
      set_trigleds(0, current_led_mode, false, false);
      set_trigleds(0, current_led_mode, true, true);
@@ -48,11 +70,21 @@ public:
   void reset_trigleds() {
      clear_trigleds();
      current_led_mode = TRIGLED_OVERLAY;
+     CLEAR_BIT32(led_base_state, STRIP_LED3);
+     updateLeds = true;
   }
   void setPixelColor(uint32_t n, uint32_t c, bool update = true);
   void show();
   void set_flashled(uint8_t n);
   void set_flashleds(uint32_t bitmask);
+  void set_tbd_driver_leds(bool left, bool right) {
+    if (tbd_driver_left_active == left && tbd_driver_right_active == right) {
+      return;
+    }
+    tbd_driver_left_active = left;
+    tbd_driver_right_active = right;
+    updateLeds = true;
+  }
   inline void set_led(uint8_t n) {
     if (n < 32) {
       SET_BIT32(led_base_state, n);

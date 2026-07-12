@@ -1,3 +1,216 @@
+MCL 5.00 01/06/2026
+
+**** IMPORTANT ****
+
+Backup all of your Projects before installing MCL 5.00.
+
+Please upgrade to Machinedrum OS X.13 & Monomachine OS X.01 before using MCL 5.00.
+
+*******************
+
+- Project
+
+  MCL 5.00 introduces a new project format. Existing projects are upgraded
+  automatically on first load and are no longer compatible with older versions
+  of MCL. Please back up your projects before upgrading.
+
+  The Load Project page now supports folder creation, so projects can be
+  grouped and nested for better organisation. Projects can also be duplicated
+  or moved between folders via the shift menu.
+
+  A new project "Version" feature lets you retain multiple snapshots of the
+  same project without having to create separate copies.
+
+  The MCL System configuration can now be stored and loaded per-project, or
+  globally, via the PROJ CFG option in System Settings.
+
+- Samplebank Linking
+
+  The MACHINEDRUM menu now has a SAMPLEBANK option for linking a project
+  to a Machinedrum sample bank (+Drive required).
+  It can be set to OFF or a fixed bank from 1 to 128.
+  The linked sample bank is stored with the project configuration and is loaded
+  when the project is loaded,
+
+- UI
+
+  The MD's [ Left ] and [ Right ] arrow keys now cycle through parameters on
+  most pages, and [ Up ] and [ Down ] adjust the selected parameter.
+
+- Grid Page
+
+  A new SOUND on/off option in the grid slot menu allows a saved slot to be
+  loaded as sequence-only, without overwriting the destination sound. The
+  SOUND option is listed below JUMP.
+
+- Sequencer Swing
+
+  StepEdit Sequencer Tracks now have a Swing % parameter.
+
+  [ Func ] + [ Swing ] opens the Swing edit menu, where per-track or all-track
+  Swing % can be adjusted.
+
+- Sequencer Mute
+
+  [ Func ] + [ Accent ] opens Mute edit mode.
+
+  The mute mask is now stored with Sequencer tracks.
+
+- Sequencer Conditional Trigs
+
+  The conditional trig modes have been expanded to the following options:
+
+   --- = always plays, no condition.
+   10%, 25%, 33%, 50%, 66%, 75%, 90% = probability that the trig plays.
+   1SH = one-shot; plays once, then needs to be rearmed.
+   1ST = first cycle/pass only.
+   !1S = not first cycle/pass.
+   FIL = fill active for that track.
+   !FL = fill not active for that track.
+   PRE = previous trig condition fired.
+   !PR = previous trig condition did not fire.
+   NEI = neighbouring previous track fired.
+   !NE = neighbouring previous track did not fire.
+   x:y = iterator condition, for example 2:4 plays on the 2nd pass of a
+   4-pass cycle.
+
+  Older projects are updated automatically to use the new conditions.
+
+- Track Fill
+
+  Sequencer trigs can now use Fill conditions (FIL, !FL).
+
+  Similar to track mutes, the MCL sequencer stores a fill state for each track.
+  Fill states can be edited from the Mixer Page or, in enhanced mode, from the MD's Mute
+  Menu by switching to Fill mode.
+
+  When a track's fill state is active, shown as a diamond, steps assigned a
+  Fill condition will be triggered when the sequencer plays.
+
+- Mixer Page
+
+  From MCL's Mixer Page, hold [ Global ] and press [ Scale ] to toggle between
+  Mute and Fill modes.
+
+  Each of the four Performance States now stores Track Fill settings in
+  addition to Track Mute settings.
+
+  Holding an arrow key displays and edits that Performance State's Track Fill
+  or Track Mute settings, depending on the active mode.
+
+- Mute Menu
+
+  In enhanced mode, press [ Scale ] from the MD's Mute Menu to toggle between
+  Mute and Fill modes.
+
+- Arpeggiator per-track
+
+  Each track has always had its own Arpeggiator, but the settings were not
+  retained on save. Arpeggiator settings are now stored alongside the
+  corresponding Sequencer track.
+
+  The Arpeggiator now has a LCK mode for locking the current note set against
+  accidental note selection, and a TRG rate that advances the arpeggiator only
+  when the sequencer track fires a trig.
+
+- LFO per-track
+
+  Each track now has its own dedicated LFO, and the LFO data is stored
+  with the track on save and load.
+
+  Per-track LFO parameters are edited from the LFO Page.
+
+  Each LFO has a speed multiplier: 0.01x, 0.1x, 1x, 2x, 4x, 8x.
+
+  New LFO wave shapes matching the MDX are now available.
+
+  LFOs can modulate Perf Controllers, and Perf Controllers can modulate LFO
+  depth and speed.
+
+  In LFO Trig mode, the LFO re-triggers in sync with the related track.
+
+  The legacy LF slot is no longer used in MCL 5.00; any existing LFO data is
+  copied to Grid X, Track 1.
+
+  LFO Mode "one" has been replaced with 1SH, for true one-shot playback.
+
+- Polyphony / Voice Select
+
+  MCL Polyphony mode now makes the MD fully multi-timbral.
+
+  Tracks can be assigned a MIDI channel; tracks sharing the same MIDI channel
+  form a single voice group.
+
+  POLY MODE replaces the previous "POLY CHAN" configuration option and can be
+  set to respond to internal note data, or to both internal and external note
+  data.
+
+  As before, Voice Select options are stored with the RT track on Grid Y.
+
+- External MIDI Track Routing
+
+  External MIDI Tracks can now target MD polyphonic voice groups by
+  selecting route channels above MIDI channel 16.
+
+  Notes are routed through the Polyphonic Voice allocator, and CC automation
+  or parameter locks can modulate the addressed MD track parameters through
+  the same route.
+
+- PianoRoll
+
+  Added a note selection rectangle via [ NO ] + [ Down/Right ] for
+  clear/copy/paste operations.
+
+  [ YES ] + [ NO ] + [ Up/Down ] now controls zoom.
+
+  Added page clear/copy/paste for sequencer notes and automation lanes.
+
+- Configuration Changes
+
+  Config -> MIDI -> General has been renamed Config -> MIDI -> Controller, and
+  its settings are now grouped into Input and Output sub-menus:
+
+   INPUT ->  PORT:       [ 2, USB, 2 + USB ]
+             CHRO CHAN:  [ --, 1 .. 16, OMNI ]
+             TRIG CHAN:  [ --, 1 .. 16, OMNI ]
+             POLY MODE:  [ INT, INT+EXT ]
+
+   OUTPUT -> NOTE FWD:   [ OFF, Ctrl->2 ]
+             CC FWD:     [ OFF, Ctrl->2 ]
+             MUTE CC:    [ OFF, 0 .. 127 ]
+
+   PORT selects the MIDI input used for Controller input. CHRO CHAN and
+   TRIG CHAN select the channels used for Chromatic playing and external
+   drum-pad triggering. POLY MODE controls whether polyphonic voice groups
+   respond only to internal input, or also to external Controller input.
+
+   NOTE FWD and CC FWD control whether Note and Control Change messages from
+   the Controller are forwarded to the Port 2 output.
+
+- Bug Fixes / Improvements
+
+  Fixed a regression in realtime MIDI message interleaving when forwarding
+  MIDI clock between ports.
+
+  Improved performance of MIDI byte reception on AVR.
+
+  Fixed a case where the MCL sequencer could lose sync with external MIDI
+  clock while receiving sysex messages from the MD.
+
+  Fixed unexpected parameter resets when stopping and starting the sequencer.
+
+  PianoRoll / External MIDI tracks: fixes to note rendering, deletion and
+  rotation behaviour.
+
+  Fixed stuck MIDI notes during slot transitions on the A4 and MNM drivers.
+
+- Cross Platform Support
+
+  MCL now runs on multiple hardware platforms, including RP2350-compatible
+  boards such as the TBD-16. WASM support has also been added for the
+  Desktop runtime.
+
+
 MCL 4.70 01/10/2025
 
 Please upgrade to Machinedrum OS X.12 & Monomachine OS X.01 before using MCL 4.70

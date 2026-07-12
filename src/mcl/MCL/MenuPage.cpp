@@ -1,10 +1,126 @@
 #include "MenuPage.h"
 #include "MCLGUI.h"
-#include "MidiActivePeering.h"
+#include "Devices/DeviceManager.h"
+#include "Devices/DevicePanelRef.h"
+#include "../Drivers/MidiDevice.h"
 #include "ResourceManager.h"
+#include "MCLSysConfig.h"
+#include "Devices/MidiSetup.h"
+#include "MCLDefines.h"
+
+namespace {
+
+#ifdef MCL_HAS_TBD_DRIVER
+bool is_grid_y_device_value(uint8_t *dest_var) {
+  return dest_var == &mcl_cfg.grid_y_device;
+}
+
+uint8_t grid_y_device_to_menu_value(uint8_t stored_value) {
+  switch (stored_value) {
+  case GRID_Y_DEVICE_GENER:
+    return 0;
+  case GRID_Y_DEVICE_ELEKT:
+    return 1;
+  case GRID_Y_DEVICE_TBD:
+    return 2;
+  case GRID_Y_DEVICE_OFF:
+    return 3;
+  default:
+    return 0;
+  }
+}
+
+uint8_t grid_y_device_from_menu_value(uint8_t menu_value) {
+  switch (menu_value) {
+  case 0:
+    return GRID_Y_DEVICE_GENER;
+  case 1:
+    return GRID_Y_DEVICE_ELEKT;
+  case 2:
+    return GRID_Y_DEVICE_TBD;
+  case 3:
+    return GRID_Y_DEVICE_OFF;
+  default:
+    return GRID_Y_DEVICE_GENER;
+  }
+}
+#endif
+
+uint8_t menu_value_from_stored(uint8_t *dest_var, uint8_t stored_value) {
+  if (dest_var == &mcl_cfg.uart2_poly_chan) {
+    return stored_value == MIDI_LOCAL_MODE ? MD_POLY_MODE_INT
+                                           : MD_POLY_MODE_INT_EXT;
+  }
+#ifdef MCL_HAS_TBD_DRIVER
+  if (is_grid_y_device_value(dest_var)) {
+    return grid_y_device_to_menu_value(stored_value);
+  }
+#endif
+  return stored_value;
+}
+
+uint8_t stored_value_from_menu(uint8_t *dest_var, uint8_t menu_value) {
+  if (dest_var == &mcl_cfg.uart2_poly_chan) {
+    return menu_value == MD_POLY_MODE_INT_EXT;
+  }
+#ifdef MCL_HAS_TBD_DRIVER
+  if (is_grid_y_device_value(dest_var)) {
+    return grid_y_device_from_menu_value(menu_value);
+  }
+#endif
+  return menu_value;
+}
+
+void nudge_menu_encoder(Encoder *encoder, int8_t delta) {
+  if (encoder == nullptr) {
+    return;
+  }
+  auto *range_encoder = (MCLEncoder *)encoder;
+  int next = range_encoder->cur + delta;
+  if (next < range_encoder->min) {
+    next = range_encoder->min;
+  }
+  if (next > range_encoder->max) {
+    next = range_encoder->max;
+  }
+  range_encoder->cur = next;
+}
+
+void sync_menu_value_encoder(Encoder *encoder, MenuBase *menu,
+                             const menu_item_t *item,
+                             bool reset_on_null) {
+  auto *value_encoder = (MCLEncoder *)encoder;
+  uint8_t range = item != nullptr ? item->range : 0;
+  value_encoder->max = range > 0 ? range - 1 : 0;
+  value_encoder->min = item != nullptr ? item->min : 0;
+
+  uint8_t *dest_var = menu->get_dest_variable(item);
+  if (dest_var != NULL) {
+    encoder->setValue(menu_value_from_stored(dest_var, *dest_var));
+  } else if (reset_on_null) {
+    encoder->setValue(0);
+  }
+}
+
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+bool mouse_in_menu_value_area(int16_t x, int16_t x_offset, int16_t width) {
+  int16_t value_width = width < 36 ? width / 2 : 18;
+  if (value_width < 10) {
+    value_width = 10;
+  }
+  return x >= x_offset + width - value_width;
+}
+#endif
+
+} // namespace
 
 void MenuPageBase::init() {
+  init(true);
+}
+
+void MenuPageBase::init(bool generate_row_names) {
   DEBUG_PRINTLN("MenuPageBase::init");
+  DevicePanelRef::set_primary_key_repeat(1);
   R.Clear();
   R.use_machine_names_short(); // for grid page
   R.use_icons_knob(); // for grid page
@@ -13,24 +129,20 @@ void MenuPageBase::init() {
   DEBUG_PRINT("R.Size() = ");
   DEBUG_PRINTLN(R.Size());
   R.restore_menu_layout_deps();
-  gen_menu_row_names();
+  (void)generate_row_names;
 
-  ((MCLEncoder *)encoders[1])->max = get_menu()->get_number_of_items() - 1;
+  MenuBase *m = get_menu();
+  encoders[1]->cur = selected_item;
+  ((MCLEncoder *)encoders[1])->max = m->get_number_of_items() - 1;
 
   if (((MCLEncoder *)encoders[1])->cur > ((MCLEncoder *)encoders[1])->max) {
     ((MCLEncoder *)encoders[1])->cur = 0;
     cur_row = 0;
   }
+  selected_item = encoders[1]->cur;
 
-  ((MCLEncoder *)encoders[0])->max =
-      get_menu()->get_option_range(encoders[1]->cur) - 1;
-  ((MCLEncoder *)encoders[0])->min =
-      get_menu()->get_option_min(encoders[1]->cur);
-
-  uint8_t *dest_var = get_menu()->get_dest_variable(encoders[1]->cur);
-  if (dest_var != NULL) {
-    encoders[0]->setValue(*dest_var);
-  }
+  const menu_item_t *item = m->get_item(encoders[1]->cur);
+  sync_menu_value_encoder(encoders[0], m, item, false);
   encoders[0]->old = encoders[0]->cur;
   encoders[1]->old = encoders[1]->cur;
 }
@@ -41,84 +153,40 @@ void MenuPageBase::gen_menu_device_names() {
       (menu_option_t *)R.Allocate(sizeof(menu_option_t) * NUM_DEVS);
   m->set_custom_options(p,0);
 
+  MidiDevice *devs[] = { device_manager.primary_device(), device_manager.secondary_device() };
   for (uint8_t n = 0; n < NUM_DEVS; n++) {
-    p->pos = n + 1;
-    strcpy(p->name, midi_active_peering.get_device(n + 1)->name);
+    p->pos = n;
+#ifdef PLATFORM_TBD
+    if (devs[0] == devs[1]) {
+      if (strcmp(devs[n]->name, "TBD") == 0) {
+        strcpy(p->name, n == 0 ? "TB1" : "TB2");
+      } else {
+        strncpy(p->name, devs[n]->name, sizeof(p->name) - 3);
+        p->name[sizeof(p->name) - 3] = '\0';
+        strncat(p->name, n == 0 ? ":1" : ":2",
+                sizeof(p->name) - strlen(p->name) - 1);
+      }
+    } else {
+#endif
+      strcpy(p->name, devs[n]->name);
+#ifdef PLATFORM_TBD
+    }
+#endif
     p++;
   }
 }
 
-void MenuPageBase::gen_menu_transpose_names() {
-  MenuBase *m = get_menu();
-  menu_option_t *p = (menu_option_t *)R.Allocate(sizeof(menu_option_t) * 50);
-  m->set_custom_options(p,1);
-
-  for (int8_t i = -12; i <= 12; ++i) {
-    // Generate both regular and ALL entries in same loop
-    for (uint8_t all = 0; all < 2; ++all) {
-      p->pos = i + (all ? 37 : 12); // 0 transpose at index 12
-
-      uint8_t idx = 0;
-      if (all) {
-        p->name[idx++] = 'A';
-        p->name[idx++] = 'L';
-        p->name[idx++] = 'L';
-        p->name[idx++] = ' ';
-      }
-
-      p->name[idx++] = (i < 0) ? '-' : '+';
-      uint8_t num = abs(i);
-      if (num >= 10) {
-        p->name[idx++] = '1';
-        num -= 10;
-      }
-      p->name[idx++] = '0' + num;
-      p->name[idx] = '\0';
-
-      ++p;
-    }
-  }
-
-}
-
-void MenuPageBase::gen_menu_row_names() {
-  MenuBase *m = get_menu();
-  menu_option_t *p = (menu_option_t *)R.Allocate(sizeof(menu_option_t) * 128);
-  m->set_custom_options(p,0);
-  for (uint8_t row_id = 0; row_id < 128; ++row_id) {
-    char bank = 'A' + row_id / 16;
-    uint8_t i = row_id % 16 + 1;
-
-    p->pos = row_id;
-    p->name[0] = bank;
-
-    if (i < 10) {
-      p->name[1] = '0';
-      p->name[2] = '0' + i;
-    } else {
-      p->name[1] = '1';
-      p->name[2] = '0' + i - 10;
-    }
-
-    p->name[3] = '\0';
-    ++p;
-  }
-}
-
-void MenuPageBase::setup() {}
-
 void MenuPageBase::cleanup() {
+  selected_item = encoders[1]->cur;
   key_interface.ignoreNextEventClear(MDX_KEY_YES);
   key_interface.ignoreNextEventClear(MDX_KEY_NO);
 }
 
 void MenuPageBase::loop() {
+  MenuBase *m = get_menu();
 
   if (encoders[1]->hasChanged()) {
-    ((MCLEncoder *)encoders[0])->max =
-        get_menu()->get_option_range(encoders[1]->cur) - 1;
-    ((MCLEncoder *)encoders[0])->min =
-        get_menu()->get_option_min(encoders[1]->cur);
+    const menu_item_t *item = m->get_item(encoders[1]->cur);
 
     uint8_t diff = encoders[1]->cur - encoders[1]->old;
     int8_t new_val = cur_row + diff;
@@ -130,17 +198,13 @@ void MenuPageBase::loop() {
     }
     // MD.assignMachine(0, encoders[1]->cur);
     cur_row = new_val;
-    uint8_t *dest_var = get_menu()->get_dest_variable(encoders[1]->cur);
-    if (dest_var != NULL) {
-      encoders[0]->setValue(*dest_var);
-    } else {
-      encoders[0]->setValue(0);
-    }
+    selected_item = encoders[1]->cur;
+    sync_menu_value_encoder(encoders[0], m, item, true);
   }
   if (encoders[0]->hasChanged()) {
-    uint8_t *dest_var = get_menu()->get_dest_variable(encoders[1]->cur);
+    uint8_t *dest_var = m->get_dest_variable(encoders[1]->cur);
     if (dest_var != NULL) {
-      *dest_var = encoders[0]->cur;
+      *dest_var = stored_value_from_menu(dest_var, encoders[0]->cur);
     }
   }
 }
@@ -150,72 +214,103 @@ void MenuPageBase::draw_scrollbar(uint8_t x_offset) {
                                   visible_rows, encoders[1]->cur - cur_row);
 }
 
-void MenuPageBase::draw_item(uint8_t item_n, uint8_t row) {
-  const char *name = get_menu()->get_item_name(item_n);
-  if (name != nullptr) {
-    oled_display.print(name);
-  }
-  uint8_t number_of_items = get_menu()->get_number_of_items();
-
-  if (item_n > number_of_items - 1) {
+void MenuPageBase::draw_item(MenuBase *m, uint8_t item_n) {
+  const menu_item_t *item = m->get_item(item_n);
+  if (item == nullptr) {
     return;
   }
 
-  uint8_t number_of_options = get_menu()->get_number_of_options(item_n);
-  if (get_menu()->get_option_range(item_n) > 0) {
+  oled_display.print(item->name);
 
-    oled_display.print(F(" "));
-    uint8_t *pdest = get_menu()->get_dest_variable(item_n);
-    const char *option_name = get_menu()->get_option_name(item_n, *pdest);
+  if (item->range > 0) {
+
+    mcl_print_P(mclstr_space);
+    uint8_t *pdest = m->get_dest_variable(item);
+    uint8_t option_value = *pdest;
+    option_value = menu_value_from_stored(pdest, option_value);
+    const char *option_name = m->get_option_name(item, option_value);
     if (option_name == NULL) {
-      oled_display.println(*pdest);
+      oled_display.print(option_value);
+      if (item->options_begin == MENU_OPTIONS_PERCENT) {
+        oled_display.print('%');
+      }
+      oled_display.println();
     } else {
       oled_display.println(option_name);
     }
   }
 }
 
-void MenuPageBase::draw_menu(uint8_t x_offset, uint8_t y_offset,
-                             uint8_t width) {
+uint8_t MenuPageBase::draw_menu(uint8_t x_offset, uint8_t y_offset,
+                                uint8_t width, uint8_t scrollbar_width) {
   oled_display.setCursor(x_offset, y_offset);
-  uint8_t number_of_items = get_menu()->get_number_of_items();
+  MenuBase *m = get_menu();
+  uint8_t number_of_items = m->get_number_of_items();
+  bool show_scrollbar = scrollbar_width > 0 && number_of_items > visible_rows;
+  uint8_t item_width = width;
+  if (!show_scrollbar && scrollbar_width > 0) {
+    item_width += scrollbar_width + 3;
+  }
   uint8_t max_items;
   if (number_of_items > visible_rows) {
     max_items = visible_rows;
   } else {
     max_items = number_of_items;
   }
+  uint8_t first_item = encoders[1]->cur - cur_row;
   for (uint8_t n = 0; n < max_items; n++) {
 
     oled_display.setCursor(x_offset, y_offset + 8 * n);
     if (n == cur_row) {
       oled_display.setTextColor(BLACK, WHITE);
       oled_display.fillRect(max(0, oled_display.getCursorX() - 3),
-                            max(0, oled_display.getCursorY() - 6), width, 7,
-                            WHITE);
+                            max(0, oled_display.getCursorY() - 6),
+                            item_width, 7, WHITE);
     } else {
       oled_display.setTextColor(WHITE, BLACK);
     }
-    draw_item(encoders[1]->cur - cur_row + n, n);
+    draw_item(m, first_item + n);
+  }
+
+  if (show_scrollbar) {
+    uint8_t bar_x = x_offset + item_width;
+    uint8_t bar_y = y_offset - 6;
+    uint8_t bar_h = visible_rows * 8 - 1;
+    uint8_t thumb_h = ((uint16_t)visible_rows * bar_h) / number_of_items;
+    if (thumb_h < 3) {
+      thumb_h = 3;
+    }
+    uint8_t travel = bar_h - thumb_h;
+    uint8_t max_first = number_of_items - visible_rows;
+    uint8_t thumb_y = bar_y + ((uint16_t)first_item * travel) / max_first;
+    oled_display.fillRect(bar_x, bar_y, scrollbar_width, bar_h, BLACK);
+    oled_display.fillRect(bar_x, thumb_y, scrollbar_width, thumb_h, WHITE);
   }
 
   // draw_item.read(getRow());
 
   oled_display.setTextColor(WHITE, BLACK);
+  return number_of_items;
+}
+
+void MenuPageBase::draw_right_menu(uint8_t width) {
+  oled_display.setFont(&TomThumb);
+  oled_display.fillRect(128 - width - 2, 0, width + 2, 32, BLACK);
+  draw_menu(128 - width, 8, width);
 }
 
 void MenuPageBase::display() {
 
-  uint8_t number_of_items = get_menu()->get_number_of_items();
+  MenuBase *m = get_menu();
   uint8_t x_offset = 43;
   oled_display.clearDisplay();
   oled_display.setTextColor(WHITE, BLACK);
   oled_display.setFont(&TomThumb);
   oled_display.setCursor(0, 8);
-  oled_display.println(get_menu()->get_name());
+  oled_display.println(m->get_name());
   mcl_gui.draw_vertical_dashline(x_offset - 6);
 
-  draw_menu(x_offset, 8);
+  uint8_t number_of_items = draw_menu(x_offset, 8);
 
   if (number_of_items > visible_rows) {
     draw_scrollbar(120);
@@ -224,8 +319,9 @@ void MenuPageBase::display() {
 
 bool MenuPageBase::enter() {
   DEBUG_PRINT_FN();
-  void (*row_func)() = get_menu()->get_row_function(encoders[1]->cur);
-  PageIndex page_callback = get_menu()->get_page_callback(encoders[1]->cur);
+  MenuBase *m = get_menu();
+  void (*row_func)() = m->get_row_function(encoders[1]->cur);
+  PageIndex page_callback = m->get_page_callback(encoders[1]->cur);
   if (page_callback != NULL_PAGE) {
     DEBUG_PRINTLN("menu pushing page");
     DEBUG_PRINTLN((uint16_t)page_callback);
@@ -244,7 +340,8 @@ void MenuPageBase::exit() {
   if (GUI.currentPage() != this) {
     return;
   }
-  void (*exit_func)() = get_menu()->get_exit_function();
+  MenuBase *m = get_menu();
+  void (*exit_func)() = m->get_exit_function();
   if (exit_func != NULL) {
     (*exit_func)();
   }
@@ -271,17 +368,17 @@ bool MenuPageBase::handleEvent(gui_event_t *event) {
         key_interface.ignoreNextEvent(MDX_KEY_NO);
         goto NO;
       case MDX_KEY_UP:
-        encoders[1]->cur -= inc;
-        break;
+        nudge_menu_encoder(encoders[1], -inc);
+        return true;
       case MDX_KEY_DOWN:
-        encoders[1]->cur += inc;
-        break;
+        nudge_menu_encoder(encoders[1], inc);
+        return true;
       case MDX_KEY_LEFT:
-        encoders[0]->cur -= inc;
-        break;
+        nudge_menu_encoder(encoders[0], -inc);
+        return true;
       case MDX_KEY_RIGHT:
-        encoders[0]->cur += inc;
-        break;
+        nudge_menu_encoder(encoders[0], inc);
+        return true;
       }
     }
   }
@@ -303,3 +400,125 @@ bool MenuPageBase::handleEvent(gui_event_t *event) {
   }
   return false;
 }
+
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+bool MenuPageBase::selectMouseItem(uint8_t item, uint8_t row) {
+  MenuBase *m = get_menu();
+  if (encoders[0] == nullptr || encoders[1] == nullptr ||
+      item >= m->get_number_of_items() || row >= visible_rows) {
+    return false;
+  }
+
+  bool changed = encoders[1]->cur != item || cur_row != row;
+  encoders[1]->cur = item;
+  encoders[1]->old = item;
+  selected_item = item;
+  cur_row = row;
+
+  uint8_t range = m->get_option_range(item);
+  ((MCLEncoder *)encoders[0])->max = range > 0 ? range - 1 : 0;
+  ((MCLEncoder *)encoders[0])->min = m->get_option_min(item);
+
+  uint8_t *dest_var = m->get_dest_variable(item);
+  encoders[0]->setValue(dest_var != NULL
+                            ? menu_value_from_stored(dest_var, *dest_var)
+                            : 0);
+  return changed;
+}
+
+bool MenuPageBase::handleMouseEventAt(mcl_mouse_event_t *event,
+                                      int16_t x_offset, int16_t y_offset,
+                                      int16_t width) {
+  if (event == NULL) {
+    return false;
+  }
+
+  bool hover_event = event->type == MCL_MOUSE_MOVE ||
+                     event->type == MCL_MOUSE_DRAG;
+  bool click_event = event->type == MCL_MOUSE_DOWN ||
+                     event->type == MCL_MOUSE_DOUBLE_CLICK;
+  bool wheel_event = event->type == MCL_MOUSE_WHEEL && event->deltaY != 0;
+  if (!hover_event && !click_event && !wheel_event) {
+    return false;
+  }
+  if (click_event && (event->buttons & MCL_MOUSE_BUTTON_LEFT) == 0) {
+    return false;
+  }
+
+  int16_t row_top = y_offset - 6;
+  if (event->x < x_offset - 6 || event->x >= x_offset + width ||
+      event->y < row_top) {
+    return false;
+  }
+
+  int row = (event->y - row_top) / 8;
+  if (row < 0 || row >= visible_rows) {
+    return false;
+  }
+
+  MenuBase *m = get_menu();
+  int first_item = encoders[1]->cur - cur_row;
+  int item = first_item + row;
+  if (item < 0 || item >= m->get_number_of_items()) {
+    return false;
+  }
+
+  bool value_hit = encoders[0] != NULL && encoders[1] != NULL &&
+                   m->get_option_range((uint8_t)item) > 0 &&
+                   mouse_in_menu_value_area(event->x, x_offset, width);
+
+  if (wheel_event) {
+    if (value_hit) {
+      selectMouseItem((uint8_t)item, (uint8_t)row);
+      nudge_menu_encoder(encoders[0], event->deltaY > 0 ? 1 : -1);
+      uint8_t *dest_var = m->get_dest_variable(encoders[1]->cur);
+      if (dest_var != NULL) {
+        *dest_var = stored_value_from_menu(dest_var, encoders[0]->cur);
+      }
+      encoders[0]->old = encoders[0]->cur;
+    } else {
+      nudge_menu_encoder(encoders[1], event->deltaY > 0 ? -1 : 1);
+    }
+    return true;
+  }
+
+  bool changed = selectMouseItem((uint8_t)item, (uint8_t)row);
+  if (value_hit && event->type == MCL_MOUSE_DRAG &&
+      (event->buttons & MCL_MOUSE_BUTTON_LEFT) != 0 &&
+      (event->deltaY != 0 || event->deltaX != 0)) {
+    int8_t delta = 0;
+    if (event->deltaY != 0) {
+      delta = event->deltaY > 0 ? 1 : -1;
+    } else {
+      delta = event->deltaX > 0 ? 1 : -1;
+    }
+    nudge_menu_encoder(encoders[0], delta);
+    uint8_t *dest_var = m->get_dest_variable(encoders[1]->cur);
+    if (dest_var != NULL) {
+      *dest_var = stored_value_from_menu(dest_var, encoders[0]->cur);
+    }
+    encoders[0]->old = encoders[0]->cur;
+    return true;
+  }
+
+  if (click_event) {
+    if (value_hit) {
+      bool reverse =
+          (event->modifiers & MCL_MOUSE_MODIFIER_SHIFT) != 0;
+      nudge_menu_encoder(encoders[0], reverse ? -1 : 1);
+      uint8_t *dest_var = m->get_dest_variable(encoders[1]->cur);
+      if (dest_var != NULL) {
+        *dest_var = stored_value_from_menu(dest_var, encoders[0]->cur);
+      }
+      encoders[0]->old = encoders[0]->cur;
+      return true;
+    }
+    enter();
+  }
+  return changed || click_event;
+}
+
+bool MenuPageBase::handleMouseEvent(mcl_mouse_event_t *event) {
+  return handleMouseEventAt(event, 43, 8, MENU_WIDTH);
+}
+#endif

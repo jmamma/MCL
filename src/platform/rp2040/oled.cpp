@@ -1,6 +1,6 @@
 #include "Oled.h"
 #include "Adafruit_GFX.h"
-#include "DiagnosticPage.h"
+#include "GUI/Pages/DiagnosticPage.h"
 #include "MCLSd.h"
 #include "MCLGUI.h"
 
@@ -382,12 +382,36 @@ void Oled::fillScreen(uint16_t color) {
   }
 }
 */
-void Oled::textbox(const char *text, const char *text2, uint16_t delay) {
-  textbox_clock = g_clock_ms;
+
+void Oled::init_textbox() {
+  // 1. Ensure the member variable buffers are safely null-terminated
+  textbox_str[sizeof(textbox_str) - 1] = '\0';
+  textbox_str2[sizeof(textbox_str2) - 1] = '\0';
+
+  // 2. Set up the display state
+  textbox_clock = read_clock_ms();
+  textbox_enabled = true;
+}
+
+void Oled::textbox(const char *text, const char *text2) {
+  // Copy strings from RAM into member variables
   strncpy(textbox_str, text, sizeof(textbox_str));
   strncpy(textbox_str2, text2, sizeof(textbox_str2));
-  textbox_delay = delay;
-  textbox_enabled = true;
+  init_textbox();
+}
+
+void Oled::textbox_P(const char *text_P, const char *text2_P) {
+  // Use the PROGMEM-aware version of strncpy to copy from flash
+  strncpy_P(textbox_str, text_P, sizeof(textbox_str));
+  strncpy_P(textbox_str2, text2_P, sizeof(textbox_str2));
+  init_textbox();
+}
+
+void Oled::textbox_P(const char *text_P) {
+  // Copy strings from RAM into member variables
+  strncpy_P(textbox_str, text_P, sizeof(textbox_str));
+  textbox_str2[0] = '\0';
+  init_textbox();
 }
 
 bool display_lock = false;
@@ -397,7 +421,7 @@ void Oled::display(void) {
 
   display_lock = true;
   if (textbox_enabled) {
-    if (clock_diff(textbox_clock, g_clock_ms) < textbox_delay) {
+    if (clock_diff(textbox_clock, g_clock_ms) < delay_time) {
       draw_textbox(textbox_str, textbox_str2);
     } else {
       textbox_enabled = false;
@@ -435,13 +459,19 @@ void Oled::draw_textbox(char *text, char *text2) {
   auto oldfont = getFont();
   setFont();
   uint8_t font_width = 6;
-  uint8_t w = ((strlen(text) + strlen(text2) + 2) * font_width);
+  uint8_t len1 = strlen(text);
+  uint8_t len2 = strlen(text2);
+  uint8_t len_total = (strlen(text) + strlen(text2) + 2);
+  bool use_space = (len2 > 0);
+  if (use_space) { len_total++; }
+  uint8_t w = (len_total * font_width);
   uint8_t x = 64 - w / 2;
   uint8_t y = 8;
   fillRect(x - 1, y - 1, w + 2, 8 * 2 + 2, 0);
   drawRect(x, y, w, 8 * 2, 1);
   setCursor(x + font_width, y + 4);
   print(text);
+  if (use_space) { print(' '); }
   print(text2);
   setFont(oldfont);
 }

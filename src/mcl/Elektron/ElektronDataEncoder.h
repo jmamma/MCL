@@ -32,12 +32,18 @@
 class ElektronDataToSysexEncoder : public DataEncoder {
 protected:
   uint16_t retLen;
-  uint16_t cnt7;
+  uint8_t cnt7;
   bool in7Bit;
   MidiUartClass *uart;
   uint8_t buf[8];
   uint16_t checksum;
   bool inChecksum;
+#if !defined(__AVR__)
+  bool inRLE;
+  uint8_t rleByte;
+  uint8_t rleCount;
+  void rleFlush();
+#endif
 public:
 
   ElektronDataToSysexEncoder(uint8_t *_sysex = nullptr) {
@@ -61,6 +67,13 @@ public:
   /** send sysex start message **/
   void begin();
 
+#if !defined(__AVR__)
+  /** Start RLE compression (must be within 7-bit mode). **/
+  void startRLE();
+  /** Stop RLE compression and flush remaining run. **/
+  void stopRLE();
+#endif
+
   /** Start adding outgoing bytes to the checksum. **/
 
   void startChecksum();
@@ -74,6 +87,8 @@ public:
   virtual uint16_t finish();
 
   virtual void init(uint8_t *_sysex = nullptr, MidiUartClass *_uart = nullptr);
+  void flush8Bytes();
+
   DATA_ENCODER_RETURN_TYPE encode7Bit(uint8_t inb);
 
   virtual DATA_ENCODER_RETURN_TYPE pack8(uint8_t inb);
@@ -128,14 +143,21 @@ class ElektronSysexDecoder : public DataDecoder {
   uint8_t bits;
   uint8_t tmpData[7];
   bool in7Bit;
+  SysexView sysexView;
+#if !defined(__AVR__)
+  bool inRLE;
+  uint8_t rleByte;
+  uint8_t rleCount;
+  void getRaw8(uint8_t *c);
+#endif
 
 public:
   ElektronSysexDecoder(uint8_t *_data = nullptr) {
     init(_data);
   }
 
-  ElektronSysexDecoder(MidiClass *_midi, uint16_t _offset) {
-    init(_midi, _offset);
+  ElektronSysexDecoder(const SysexView &_sysexView, uint16_t _offset) {
+    init(_sysexView, _offset);
   }
 
   /** Start the decoding of 7-bit data. **/
@@ -147,8 +169,16 @@ public:
   /** Stop the decoding of 7-bit data. **/
   void stop7Bit() { in7Bit = false; }
 
-  virtual void init(MidiClass *_midi, uint16_t _offset);
+#if !defined(__AVR__)
+  /** Start RLE decompression (within 7-bit mode). **/
+  void startRLE();
+  /** Stop RLE decompression. **/
+  void stopRLE();
+#endif
+
+  void init(const SysexView &_sysexView, uint16_t _offset);
   virtual void init(uint8_t *_data);
+  uint8_t readByte();
   virtual DATA_ENCODER_RETURN_TYPE get8(uint8_t *c);
 };
 

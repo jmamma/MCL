@@ -3,7 +3,7 @@
 
 class StackMonitor {
 private:
-    static constexpr uint32_t STACK_WARN_THRESHOLD = 1024;  // Warning at 1K left
+    static constexpr int32_t STACK_WARN_THRESHOLD = 1024;  // Warning at 1K left
 
     // These match the linker script exactly
     static constexpr uint32_t SCRATCH_X_START = 0x20080000;
@@ -21,7 +21,7 @@ public:
     }
 
     static int32_t get_free_stack() {
-        #ifdef AVR
+        #if defined(__AVR__) || defined(PLATFORM_DESKTOP)
             return 0; //todo
         #else
         uint32_t sp = rp2040.getStackPointer();
@@ -59,7 +59,7 @@ public:
     }
 
     static void print_stack_info() {
-        #ifdef AVR
+        #if defined(AVR) || defined(PLATFORM_DESKTOP)
         #else
         int32_t free_space = get_free_stack();
         uint32_t core = rp2040.cpuid();

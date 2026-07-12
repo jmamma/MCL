@@ -15,6 +15,7 @@ struct chunk_t {
 
   /// returns total chunk length.
   uint32_t total_len() const { return chunk_size + sizeof(chunk_t); }
+  uint32_t padded_len() const { return total_len() + (chunk_size & 1); }
 
   /// returns extra data length in the chunk.
   template <typename T> uint32_t ex_len() const {
@@ -30,7 +31,7 @@ struct chunk_t {
 
   /// clear the chunk id and length, mark the current chunk inactive.
   void deactivate() {
-    *(uint32_t *)chunk_id = 0;
+    chunk_id[0] = 0;
     chunk_size = 0;
   }
 
@@ -39,7 +40,7 @@ struct chunk_t {
     return 0 == memcmp(chunk_id, T::id, sizeof(chunkid_t));
   }
 
-  bool is_active() const { return *(uint32_t *)chunk_id != 0; }
+  bool is_active() const { return chunk_id[0] != 0; }
 };
 
 struct fmtchunk_t : public chunk_t {
@@ -57,8 +58,9 @@ struct fmtchunk_t : public chunk_t {
     sampleRate = smplrate;
     bitRate = bitrate;
     audioFormat = 1; // PCM
-    byteRate = sampleRate * nchannel * (bitrate / 8);
-    blockAlign = nchannel * (bitrate / 8);
+    uint8_t bytes_per_sample = (bitrate + 7) >> 3;
+    byteRate = sampleRate * nchannel * bytes_per_sample;
+    blockAlign = nchannel * bytes_per_sample;
 
     activate<fmtchunk_t>(0);
   }
@@ -100,8 +102,8 @@ struct smplchunk_t : public chunk_t {
   uint32_t cbSamplerData;
   loop_t loops[1]; // keep at least 1 loop in-place
 
-  void init(const fmtchunk_t &fmt, uint8_t SDS_loop_type,
-            uint32_t SDS_loop_start, uint32_t SDS_loop_end) {
+  void init(uint8_t SDS_loop_type, uint32_t SDS_loop_start,
+            uint32_t SDS_loop_end) {
     activate<smplchunk_t>(0);
     dwManufacturer = 0;
     memcpy(&dwProduct, "MCL ", 4);
@@ -115,14 +117,14 @@ struct smplchunk_t : public chunk_t {
 
     loops[0].dwIdentifier = 0;
     loops[0].dwType = SDS_loop_type;
-    loops[0].dwStart = SDS_loop_start * fmt.numChannels * (fmt.bitRate / 8);
-    loops[0].dwEnd = SDS_loop_end * fmt.numChannels * (fmt.bitRate / 8);
+    loops[0].dwStart = SDS_loop_start;
+    loops[0].dwEnd = SDS_loop_end;
     loops[0].dwFraction = 0;
     loops[0].dwPlayCount = 0;
   }
 
-  void to_sds(const fmtchunk_t &fmt, uint8_t &SDS_loop_type,
-              uint32_t &SDS_loop_start, uint32_t &SDS_loop_end) {
+  void to_sds(uint8_t &SDS_loop_type, uint32_t &SDS_loop_start,
+              uint32_t &SDS_loop_end) const {
     // only activate SDS looping if we're not dealing with chain/slices
     if (cSampleLoops != 1) {
       return;
@@ -131,16 +133,8 @@ struct smplchunk_t : public chunk_t {
       return;
     }
     SDS_loop_type = loops[0].dwType;
-    SDS_loop_start = loops[0].dwStart / (fmt.numChannels * (fmt.bitRate / 8));
-    SDS_loop_end = loops[0].dwEnd / (fmt.numChannels * (fmt.bitRate / 8));
-
-    DEBUG_PRINTLN("to_sds");
-    DEBUG_DUMP(loops[0].dwStart);
-    DEBUG_DUMP(loops[0].dwEnd);
-    DEBUG_DUMP(fmt.numChannels);
-    DEBUG_DUMP(fmt.bitRate);
-    DEBUG_PRINTLN(SDS_loop_start);
-    DEBUG_PRINTLN(SDS_loop_end);
+    SDS_loop_start = loops[0].dwStart;
+    SDS_loop_end = loops[0].dwEnd;
   }
 
   static constexpr const char *id = "smpl";
@@ -159,15 +153,15 @@ struct WavHeader {
   smplchunk_t smpl;
 
   uint32_t get_length() {
-     return (data.chunk_size / fmt.numChannels) / (fmt.bitRate / 8);
+     return data.chunk_size / fmt.blockAlign;
   }
 
   uint32_t total_len() const {
     uint32_t sz = 12;
-    sz += fmt.total_len();
-    sz += data.total_len();
+    sz += fmt.padded_len();
+    sz += data.padded_len();
     if (smpl.is_active()) {
-      sz += smpl.total_len();
+      sz += smpl.padded_len();
     }
     return sz;
   }
@@ -184,7 +178,7 @@ struct WavHeader {
     DEBUG_PRINT_FN();
     fmt.init(numChannels, sampleRate, bitRate);
     data.init();
-    smpl.init(fmt, SDS_loop_type, SDS_loop_start, SDS_loop_end);
+    smpl.init(SDS_loop_type, SDS_loop_start, SDS_loop_end);
     _fill_chunkinfo();
   }
 
@@ -210,7 +204,8 @@ struct WavHeader {
     if (memcmp(format, "WAVE", 4)) {
       return false;
     }
-    if (filesize != chunk_size + 8) {
+    if ((filesize < sizeof(chunk_t)) ||
+        (chunk_size > filesize - sizeof(chunk_t))) {
       return false;
     }
     return true;
@@ -220,9 +215,7 @@ struct WavHeader {
 class Wav {
 public:
   WavHeader header;
-  bool headerRead = false;
   uint32_t data_offset;
-  uint32_t smpl_offset;
   char filename[16];
   File file;
   Wav() {}
@@ -238,6 +231,9 @@ public:
   bool write_samples(void *data, uint32_t num_samples,
                      uint32_t sample_offset = 0, uint8_t channel = 0,
                      bool writeheader = true);
+  bool write_mono_samples(void *data, uint32_t num_samples,
+                          uint32_t sample_offset = 0,
+                          bool writeheader = true);
   bool read_samples(void *data, uint32_t num_samples,
                     uint32_t sample_offset = 0, uint8_t channel = 0);
   bool rename(char *new_name);
@@ -248,6 +244,11 @@ public:
                   wav_sample_t *c0_min_sample = NULL,
                   wav_sample_t *c1_max_sample = NULL,
                   wav_sample_t *c1_min_sample = NULL);
+#if defined(__AVR__)
+  bool normalize16_mono(uint16_t target_peak, uint16_t current_peak,
+                        uint32_t num_samples = 0,
+                        uint32_t sample_index = 0);
+#endif
   bool apply_gain(float gain, uint8_t channel = 0, uint32_t num_samples = 0, uint32_t sample_index = 0);
 };
 

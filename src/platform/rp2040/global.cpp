@@ -2,13 +2,18 @@
 #include "MidiSysex.h"
 #include "MidiIDSysex.h"
 #include "Midi.h"
-#include "MidiSetup.h"
+#include "Devices/MidiSetup.h"
 #include "memory.h"
 #include "oled.h"
 #include "GUI.h"
-#include "MD.h"
-#include "MNM.h"
-#include "A4.h"
+#include "../../mcl/Drivers/MD/MD.h"
+#include "../../mcl/Drivers/MNM/MNM.h"
+#include "../../mcl/Drivers/A4/A4.h"
+#include "../../mcl/Drivers/Generic/GenericMidiDevice.h"
+#ifdef PLATFORM_TBD
+#include "../../mcl/Drivers/TBD/TBD.h"
+#endif
+#include "Devices/MidiActivePeering.h"
 #include "Elektron.h"
 #include "MidiIDSysex.h"
 #include "SoftwareSPI.h"
@@ -24,15 +29,25 @@ uint8_t seq_tx4_buf[TX_SEQBUF_SIZE];
 
 uint8_t uart1_rx_buf[UART1_RX_BUFFER_LEN];
 uint8_t uart1_tx_buf[UART1_TX_BUFFER_LEN];
+uint8_t uart1_rt_buf[UART1_RT_BUFFER_LEN];
 uint8_t uart1_sysex_buf[SYSEX1_DATA_LEN];
 
 uint8_t uart2_rx_buf[UART2_RX_BUFFER_LEN];
 uint8_t uart2_tx_buf[UART2_TX_BUFFER_LEN];
+uint8_t uart2_rt_buf[UART2_RT_BUFFER_LEN];
 uint8_t uart2_sysex_buf[SYSEX2_DATA_LEN];
 
 uint8_t uartusb_rx_buf[UARTUSB_RX_BUFFER_LEN];
 uint8_t uartusb_tx_buf[UARTUSB_TX_BUFFER_LEN];
+uint8_t uartusb_rt_buf[UARTUSB_RT_BUFFER_LEN];
 uint8_t uartusb_sysex_buf[SYSEXUSB_DATA_LEN];
+
+#ifdef PLATFORM_TBD
+uint8_t uartp4_rx_buf[UARTUSB_RX_BUFFER_LEN];
+uint8_t uartp4_tx_buf[UARTUSB_TX_BUFFER_LEN];
+uint8_t uartp4_rt_buf[UARTUSB_RT_BUFFER_LEN];
+uint8_t uartp4_sysex_buf[SYSEXUSB_DATA_LEN];
+#endif
 
 // Sequencer ring buffers
 RingBuffer seq_tx1_rb(seq_tx1_buf, TX_SEQBUF_SIZE);
@@ -43,15 +58,25 @@ RingBuffer seq_tx4_rb(seq_tx4_buf, TX_SEQBUF_SIZE);
 // UART ring buffers
 RingBuffer uart1_rx_rb(uart1_rx_buf, UART1_RX_BUFFER_LEN);
 RingBuffer uart1_tx_rb(uart1_tx_buf, UART1_TX_BUFFER_LEN);
+RingBuffer uart1_rt_rb(uart1_rt_buf, UART1_RT_BUFFER_LEN);
 RingBuffer uart1_sysex_rb(uart1_sysex_buf, SYSEX1_DATA_LEN);
 
 RingBuffer uart2_rx_rb(uart2_rx_buf, UART2_RX_BUFFER_LEN);
 RingBuffer uart2_tx_rb(uart2_tx_buf, UART2_TX_BUFFER_LEN);
+RingBuffer uart2_rt_rb(uart2_rt_buf, UART2_RT_BUFFER_LEN);
 RingBuffer uart2_sysex_rb(uart2_sysex_buf, SYSEX2_DATA_LEN);
 
 RingBuffer uartusb_rx_rb(uartusb_rx_buf, UARTUSB_RX_BUFFER_LEN);
 RingBuffer uartusb_tx_rb(uartusb_tx_buf, UARTUSB_TX_BUFFER_LEN);
+RingBuffer uartusb_rt_rb(uartusb_rt_buf, UARTUSB_RT_BUFFER_LEN);
 RingBuffer uartusb_sysex_rb(uartusb_sysex_buf, SYSEXUSB_DATA_LEN);
+
+#ifdef PLATFORM_TBD
+RingBuffer uartp4_rx_rb(uartp4_rx_buf, UARTUSB_RX_BUFFER_LEN);
+RingBuffer uartp4_tx_rb(uartp4_tx_buf, UARTUSB_TX_BUFFER_LEN);
+RingBuffer uartp4_rt_rb(uartp4_rt_buf, UARTUSB_RT_BUFFER_LEN);
+RingBuffer uartp4_sysex_rb(uartp4_sysex_buf, SYSEXUSB_DATA_LEN);
+#endif
 
 // MIDI UART instances
 MidiUartClass seq_tx1(nullptr, nullptr, &seq_tx1_rb);
@@ -59,20 +84,28 @@ MidiUartClass seq_tx2(nullptr, nullptr, &seq_tx2_rb);
 MidiUartClass seq_tx3(nullptr, nullptr, &seq_tx3_rb);
 MidiUartClass seq_tx4(nullptr, nullptr, &seq_tx4_rb);
 
-MidiUartClass MidiUart(uart1, &uart1_rx_rb, &uart1_tx_rb);
-MidiUartClass MidiUart2(uart0, &uart2_rx_rb, &uart2_tx_rb);
-
-MidiUartUSBClass MidiUartUSB(nullptr, &uartusb_rx_rb, &uartusb_tx_rb);
+MidiUartClass MidiUart(uart1, &uart1_rx_rb, &uart1_tx_rb, &uart1_rt_rb);
+MidiUartClass MidiUart2(uart0, &uart2_rx_rb, &uart2_tx_rb, &uart2_rt_rb);
+MidiUartUSBClass MidiUartUSB(nullptr, &uartusb_rx_rb, &uartusb_tx_rb, &uartusb_rt_rb);
+#ifdef PLATFORM_TBD
+MidiUartP4Class MidiUartP4(&uartp4_rx_rb, &uartp4_tx_rb, &uartp4_rt_rb);
+#endif
 
 // Sysex instances
 MidiSysexClass MidiSysex(&MidiUart, &uart1_sysex_rb);
 MidiSysexClass MidiSysex2(&MidiUart2, &uart2_sysex_rb);
 MidiSysexClass MidiSysexUSB(&MidiUartUSB, &uartusb_sysex_rb);
+#ifdef PLATFORM_TBD
+MidiSysexClass MidiSysexP4(&MidiUartP4, &uartp4_sysex_rb);
+#endif
 
 // MIDI class instances
 MidiClass Midi(&MidiUart, &MidiSysex);
 MidiClass Midi2(&MidiUart2, &MidiSysex2);
 MidiClass MidiUSB(&MidiUartUSB, &MidiSysexUSB);
+#ifdef PLATFORM_TBD
+MidiClass MidiP4(&MidiUartP4, &MidiSysexP4);
+#endif
 
 MidiIDSysexListenerClass MidiIDSysexListener;
 
@@ -87,7 +120,7 @@ volatile uint16_t g_clock_minutes = 0;
 volatile uint16_t g_clock_fps = 0;
 volatile uint16_t g_fps = 0;
 
-volatile uint8_t *rand_ptr = nullptr;
+volatile uint16_t g_random_state = 0;
 
 // GUI object
 GuiClass GUI;
@@ -102,6 +135,9 @@ MDClass MD;
 MNMClass MNM;
 A4Class Analog4;
 GenericMidiDevice generic_midi_device;
+#ifdef PLATFORM_TBD
+TbdDevice TBD;
+#endif
 NullMidiDevice null_midi_device;
 
 // -- Device manager
@@ -119,6 +155,18 @@ MidiSetup midi_setup;
 
 SdFat_ SD;
 
+// TinyUSB callbacks fire from tud_task() under the USB mutex. RX realtime bytes
+// are handled immediately; TX realtime bytes are drained on SOF cadence.
+extern "C" void tud_midi_rx_cb(uint8_t itf) {
+  (void)itf;
+  MidiUartUSB.receive();
+}
+
+extern "C" void tud_sof_cb(uint32_t frame_count) {
+  (void)frame_count;
+  MidiUartUSB.service_sof();
+}
+
 void handleIncomingMidi() {
   uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 1;
@@ -132,6 +180,12 @@ void handleIncomingMidi() {
   MidiUartUSB.poll();
   MidiUSB.processSysex();
   MidiUSB.processMidi();
+
+#ifdef PLATFORM_TBD
+  MidiUartP4.service_irq();
+  MidiP4.processSysex();
+  MidiP4.processMidi();
+#endif
 
   MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 }

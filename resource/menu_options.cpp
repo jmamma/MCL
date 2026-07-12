@@ -1,5 +1,5 @@
 #include "MenuTypes.h"
-#include "SeqDefines.h"
+#include "Sequencer/SeqDefines.h"
 
 menu_option_t MENU_OPTIONS[] = {
   // 0: RAM PAGE LINK
@@ -35,7 +35,7 @@ menu_option_t MENU_OPTIONS[] = {
   // 41: SEQ SPEED
   {SEQ_SPEED_1X, "1x"}, {SEQ_SPEED_2X , "2x"}, {SEQ_SPEED_3_2X, "3/2x"}, {SEQ_SPEED_3_4X,"3/4x"}, { SEQ_SPEED_1_2X, "1/2x"}, {SEQ_SPEED_1_4X, "1/4x"}, {SEQ_SPEED_1_8X, "1/8x"},
   // 48: SEQ EDIT
-  {MASK_PATTERN,"TRIG"}, {MASK_SLIDE,"SLIDE"}, {MASK_LOCK,"LOCK"}, {MASK_MUTE,"MUTE"},
+  {MASK_PATTERN,"TRIG"}, {MASK_MUTE,"MUTE"}, {MASK_SWING,"SWING"}, {MASK_SLIDE,"SLIDE"},
   // 52: GRID
   {0, "X"}, {1, "Y"},
   // 54: MIDI TURBO 1/
@@ -50,33 +50,63 @@ menu_option_t MENU_OPTIONS[] = {
   {0, "--"}, {1, "SIN"}, {2, "TRI"}, {3, "PUL"}, {4, "SAW"}, {5, "USR"},
   // 80: OSC
   {0, "OSC1"}, {1, "OSC2"}, {2, "OSC3"}, {3, "MIXER"},
-  // 84: MIDI_DEVICE
-  {0, "GENER"}, {1, "ELEKT"},
-  // 86"
-  {0, "OFF"}, {1, "2->2"},
-  // 88
-  {0, "--"},{17, "OMNI"},
-  // 90
+  // 84:
+  {0, "OFF"}, {1, "CTRL->2"},
+  // 86
   {0, "BASIC"}, {1, "ADV"},
-  // 92: MIDI2 FWD
+  // 88: MIDI2 FWD
   {0, "OFF"}, {1, "1"}, {2, "USB"}, {3, "1 + USB"},
-  // 96: MIDIUSB FWD
+  // 92: MIDIUSB FWD
   {0, "OFF"}, {1, "1"}, {2, "2"}, {3, "1 + 2"},
-  // 100: MIDI CLK SEND
-  {0, "OFF"}, {1, "2"}, {2, "USB"}, {3, "2 + USB"},
-  // 104: NOTES
+  // 96: NOTES
   {0, "C"}, {1, "C#"}, {2, "D"}, {3, "D#"}, {4, "E"}, {5, "F"}, {6, "F#"}, {7, "G"}, {8, "G#"}, {9, "A"}, {10, "A#"}, {11, "B"},
-  // 116
+  // 108
   {0, "CTRL"},
-  // 117
+  // 109
   {0, "A"}, {1, "B"}, {2, "C"}, {3, "D"},
-  // 121
+  // 113
   {128, "--"},
-  // 122
+  // 114
   {0, "--"}, {1,"PERF"},
-  // 124
-  {0, "GENER"}, {1,"MD"},
-  // 126: PIANO ROLL
-  {0,"NOTE"}
+  // 116: PIANO ROLL
+  {0,"NOTE"},
+  // 117: PORT 1 device
+  {0, "GENER"}, {1, "MD"}, {2, "OFF"},
+  // 120: PORT 2 device
+  {0, "GENER"}, {1, "ELEKT"}, {2, "OFF"},
+  // 123: USB device
+  {0, "OFF"}, {1, "MD"}, {2, "ELEKT"}, {3, "GENER"},
+#if defined(PLATFORM_TBD)
+  // 127: GRID X device
+  {0, "OFF"}, {1, "MD"}, {2, "TBD"},
+  // 130: GRID X port
+  {0, "INT"}, {1, "MIDI 1"}, {2, "USB"},
+  // 133: GRID Y device
+  {0, "GENER"}, {1, "ELEKT"}, {2, "TBD"}, {3, "OFF"},
+  // 137: GRID Y port
+  {0, "INT"}, {1, "MIDI 2"}, {2, "USB"},
+  // 140: TBD MIDI clock/transport source
+  {0, "1"}, {1, "2"}, {2, "USB"}, {3, "INT"},
+#else
+  // 127: GRID X device
+  {0, "OFF"}, {1, "MD"},
+  // 129: GRID X port
+  {0, "MIDI 1"}, {1, "USB"},
+  // 131: GRID Y device
+  {1, "GENER"}, {2, "ELEKT"}, {3, "OFF"},
+  // 134: GRID Y port
+  {1, "MIDI 2"}, {2, "USB"},
+#endif
+  // 136 AVR / 144 TBD: LFO SPEED MULT
+  {0, ".01"}, {1, ".1"}, {2, ".25"}, {3, ".5"},
+  {4, "1x"}, {5, "2x"}, {6, "4x"}, {7, "8x"},
+  // 144 AVR / 152 TBD: MD sample bank project link
+  {0, "OFF"},
+#if defined(__AVR__)
+  // 145: SEQ CHANNEL routed primary track labels
+  {17, "MD1"}, {18, "MD2"}, {19, "MD3"}, {20, "MD4"},
+  {21, "MD5"}, {22, "MD6"}, {23, "MD7"}, {24, "MD8"},
+  {25, "MD9"}, {26, "MD10"}, {27, "MD11"}, {28, "MD12"},
+  {29, "MD13"}, {30, "MD14"}, {31, "MD15"}, {32, "MD16"},
+#endif
 };
-

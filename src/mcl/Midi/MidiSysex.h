@@ -27,11 +27,12 @@ public:
   volatile uint8_t msgType;
   volatile uint8_t msg_rd;
 
-  MidiSysexListenerClass(MidiSysexClass *_sysex = NULL) {
+  MidiSysexListenerClass(MidiSysexClass *_sysex = NULL, uint8_t id0 = 0,
+                         uint8_t id1 = 0, uint8_t id2 = 0) {
     sysex = _sysex;
-    ids[0] = 0;
-    ids[1] = 0;
-    ids[2] = 0;
+    ids[0] = id0;
+    ids[1] = id1;
+    ids[2] = id2;
     msgType = 255;
     msg_rd = 255;
   }
@@ -45,7 +46,10 @@ public:
 #endif
 };
 
+#ifndef NUM_SYSEX_SLAVES
 #define NUM_SYSEX_SLAVES 5
+#endif
+
 #define NUM_SYSEX_MSGS 24
 
 class MidiSysexLedger {
@@ -61,7 +65,7 @@ public:
 
 class MidiSysexClass {
 protected:
-  bool recording;
+  volatile bool recording;
   uint8_t recvIds[3];
   bool sysexLongId;
 
@@ -80,7 +84,7 @@ public:
 
   MidiSysexListenerClass *listeners[NUM_SYSEX_SLAVES];
 
-  MidiSysexClass(MidiUartClass *_uart, RingBuffer<> *_rb) {
+  MidiSysexClass(MidiUartClass *_uart, RingBuffer<> *_rb) NOINLINE() {
     uart = _uart;
     recording = false;
     sysexLongId = false;
@@ -125,8 +129,20 @@ public:
     ledger[msg_wr].state = SYSEX_STATE_REC;
   }
 
-  ALWAYS_INLINE() void stopRecord() {
+  __attribute__((noinline)) void stopRecord() {
     recording = false;
+
+    // Calculate recordLen from buffer positions (deferred from per-byte increment)
+    volatile uint8_t *start = ledger[msg_wr].ptr;
+    volatile uint8_t *end = rb->buf + rb->wr;
+
+    if (end >= start) {
+      ledger[msg_wr].recordLen = end - start;
+    } else {
+      // Wrapped around the ring buffer
+      ledger[msg_wr].recordLen = (rb->buf + rb->len - start) + (end - rb->buf);
+    }
+
     ledger[msg_wr].state = SYSEX_STATE_FIN;
     msg_wr++;
     if (msg_wr == NUM_SYSEX_MSGS) {
@@ -162,7 +178,8 @@ public:
 
   ALWAYS_INLINE() void recordByte(uint8_t c) {
     putByte(c);
-    ledger[msg_wr].recordLen++;
+    // Removed per-byte recordLen increment - now calculated in stopRecord()
+    // Saves ~40 cycles per byte from avoiding packed 14-bit field manipulation
   }
 
   void initSysexListeners() {
@@ -240,4 +257,39 @@ public:
       recordByte(byte);
     }
   }
+};
+
+class SysexView {
+public:
+  SysexView() : rb(nullptr), base(0), recordLen(0) {}
+  SysexView(MidiSysexClass *sysex) { init(sysex); }
+  SysexView(MidiSysexClass *sysex, uint8_t msg_rd) { init(sysex, msg_rd); }
+
+  void init(MidiSysexClass *sysex) {
+    rb = sysex->rb;
+    base = (uint16_t)((uint8_t *)sysex->get_ptr() - rb->buf);
+    recordLen = sysex->get_recordLen();
+  }
+
+  void init(MidiSysexClass *sysex, uint8_t msg_rd) {
+    rb = sysex->rb;
+    base = (uint16_t)((uint8_t *)sysex->ledger[msg_rd].ptr - rb->buf);
+    recordLen = sysex->ledger[msg_rd].recordLen;
+  }
+
+  uint16_t get_recordLen() const { return recordLen; }
+
+  uint8_t getByte(uint16_t n) const {
+    uint16_t targetPos = base + n;
+    if (targetPos >= rb->len) {
+      targetPos -= rb->len;
+    }
+    volatile uint8_t *src = rb->buf + targetPos;
+    return get_bank1(src);
+  }
+
+private:
+  RingBuffer<> *rb;
+  uint16_t base;
+  uint16_t recordLen;
 };

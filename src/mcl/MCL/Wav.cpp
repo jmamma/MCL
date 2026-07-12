@@ -1,5 +1,17 @@
 #include "Wav.h"
 #include "MidiSDS.h"
+
+static inline __int24 wav_abs_peak(__int24 sample) {
+  int32_t value = (int32_t)sample;
+  if (value >= 0) {
+    return sample;
+  }
+  if (value <= -8388607L) {
+    return (__int24)8388607L;
+  }
+  return (__int24)-value;
+}
+
 bool Wav::close(bool write) {
   DEBUG_PRINT_FN();
   bool ret;
@@ -10,17 +22,16 @@ bool Wav::close(bool write) {
       return false;
     }
   }
-  headerRead = false;
   return file.close();
 }
 
 bool Wav::open(const char *file_name, bool write, uint16_t numChannels,
                uint32_t sampleRate, uint8_t bitRate, bool loop) {
   DEBUG_PRINT_FN();
-  DEBUG_PRINTLN(filename);
+  DEBUG_PRINTLN(file_name);
   uint16_t file_mode = write ? (O_RDWR | O_CREAT) : O_RDWR;
-  strncpy(filename, file_name, 16);
-  headerRead = false;
+  strncpy(filename, file_name, sizeof(filename) - 1);
+  filename[sizeof(filename) - 1] = '\0';
 
   if (file.isOpen()) {
     DEBUG_PRINTLN(F("file already open"));
@@ -50,7 +61,6 @@ bool Wav::open(const char *file_name, bool write, uint16_t numChannels,
       goto failed;
     }
 
-    headerRead = true;
     DEBUG_DUMP(data_offset);
     DEBUG_DUMP(file.fileSize());
   } else {
@@ -58,7 +68,6 @@ bool Wav::open(const char *file_name, bool write, uint16_t numChannels,
       DEBUG_PRINTLN(F("Could not read header"));
       goto failed;
     }
-    headerRead = true;
   }
   return true;
 failed:
@@ -74,7 +83,8 @@ bool Wav::rename(char *new_name) {
     DEBUG_PRINTLN(F("rename failed"));
     return false;
   } else {
-    strncpy(filename, new_name, 16);
+    strncpy(filename, new_name, sizeof(filename) - 1);
+    filename[sizeof(filename) - 1] = '\0';
     return true;
   }
 }
@@ -111,16 +121,22 @@ bool Wav::write_header() {
   chunk_offset += sizeof(datachunk_t);
 
   data_offset = chunk_offset;
+  if (header.data.chunk_size & 1) {
+    uint8_t pad = 0;
+    if (!write_data(&pad, 1, data_offset + header.data.chunk_size)) {
+      return false;
+    }
+  }
   DEBUG_DUMP(data_offset);
   return true;
 }
 
 bool Wav::read_header() {
   DEBUG_PRINT_FN();
-  char header_buf[72];
+  uint8_t header_buf[72];
+  chunk_t chunk;
   uint32_t file_size = file.fileSize();
   uint32_t chunk_offset = 12;
-  chunk_t *pchunk = (chunk_t *)header_buf;
 
   if (!read_data(&header, chunk_offset, 0)) {
     return false;
@@ -129,36 +145,49 @@ bool Wav::read_header() {
   if (!header.check(file_size)) {
     return false;
   }
-  // deactivate all chunks
-  header.init();
+  uint32_t riff_end = header.chunk_size + sizeof(chunk_t);
+  header.fmt.deactivate();
+  header.data.deactivate();
+  header.smpl.deactivate();
+  data_offset = 0;
 
   // parse the subchunks
-  while (chunk_offset < file_size) {
-    uint32_t read_size = min(sizeof(header_buf), file_size - chunk_offset);
-    if (!read_data(&header_buf, read_size, chunk_offset)) {
+  while (chunk_offset + sizeof(chunk_t) <= riff_end) {
+    uint32_t remaining = riff_end - chunk_offset;
+    uint32_t read_size = min((uint32_t)sizeof(header_buf), remaining);
+    if (!read_data(header_buf, read_size, chunk_offset)) {
       return false;
     }
-    if (pchunk->is<fmtchunk_t>()) {
-      header.fmt = *(fmtchunk_t *)pchunk;
+    memcpy(&chunk, header_buf, sizeof(chunk));
+    if (chunk.chunk_size > remaining - sizeof(chunk_t)) {
+      return false;
+    }
+    uint32_t padded_len = chunk.total_len() + (chunk.chunk_size & 1);
+    if (padded_len > remaining) {
+      return false;
+    }
+    if (chunk.is<fmtchunk_t>()) {
+      if (chunk.chunk_size < sizeof(fmtchunk_t) - sizeof(chunk_t)) {
+        return false;
+      }
+      memcpy(&header.fmt, header_buf, sizeof(header.fmt));
       DEBUG_PRINTLN("parse fmt");
       DEBUG_DUMP(header.fmt.audioFormat);
       DEBUG_DUMP(header.fmt.sampleRate);
       DEBUG_DUMP(header.fmt.bitRate);
       DEBUG_DUMP(header.fmt.numChannels);
-    } else if (pchunk->is<datachunk_t>()) {
-      header.data = *(datachunk_t *)pchunk;
+    } else if (chunk.is<datachunk_t>()) {
+      memcpy(&header.data, header_buf, sizeof(header.data));
       data_offset = chunk_offset + sizeof(datachunk_t);
       DEBUG_PRINTLN("parse data");
       DEBUG_DUMP(data_offset);
-    } else if (pchunk->is<smplchunk_t>()) {
-      header.smpl = *(smplchunk_t *)pchunk;
-      smpl_offset = chunk_offset + sizeof(smplchunk_t) - sizeof(loop_t);
-      DEBUG_PRINTLN("parse smpl");
-      DEBUG_DUMP(smpl_offset);
-    } else {
-    //break;
+    } else if (chunk.is<smplchunk_t>()) {
+      if (chunk.chunk_size >= sizeof(smplchunk_t) - sizeof(chunk_t)) {
+        memcpy(&header.smpl, header_buf, sizeof(header.smpl));
+        DEBUG_PRINTLN("parse smpl");
+      }
     }
-    chunk_offset += pchunk->total_len();
+    chunk_offset += padded_len;
   }
 
   // required subchunks
@@ -166,7 +195,9 @@ bool Wav::read_header() {
     return false;
   }
 
-  if ((header.fmt.bitRate > 28) || (header.fmt.bitRate < 8)) {
+  if ((header.fmt.audioFormat != 1) || (header.fmt.numChannels == 0) ||
+      (header.fmt.sampleRate == 0) || (header.fmt.blockAlign == 0) ||
+      (header.fmt.bitRate > 28) || (header.fmt.bitRate < 8)) {
     DEBUG_PRINTLN(F("header bitRate is not valid:"));
     DEBUG_PRINTLN(header.fmt.bitRate);
     return false;
@@ -219,11 +250,20 @@ bool Wav::write_samples(void *data, uint32_t num_samples,
                         uint32_t sample_offset, uint8_t channel,
                         bool writeheader) {
   //  DEBUG_PRINTLN(channel);
-  uint32_t position =
-      channel * (header.data.chunk_size / header.fmt.numChannels) +
-      sample_offset * (header.fmt.bitRate / 8);
+  uint32_t position;
+  uint32_t size;
+  uint8_t bytes_per_sample = (header.fmt.bitRate + 7) >> 3;
 
-  uint32_t size = num_samples * (header.fmt.bitRate / 8);
+  // Write all channels when channel >= numChannels (matches read_samples behavior)
+  if (channel >= header.fmt.numChannels) {
+    position = sample_offset * bytes_per_sample * header.fmt.numChannels;
+    size = num_samples * bytes_per_sample * header.fmt.numChannels;
+  } else {
+    position =
+        channel * (header.data.chunk_size / header.fmt.numChannels) +
+        sample_offset * bytes_per_sample;
+    size = num_samples * bytes_per_sample;
+  }
   // DEBUG_PRINTLN(num_samples);
   //  DEBUG_PRINTLN(header.bitRate);
 
@@ -235,7 +275,10 @@ bool Wav::write_samples(void *data, uint32_t num_samples,
     DEBUG_PRINTLN(F("write failed"));
     return false;
   }
-  uint32_t new_subchunk2Size = (position + size) * header.fmt.numChannels;
+  uint32_t new_subchunk2Size = position + size;
+  if (channel < header.fmt.numChannels) {
+    new_subchunk2Size *= header.fmt.numChannels;
+  }
   // DEBUG_PRINT_FN();
   // DEBUG_PRINTLN(position);
   // DEBUG_PRINTLN(num_samples);
@@ -256,12 +299,44 @@ bool Wav::write_samples(void *data, uint32_t num_samples,
   return ret;
 }
 
-bool Wav::read_samples(void *data, uint32_t num_samples, uint32_t sample_index,
-                       uint8_t channel) {
-  uint8_t sample_size = header.fmt.bitRate / 8;
-  if (header.fmt.bitRate % 8 > 0) {
-    sample_size++;
+bool Wav::write_mono_samples(void *data, uint32_t num_samples,
+                             uint32_t sample_offset, bool writeheader) {
+  uint8_t bytes_per_sample = (header.fmt.bitRate + 7) >> 3;
+  uint32_t position = sample_offset * bytes_per_sample;
+  uint32_t size = num_samples * bytes_per_sample;
+  bool ret = write_data(data, size, position + data_offset);
+
+  if (!ret) {
+    DEBUG_PRINTLN(F("write failed"));
+    return false;
   }
+
+  uint32_t new_subchunk2Size = position + size;
+  if (new_subchunk2Size > header.data.chunk_size) {
+    header.data.chunk_size = new_subchunk2Size;
+    header.chunk_size = header.total_len() - sizeof(chunk_t);
+  }
+  if (writeheader) {
+    ret = write_header();
+  }
+  if (!ret) {
+    DEBUG_PRINTLN(F("write header failed"));
+    return false;
+  }
+  return ret;
+}
+
+#if defined(__AVR__)
+// Keep the generic stereo/24-bit reader out of SDS packet builders on AVR.
+#define WAV_AVR_NOINLINE __attribute__((noinline))
+#else
+#define WAV_AVR_NOINLINE
+#endif
+
+bool WAV_AVR_NOINLINE Wav::read_samples(void *data, uint32_t num_samples,
+                                        uint32_t sample_index,
+                                        uint8_t channel) {
+  uint8_t sample_size = (header.fmt.bitRate + 7) >> 3;
 
   uint8_t nch_sample_size = sample_size * header.fmt.numChannels;
   uint32_t position = sample_index * nch_sample_size;
@@ -305,6 +380,9 @@ bool Wav::read_samples(void *data, uint32_t num_samples, uint32_t sample_index,
   uint32_t full_run =
       ((sizeof(tmp_buf) / header.fmt.numChannels) / sample_size) * sample_size *
       header.fmt.numChannels;
+  if (full_run == 0) {
+    return false;
+  }
   while (read_size > 0) {
     uint32_t current_run = min(full_run, read_size * header.fmt.numChannels);
     bool ret = read_data(tmp_buf, current_run, position);
@@ -321,6 +399,8 @@ bool Wav::read_samples(void *data, uint32_t num_samples, uint32_t sample_index,
   return true;
 }
 
+#undef WAV_AVR_NOINLINE
+
 __int24 Wav::find_peak(uint8_t channel, uint32_t num_samples,
                        uint32_t sample_index) {
 
@@ -333,14 +413,16 @@ __int24 Wav::find_peak(uint8_t channel, uint32_t num_samples,
              &c1_max_sample, &c1_min_sample);
   if (channel == 0) {
 
-    if (abs(c0_min_sample.val) > c0_max_sample.val) {
-      return abs(c0_min_sample.val);
+    __int24 c0_min_abs = wav_abs_peak(c0_min_sample.val);
+    if (c0_min_abs > c0_max_sample.val) {
+      return c0_min_abs;
     }
     return c0_max_sample.val;
   }
 
-  if (abs(c1_min_sample.val) > c1_max_sample.val) {
-    return abs(c1_min_sample.val);
+  __int24 c1_min_abs = wav_abs_peak(c1_min_sample.val);
+  if (c1_min_abs > c1_max_sample.val) {
+    return c1_min_abs;
   }
   return c1_max_sample.val;
 }
@@ -359,23 +441,20 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
   c0_max_sample->val = 0;
   c0_min_sample->val = 0;
 
-  int16_t c0_min_sample16;
-  int16_t c0_max_sample16;
+  int16_t c0_min_sample16 = 0;
+  int16_t c0_max_sample16 = 0;
 
   if (!ignore_second_chan) {
     c1_max_sample->val = 0;
     c1_min_sample->val = 0;
   }
-  int16_t c1_min_sample16;
-  int16_t c1_max_sample16;
+  int16_t c1_min_sample16 = 0;
+  int16_t c1_max_sample16 = 0;
 
   __int24 sample_val24 = 0;
   int16_t sample_val16 = 0;
 
-  uint8_t sample_size = header.fmt.bitRate / 8;
-  if (header.fmt.bitRate % 8 > 0) {
-    sample_size++;
-  }
+  uint8_t sample_size = (header.fmt.bitRate + 7) >> 3;
   uint32_t num_of_samples;
 
   if (num_samples > 0) {
@@ -383,19 +462,15 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
   }
 
   else {
-    uint32_t num_of_samples =
+    num_of_samples =
         (header.data.chunk_size / header.fmt.numChannels) / sample_size;
   }
 
-  int16_t buffer_size = 512;
+  const uint16_t buffer_size = 512;
 
   uint8_t buffer[buffer_size];
 
-  int16_t read_size = buffer_size / (sample_size * header.fmt.numChannels);
-
-  int32_t sample_max = (pow(2, header.fmt.bitRate) / 2);
-
-  uint8_t word_offset = 4 - sample_size;
+  uint16_t read_size = buffer_size / (sample_size * header.fmt.numChannels);
 
   DEBUG_DUMP(sample_size);
   DEBUG_DUMP(header.fmt.bitRate);
@@ -421,7 +496,8 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
       // 16bit - fast mode.
       case 2:
 
-        sample_val16 = ((int16_t *)&buffer)[buf_index++];
+        memcpy(&sample_val16, buffer + ((uint16_t)buf_index++ << 1),
+               sizeof(sample_val16));
 
         if (sample_val16 < c0_min_sample16) {
           c0_min_sample16 = sample_val16;
@@ -433,7 +509,8 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
           c0_max_sample->pos = sample + sample_index;
         }
         if (!ignore_second_chan) {
-          sample_val16 = ((int16_t *)&buffer)[buf_index++];
+          memcpy(&sample_val16, buffer + ((uint16_t)buf_index++ << 1),
+                 sizeof(sample_val16));
           if (sample_val16 < c1_min_sample16) {
             c1_min_sample16 = sample_val16;
             c1_min_sample->pos = sample + sample_index;
@@ -451,7 +528,9 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
       case 3:
         // 24bit
 
-        sample_val24 = ((__int24 *)&buffer)[buf_index++];
+        memcpy(&sample_val24,
+               buffer + ((uint16_t)buf_index++ * sizeof(sample_val24)),
+               sizeof(sample_val24));
 
         if (sample_val24 < c0_min_sample->val) {
           c0_min_sample->val = sample_val24;
@@ -463,7 +542,9 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
           c0_max_sample->pos = sample + sample_index;
         }
         if (!ignore_second_chan) {
-          sample_val24 = ((__int24 *)&buffer)[buf_index++];
+          memcpy(&sample_val24,
+                 buffer + ((uint16_t)buf_index++ * sizeof(sample_val24)),
+                 sizeof(sample_val24));
           if (sample_val24 < c1_min_sample->val) {
             c1_min_sample->val = sample_val24;
             c1_min_sample->pos = sample + sample_index;
@@ -490,14 +571,66 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
   }
 }
 
+#if defined(__AVR__)
+bool Wav::normalize16_mono(uint16_t target_peak, uint16_t current_peak,
+                           uint32_t num_samples, uint32_t sample_index) {
+  if ((header.fmt.bitRate != 16) || (header.fmt.numChannels != 1)) {
+    return false;
+  }
+  if (current_peak == 0) {
+    return true;
+  }
+
+  uint32_t num_of_samples = num_samples;
+  if (num_of_samples == 0) {
+    num_of_samples = header.data.chunk_size / sizeof(int16_t);
+  }
+
+  const uint16_t buffer_samples = 256;
+  int16_t buffer[buffer_samples];
+  uint32_t sample_end = sample_index + num_of_samples;
+  uint32_t gain_q15 = ((uint32_t)target_peak << 15) / current_peak;
+
+  for (uint32_t n = sample_index; n < sample_end; n += buffer_samples) {
+    uint16_t current_run = buffer_samples;
+    if (n + current_run > sample_end) {
+      current_run = sample_end - n;
+    }
+
+    uint32_t position = data_offset + n * sizeof(int16_t);
+    uint16_t bytes = current_run * sizeof(int16_t);
+    if (!read_data(buffer, bytes, position)) {
+      DEBUG_PRINTLN("could not read");
+      return false;
+    }
+
+    for (uint16_t i = 0; i < current_run; i++) {
+      int32_t sample = buffer[i];
+      int32_t magnitude = sample < 0 ? -sample : sample;
+      int32_t scaled = ((uint32_t)magnitude * gain_q15) >> 15;
+      if (scaled > INT16_MAX) {
+        scaled = INT16_MAX;
+      }
+      if (sample < 0) {
+        scaled = -scaled;
+      }
+      buffer[i] = (int16_t)scaled;
+    }
+
+    if (!write_data(buffer, bytes, position)) {
+      DEBUG_PRINTLN("could not write");
+      return false;
+    }
+  }
+  return true;
+}
+#endif
+
 bool Wav::apply_gain(float gain, uint8_t channel, uint32_t num_samples,
                      uint32_t sample_index) {
   DEBUG_PRINT_FN();
 
-  uint8_t sample_size = header.fmt.bitRate / 8;
-  if (header.fmt.bitRate % 8 > 0) {
-    sample_size++;
-  }
+  uint8_t sample_size = (header.fmt.bitRate + 7) >> 3;
 
   bool is_stereo = (header.fmt.numChannels == 2);
 
@@ -512,16 +645,16 @@ bool Wav::apply_gain(float gain, uint8_t channel, uint32_t num_samples,
         (header.data.chunk_size / header.fmt.numChannels) / sample_size;
   }
 
-  int16_t buffer_size = 512;
+  const uint16_t buffer_size = 512;
 
   uint8_t buffer[buffer_size];
 
-  int16_t read_size = buffer_size / (sample_size * header.fmt.numChannels);
+  uint16_t read_size = buffer_size / (sample_size * header.fmt.numChannels);
 
-  uint16_t sample_val16 = 0;
+  int16_t sample_val16 = 0;
   __int24 sample_val24 = 0;
 
-  uint32_t sample_max = (pow(2, header.fmt.bitRate) / 2);
+  uint32_t sample_max = UINT32_C(1) << (header.fmt.bitRate - 1);
   bool write_header = false;
   DEBUG_PRINTLN(F("read_size"));
   DEBUG_PRINTLN(read_size);
@@ -530,12 +663,13 @@ bool Wav::apply_gain(float gain, uint8_t channel, uint32_t num_samples,
   DEBUG_PRINTLN(buffer_size);
   DEBUG_PRINTLN(gain);
 
-  bool is_signed;
-
-  for (int32_t n = 0; n < sample_index + num_of_samples; n += read_size) {
+  float sample_hi = (float)(sample_max - 1);
+  float sample_lo = -(float)sample_max;
+  uint32_t sample_end = sample_index + num_of_samples;
+  for (uint32_t n = 0; n < sample_end; n += read_size) {
     // Adjust read size if too large
-    if (n + read_size > sample_index + num_of_samples) {
-      read_size = sample_index + num_of_samples - n;
+    if (n + read_size > sample_end) {
+      read_size = sample_end - n;
     }
     // Read read_size samples.
 
@@ -553,32 +687,39 @@ bool Wav::apply_gain(float gain, uint8_t channel, uint32_t num_samples,
         switch (sample_size) {
         case 2:
           //16bit
-          sample_val16 = ((int16_t *)&buffer)[buf_index];
-          sample_val16 = (uint16_t)((float)sample_val16 * (float)gain);
-          is_signed = (sample_val16 < 0);
-          if (abs(sample_val16) > sample_max) {
-            sample_val16 = sample_max;
-            if (is_signed) {
-              sample_val16 *= -1;
-              sample_val16 -= 1;
+          memcpy(&sample_val16, buffer + ((uint16_t)buf_index << 1),
+                 sizeof(sample_val16));
+          {
+            float scaled = (float)sample_val16 * gain;
+            if (scaled > sample_hi) {
+              sample_val16 = (int16_t)(sample_max - 1);
+            } else if (scaled < sample_lo) {
+              sample_val16 = (int16_t)-((int32_t)sample_max);
+            } else {
+              sample_val16 = (int16_t)scaled;
             }
           }
 
-          ((int16_t *)&buffer)[buf_index] = sample_val16;
+          memcpy(buffer + ((uint16_t)buf_index << 1), &sample_val16,
+                 sizeof(sample_val16));
           break;
         case 3:
           //24bit
-          sample_val24 = ((__int24 *)&buffer)[buf_index];
-          sample_val24 = (__int24)((float)sample_val24 * (float)gain);
-          is_signed = ((int32_t)sample_val24 < 0);
-          if (abs(sample_val24) > sample_max) {
-            sample_val24 = sample_max;
-            if (is_signed) {
-              sample_val24 *= -1;
-              sample_val24 -= 1;
+          memcpy(&sample_val24,
+                 buffer + ((uint16_t)buf_index * sizeof(sample_val24)),
+                 sizeof(sample_val24));
+          {
+            float scaled = (float)(int32_t)sample_val24 * gain;
+            if (scaled > sample_hi) {
+              sample_val24 = (__int24)(int32_t)(sample_max - 1);
+            } else if (scaled < sample_lo) {
+              sample_val24 = (__int24)-((int32_t)sample_max);
+            } else {
+              sample_val24 = (__int24)(int32_t)scaled;
             }
           }
-          ((__int24 *)&buffer)[buf_index] = sample_val24;
+          memcpy(buffer + ((uint16_t)buf_index * sizeof(sample_val24)),
+                 &sample_val24, sizeof(sample_val24));
           break;
         }
       }
@@ -600,4 +741,3 @@ bool Wav::apply_gain(float gain, uint8_t channel, uint32_t num_samples,
 
     return true;
 }
-

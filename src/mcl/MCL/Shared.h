@@ -3,15 +3,8 @@
 #ifndef SHARED_H__
 #define SHARED_H__
 
-#include "mcl.h"
+#include "MCL.h"
 #include "math.h"
-
-struct MusicalNotes {
-  const char *notes_upper[16] = {"C ", "C#", "D ", "D#", "E ", "F ",
-                                 "F#", "G ", "G#", "A ", "A#", "B "};
-  const char *notes_lower[16] = {"c ", "c#", "d ", "d#", "e ", "f ",
-                                 "f#", "g ", "g#", "a ", "a#", "b "};
-};
 
 inline int range_limit(int val, int min, int max) {
   if (val > max) { return max; }

@@ -1,46 +1,147 @@
-#include "mcl.h"
+#include "MCL.h"
+#include "MCLDefines.h"
 #include "ResourceManager.h"
 #include "MCLSd.h"
-#include "MCLGFX.h"
+#include "GUI/MCLGfx.h"
 #include "MCLGUI.h"
 #include "GridTrack.h"
-#include "GridTask.h"
+#include "Grid/GridTask.h"
 #include "EmptyTrack.h"
-#include "MDTrackSelect.h"
-#include "MD.h"
-#include "MNM.h"
-#include "A4.h"
-#include "MidiSetup.h"
+#include "../Drivers/MD/UI/MDTrackSelect.h"
+#include "../Drivers/MD/MD.h"
+#include "../Drivers/MNM/MNM.h"
+#include "../Drivers/A4/A4.h"
+#include "Devices/MidiSetup.h"
 #include "Project.h"
+#include "MCLStrings.h"
+#include "MCLSysConfig.h"
 
 
-#include "GridPages.h"
-#include "AuxPages.h"
-#include "ProjectPages.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Grid/GridPages.h"
+#include "Devices/MidiActivePeering.h"
+#include "GUI/Pages/CommonPages.h"
+#include "MDPages.h"
+#include "GUI/Pages/Project/ProjectPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
+#include "Sequencer/SeqTrackUtil.h"
+#include "Devices/DeviceManager.h"
 
-#include "PageSelectPage.h"
+#include "GUI/Pages/PageSelectPage.h"
 #include "MenuPage.h"
-#include "MixerPage.h"
-#include "GridSavePage.h"
-#include "GridLoadPage.h"
+#include "GUI/Pages/Performance/MixerPage.h"
+#include "GUI/Pages/Grid/GridSavePage.h"
+#include "GUI/Pages/Grid/GridLoadPage.h"
+#include "platform.h"
 
 #ifdef WAV_DESIGNER
-#include "OscMixerPage.h"
-#include "WavDesignerPage.h"
-#include "WavDesigner.h"
+#include "GUI/Pages/WavDesigner/OscMixerPage.h"
+#include "GUI/Pages/WavDesigner/WavDesignerPage.h"
+#include "WavDesigner/WavDesigner.h"
 #endif
 
-#include "TextInputPage.h"
-#include "PolyPage.h"
-#include "SampleBrowserPage.h"
-#include "QuestionDialogPage.h"
-#include "FXPage.h"
-#include "RoutePage.h"
-#include "LFOPage.h"
-#include "RAMPage.h"
-#include "SoundBrowserPage.h"
-#include "PerfPage.h"
+#include "GUI/Pages/TextInputPage.h"
+#include "GUI/Pages/Sequencer/PolyPage.h"
+#include "GUI/Pages/SampleBrowserPage.h"
+#include "GUI/Pages/QuestionDialogPage.h"
+#include "../Drivers/MD/UI/Pages/FXPage.h"
+#include "../Drivers/MD/UI/Pages/RoutePage.h"
+#include "GUI/Pages/Sequencer/LFOPage.h"
+#include "../Drivers/MD/UI/Pages/RAMPage.h"
+#include "GUI/Pages/SoundBrowserPage.h"
+#include "GUI/Pages/Performance/PerfPage.h"
+#ifdef MCL_HAS_EXTENDED_PANEL_INPUT
+#include "GUI/Pages/PlatformPanel.h"
+#endif
+#ifdef PLATFORM_TBD
+#include "GUI/Pages/BankPopupPage.h"
+#endif
+
+namespace {
+
+bool remote_fill_window_open = false;
+#ifdef PLATFORM_TBD
+bool remote_mute_window_open = false;
+bool remote_fill_scale_down = false;
+#endif
+
+uint8_t mask_shortcut_for_key(uint8_t key) {
+  uint8_t bank = key - MDX_KEY_BANKA;
+  if (bank > MDX_KEY_BANKD - MDX_KEY_BANKA) {
+    return MASK_PATTERN;
+  }
+  return bank < MASK_SWING ? MASK_MUTE : bank;
+}
+
+bool bank_key_down() {
+  return ((uint8_t *)&key_interface.cmd_key_state)[MDX_KEY_BANKA >> 3] & 0x3C;
+}
+
+#ifdef PLATFORM_TBD
+void clear_remote_func_window() {
+  remote_fill_window_open = false;
+  remote_mute_window_open = false;
+}
+#endif
+
+void open_remote_fill_window() {
+  if (grid_page.bank_popup) {
+    grid_page.close_bank_popup();
+  }
+  remote_fill_window_open = true;
+#ifdef PLATFORM_TBD
+  remote_mute_window_open = false;
+#endif
+}
+
+void close_remote_fill_window() {
+  remote_fill_window_open = false;
+}
+
+void toggle_remote_fill_window() {
+  if (remote_fill_window_open) {
+    close_remote_fill_window();
+  } else {
+    open_remote_fill_window();
+  }
+}
+
+#ifdef PLATFORM_TBD
+bool switch_remote_mute_fill_window() {
+  if (!MD.connected) {
+    return false;
+  }
+  if (remote_fill_window_open) {
+    close_remote_fill_window();
+    MD.toggle_mute_window();
+    remote_mute_window_open = true;
+    return true;
+  }
+  if (remote_mute_window_open) {
+    open_remote_fill_window();
+    return true;
+  }
+  return false;
+}
+#endif
+
+} // namespace
+
+#ifdef PLATFORM_TBD
+void mcl_remote_func_window_replaced() {
+  clear_remote_func_window();
+}
+
+void mcl_toggle_remote_mute_window() {
+  if (!MD.connected) {
+    return;
+  }
+  if (remote_fill_window_open) {
+    close_remote_fill_window();
+  }
+  MD.toggle_mute_window();
+  remote_mute_window_open = !remote_mute_window_open;
+}
+#endif
 
 // In MCL.cpp:
 const lightpage_ptr_t MCL::pages_table[NUM_PAGES] PROGMEM = {
@@ -77,10 +178,15 @@ const lightpage_ptr_t MCL::pages_table[NUM_PAGES] PROGMEM = {
 
     // Configuration pages
     { .ptr = &load_proj_page },
+#ifdef MCL_HAS_PROJECT_BACKUP
+    { .ptr = &project_version_page },
+#else
+    { .ptr = &load_proj_page },
+#endif
     { .ptr = &midi_config_page },
     { .ptr = &md_config_page },
     { .ptr = &chain_config_page },
-    { .ptr = &aux_config_page },
+    { .ptr = &mcl_config_page },
     { .ptr = &mcl_config_page },
 
     // Additional feature pages
@@ -88,12 +194,20 @@ const lightpage_ptr_t MCL::pages_table[NUM_PAGES] PROGMEM = {
     { .ptr = &md_import_page },
 
     // MIDI menu pages
+    { .ptr = &mididevice_menu_page },
+    { .ptr = &gridx_menu_page },
+    { .ptr = &gridy_menu_page },
     { .ptr = &midiport_menu_page },
+    { .ptr = &port1_menu_page },
+    { .ptr = &port2_menu_page },
+    { .ptr = &usbport_menu_page },
     { .ptr = &midiprogram_menu_page },
     { .ptr = &midiclock_menu_page },
     { .ptr = &midiroute_menu_page },
     { .ptr = &midimachinedrum_menu_page },
     { .ptr = &midigeneric_menu_page },
+    { .ptr = &midicontrolinput_menu_page },
+    { .ptr = &midicontroloutput_menu_page },
 
     // Browser pages
     { .ptr = &sound_browser },
@@ -101,6 +215,9 @@ const lightpage_ptr_t MCL::pages_table[NUM_PAGES] PROGMEM = {
     // Performance page
     { .ptr = &perf_page },
 
+#ifdef PLATFORM_TBD
+    { .ptr = &bank_popup_page },
+#endif
 #ifdef WAV_DESIGNER
     // WAV Designer pages
     { .ptr = &wd.mixer },
@@ -122,7 +239,6 @@ void MCL::setup() {
   DEBUG_DUMP(sizeof(ExtTrack));
   DEBUG_DUMP(sizeof(EmptyTrack));
 
-  DEBUG_DUMP(sizeof(MDLFOTrack));
   DEBUG_DUMP(sizeof(MDRouteTrack));
   DEBUG_DUMP(sizeof(MDFXTrack));
   DEBUG_DUMP(sizeof(MDTempoTrack));
@@ -141,7 +257,13 @@ void MCL::setup() {
     char value_str[4];
     mcl_gui.put_value_at(health, value_str);
     oled_display.init_display();
-    oled_display.textbox("HW ERROR:", value_str);
+    // mclstr_hw_error is PROGMEM, value_str is RAM. AVR's Adafruit_SSD1305
+    // only exposes textbox(RAM, RAM) and rp2040's Oled has no mixed overload,
+    // so copy the PROGMEM label into RAM first.
+    char hw_err[17];
+    strncpy_P(hw_err, mclstr_hw_error, sizeof(hw_err));
+    hw_err[sizeof(hw_err) - 1] = '\0';
+    oled_display.textbox(hw_err, value_str);
     oled_display.display();
     while (1);
   }
@@ -149,32 +271,43 @@ void MCL::setup() {
   ret = mcl_sd.sd_init();
   oled_display.init_display();
 
- if (BUTTON_DOWN(Buttons.BUTTON2)) {
+  bool allow_boot_menu = true;
+#ifdef MCL_HAS_PLATFORM_HEADLESS_BOOT
+  allow_boot_menu = !mcl_platform_headless_boot();
+#endif
+  if (allow_boot_menu && BUTTON_DOWN(Buttons.BUTTON2)) {
     // gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
     mcl.setPage(BOOT_MENU_PAGE);
     while (mcl.currentPage() == BOOT_MENU_PAGE) {
       loop();
     }
   }
+  if (ret) {
+    R.Clear();
+    R.use_icons_boot();
+    gfx.splashscreen(R.icons_boot->mcl_logo_bitmap);
+
+    ret = mcl_sd.load_init();
+  }
+
   if (!ret) {
-    oled_display.print(F("SD CARD ERROR :-("));
+    oled_display.clearDisplay();
+    oled_display.setFont();
+    oled_display.setTextColor(WHITE, BLACK);
+    oled_display.setCursor(0, 0);
+    mcl_print_P(mclstr_sd_card_error);
     oled_display.display();
     delay(2000);
     return;
   }
-  R.Clear();
-  R.use_icons_boot();
-  gfx.splashscreen(R.icons_boot->mcl_logo_bitmap);
 
-  ret = mcl_sd.load_init();
-#ifdef PLATFORM_TBD
-  GUI.addEventHandler((event_handler_t)&tbd_handleEvent);
-#endif
+  load_persistent_resources();
+
+  // Platform panel input runs from GuiClass::handleTopEvent so it can
+  // preempt the active page on cluster / physical-button overrides.
   GUI.addEventHandler((event_handler_t)&mcl_handleEvent);
 
-  if (ret) {
-    mcl.setPage(GRID_PAGE);
-  }
+  mcl.setPage(GRID_PAGE);
 
   DEBUG_PRINTLN(F("tempo:"));
   DEBUG_PRINTLN(mcl_cfg.tempo);
@@ -182,22 +315,12 @@ void MCL::setup() {
 
   note_interface.setup();
 
-  MD.midi_events.enable_live_kit_update();
+  configure_driver_ports();
 
   mcl_actions.setup();
   mcl_seq.setup();
 
-  MDSysexListener.setup(&Midi);
-
-  key_interface.setup(&Midi);
   key_interface.enable_listener();
-
-  md_track_select.setup(&Midi);
-
-#ifdef EXT_TRACKS
-  A4SysexListener.setup(&Midi2);
-  MNMSysexListener.setup(&Midi2);
-#endif
   perf_page.setup();
 
   grid_task.init();
@@ -211,7 +334,7 @@ void MCL::setup() {
 
   if (mcl_cfg.display_mirror == 1) {
 #ifndef DEBUGMODE
-    oled_display.textbox("DISPLAY ", "MIRROR");
+    oled_display.textbox_P(mclstr_display_mirror, mclstr_mirror);
     GUI.display_mirror = true;
 #endif
   }
@@ -219,100 +342,42 @@ void MCL::setup() {
 }
 
 void MCL::loop() {
+  platform_poll();
+
+#ifndef __AVR__
+  MidiUartUSB.service_background();
+#endif
+
+#ifdef PLATFORM_TBD
+  MidiUartP4.service_background();
+#endif
+
   perf_page.encoder_check();
+
+#ifdef PLATFORM_TBD
+  device_manager.ui_loop();
+#endif
+
   key_interface.check_key_throttle();
   GUI.loop();
-}
 
-bool tbd_handleEvent(gui_event_t *event) {
-    // If button press is greater than 4, then we need to remap these as CMD
-    if (EVENT_BUTTON(event) && event->source > ButtonsClass::BUTTON4) {
-        uint8_t key = 255;
-        // Handle trigger buttons with range check
-        if (event->source >= ButtonsClass::TRIG_BUTTON1) {
-            key = event->source - ButtonsClass::TRIG_BUTTON1; // MDX_KEY_TRIG1
-        }
-        else {
-           bool copy_mode = (key_interface.is_key_down(MDX_KEY_NO) ||
-                  key_interface.is_key_down(MDX_KEY_FUNC)) ||
-                 ((mcl.currentPage() == SEQ_STEP_PAGE ||
-                   mcl.currentPage() == SEQ_PTC_PAGE ||
-                   mcl.currentPage() == SEQ_EXTSTEP_PAGE) &&
-                  (key_interface.is_key_down(MDX_KEY_SCALE) ||
-                   note_interface.notes_count_on() > 0)) ||
-                 ((mcl.currentPage() == PERF_PAGE_0) &&
-                   (note_interface.notes_count_on() > 0));
-           // Handle function buttons with switch statement
-            switch (event->source) {
-                case ButtonsClass::FUNC_BUTTON1:
-                    key = copy_mode ? MDX_KEY_COPY : MDX_KEY_REC;
-                    break;
-                case ButtonsClass::FUNC_BUTTON2:
-                    key = copy_mode ? MDX_KEY_CLEAR : MDX_KEY_PLAY;
-                    if (event->mask == EVENT_BUTTON_PRESSED) {
-                      if (key == MDX_KEY_PLAY) {
-                         if (MidiClock.state == MidiClockClass::PAUSED) {
-                           MidiClock.handleImmediateMidiStart();
-                         }
-                         else if (MidiClock.state == MidiClockClass::STARTED) {
-                           MidiClock.handleImmediateMidiStop();
-                         }
-                      }
-                    }
-                    break;
-                case ButtonsClass::FUNC_BUTTON3:
-                    key = copy_mode ? MDX_KEY_PASTE : MDX_KEY_STOP;
-                    if (event->mask == EVENT_BUTTON_PRESSED) {
-                      if (key == MDX_KEY_STOP) {
-                         MidiClock.handleImmediateMidiStop();
-                      }
-                    }
-                    break;
-                case ButtonsClass::FUNC_BUTTON4:
-                    key = MDX_KEY_YES;
-                    break;
-                case ButtonsClass::FUNC_BUTTON5:
-                    key = MDX_KEY_NO;
-                    break;
-                case ButtonsClass::FUNC_BUTTON6:
-                    key = MDX_KEY_UP;
-                    break;
-                case ButtonsClass::FUNC_BUTTON7:
-                    key = MDX_KEY_LEFT;
-                    break;
-                case ButtonsClass::FUNC_BUTTON8:
-                    key = MDX_KEY_DOWN;
-                    break;
-                case ButtonsClass::FUNC_BUTTON9:
-                    key = MDX_KEY_RIGHT;
-                    break;
-                default:
-                    break;
-            }
-        }
-        if (key != 255) {
-            key_interface.key_event(key, !(event->mask & 1));
-            return true;
-        }
-    }
-    return false;
+#ifdef MCL_HAS_EXTENDED_PANEL_INPUT
+  platform_panel.loop();
+#endif
 }
 
 bool mcl_handleEvent(gui_event_t *event) {
-  /*
-  if (EVENT_NOTE(event)) {
-    uint8_t mask = event->mask;
-    uint8_t port = event->port;
-    MidiDevice *device = midi_active_peering.get_device(port);
-
-    uint8_t track = event->source;
-    if (device != &MD) {
-      return true;
-    }
-  }
-  */
   if (EVENT_CMD(event)) {
     uint8_t key = event->source;
+    PageIndex current_page = mcl.currentPage();
+    if (key == MDX_KEY_FUNC && event->mask == EVENT_BUTTON_RELEASED) {
+      seq_step_page.clear_mask_shortcut_suppress();
+    }
+    if (event->mask == EVENT_BUTTON_RELEASED) {
+      if (mask_shortcut_for_key(key) != MASK_PATTERN) {
+        seq_step_page.clear_mask_shortcut_suppress();
+      }
+    }
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (key != MDX_KEY_FUNC && key != MDX_KEY_COPY && key != MDX_KEY_CLEAR &&
           key != MDX_KEY_PASTE && key != MDX_KEY_SCALE) {
@@ -331,8 +396,8 @@ bool mcl_handleEvent(gui_event_t *event) {
               }
         */
       case MDX_KEY_EXTENDED: {
-        if (MidiClock.state == 2 && mcl.currentPage() != MIXER_PAGE) {
-          mixer_page.last_page = mcl.currentPage();
+        if (MidiClock.state == 2 && current_page != MIXER_PAGE) {
+          mixer_page.last_page = current_page;
           mcl.setPage(MIXER_PAGE);
           mixer_page.ext_key_down = 1;
           mixer_page.mute_toggle = 1;
@@ -340,21 +405,62 @@ bool mcl_handleEvent(gui_event_t *event) {
         }
         break;
       }
+      case MDX_KEY_SCALE: {
+        if (!key_interface.event_func_down(event)) {
+          if (bank_key_down()) {
+            toggle_remote_fill_window();
+#ifdef PLATFORM_TBD
+            remote_fill_scale_down = true;
+#endif
+            return true;
+          }
+#ifdef PLATFORM_TBD
+          if (switch_remote_mute_fill_window()) {
+            remote_fill_scale_down = true;
+            return true;
+          }
+#endif
+        }
+        break;
+      }
+      case MDX_KEY_MUTE:
       case MDX_KEY_BANKA:
       case MDX_KEY_BANKB:
       case MDX_KEY_BANKC:
       case MDX_KEY_BANKD: {
-        if (mcl.currentPage() == GRID_LOAD_PAGE ||
-            mcl.currentPage() == GRID_SAVE_PAGE ||
-            (mcl.currentPage() == GRID_PAGE && grid_page.show_slot_menu)) { // ||
-//            (mcl.currentPage() == MIXER_PAGE && mixer_page.preview_mute_set != 255))
+        bool func_down = key_interface.event_func_down(event);
+        uint8_t shortcut_mask = mask_shortcut_for_key(key);
+        if (func_down && shortcut_mask != MASK_PATTERN) {
+          if (seq_step_page.should_suppress_mask_shortcut(shortcut_mask)) {
+            return true;
+          }
+          if (current_page != SEQ_STEP_PAGE) {
+            seq_step_page.prepare = true;
+            seq_step_page.return_to_grid_on_mask_close = true;
+            if (current_page != SOUND_BROWSER &&
+                current_page != ARP_PAGE &&
+                current_page != POLY_PAGE) {
+              seq_step_page.last_page = current_page;
+            }
+            SeqPage::mask_type = shortcut_mask;
+            mcl.setPage(SEQ_STEP_PAGE);
+          }
+          return true;
+        }
+        if (key == MDX_KEY_MUTE) {
           return false;
         }
-        if (key_interface.is_key_down(MDX_KEY_FUNC)) {
+        if (current_page == GRID_LOAD_PAGE ||
+            current_page == GRID_SAVE_PAGE ||
+            (current_page == GRID_PAGE && grid_page.show_slot_menu)) { // ||
+//            (current_page == MIXER_PAGE && mixer_page.preview_mute_set != 255))
+          return false;
+        }
+        if (func_down) {
           return false;
         }
         if (grid_page.last_page == 255) {
-          grid_page.last_page = mcl.currentPage();
+          grid_page.last_page = current_page;
         }
         mcl.setPage(GRID_PAGE);
         grid_page.bank_popup = 1;
@@ -362,8 +468,8 @@ bool mcl_handleEvent(gui_event_t *event) {
         bool clear_states = false;
         key_interface.on(clear_states);
         grid_page.bank = key - MDX_KEY_BANKA + MD.currentBank * 4;
-        uint16_t *mask = (uint16_t *)&grid_page.row_states[0];
-        mcl_gui.set_trigleds(mask[grid_page.bank], TRIGLED_EXCLUSIVENDYNAMIC);
+        mcl_gui.set_trigleds(grid_row_bank_mask(grid_page.row_states, grid_page.bank),
+                             TRIGLED_EXCLUSIVENDYNAMIC);
 
         grid_page.send_row_led();
 
@@ -371,10 +477,18 @@ bool mcl_handleEvent(gui_event_t *event) {
         // grid_page.jump_to_row(row);
         return true;
       }
+      case MDX_KEY_NO: {
+        if (current_page != SEQ_STEP_PAGE && SeqPage::mask_type == MASK_SWING) {
+          SeqPage::mask_type = MASK_PATTERN;
+          seq_step_page.config_mask_info(false);
+          return true;
+        }
+        break;
+      }
       case MDX_KEY_BANKGROUP: {
-        if (mcl.currentPage() != TEXT_INPUT_PAGE &&
-            mcl.currentPage() != GRID_SAVE_PAGE &&
-            mcl.currentPage() != GRID_LOAD_PAGE &&
+        if (current_page != TEXT_INPUT_PAGE &&
+            current_page != GRID_SAVE_PAGE &&
+            current_page != GRID_LOAD_PAGE &&
             !key_interface.is_key_down(MDX_KEY_PATSONG)) {
           mcl.setPage(PAGE_SELECT_PAGE);
           return true;
@@ -382,22 +496,23 @@ bool mcl_handleEvent(gui_event_t *event) {
         return false;
       }
       case MDX_KEY_REC: {
-       if (mcl.currentPage() != SEQ_STEP_PAGE &&
-          mcl.currentPage() != SEQ_PTC_PAGE &&
-          mcl.currentPage() != SEQ_EXTSTEP_PAGE) {
+        if (current_page != SEQ_STEP_PAGE &&
+            current_page != SEQ_PTC_PAGE &&
+            current_page != SEQ_EXTSTEP_PAGE) {
           seq_step_page.prepare = true;
-          if (mcl.currentPage() != SOUND_BROWSER && mcl.currentPage() != ARP_PAGE && mcl.currentPage() != POLY_PAGE) {
-            seq_step_page.last_page = mcl.currentPage();
+          if (current_page != SOUND_BROWSER &&
+              current_page != ARP_PAGE &&
+              current_page != POLY_PAGE) {
+            seq_step_page.last_page = current_page;
           }
+          SeqPage::mask_type = MASK_PATTERN;
           mcl.setPage(SEQ_STEP_PAGE);
         } else {
-          if (seq_step_page.recording) {
-            seq_step_page.recording = 0;
-            MD.set_rec_mode(mcl.currentPage() == SEQ_STEP_PAGE);
-            clearLed2();
+          if (SeqPage::recording) {
+            seq_step_page.disable_record();
             key_interface.ignoreNextEvent(MDX_KEY_REC);
           } else {
-            if (mcl.currentPage() == SEQ_STEP_PAGE) {
+            if (current_page == SEQ_STEP_PAGE) {
               key_interface.ignoreNextEvent(MDX_KEY_REC);
               mcl.setPage(seq_step_page.last_page);
             }
@@ -406,61 +521,49 @@ bool mcl_handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_REALTIME: {
+        mcl_seq.set_fill(true);
         seq_step_page.bootstrap_record();
         return true;
       }
-      case MDX_KEY_COPY: {
-        if (mcl.currentPage() == SEQ_STEP_PAGE || mcl.currentPage() == PERF_PAGE_0)
-          break;
-        if (mcl.currentPage() != SEQ_PTC_PAGE &&
-            (key_interface.is_key_down(MDX_KEY_SCALE) ||
-             key_interface.is_key_down(MDX_KEY_NO))) {
-          // Ignore scale + copy if page != seq_step_page
-          break;
-        }
-        opt_copy = 2;
-        if (mcl.currentPage() == SEQ_PTC_PAGE ||
-            mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
-          opt_copy = SeqPage::recording ? 2 : 1;
-        }
-        else {
-          opt_midi_device_capture = &MD;
-        }
-        opt_copy_track_handler_cb();
-        break;
-      }
+      case MDX_KEY_COPY:
       case MDX_KEY_PASTE: {
-        if (mcl.currentPage() == SEQ_STEP_PAGE || mcl.currentPage() == PERF_PAGE_0)
+        if (current_page == SEQ_STEP_PAGE || current_page == PERF_PAGE_0)
           break;
-        if (mcl.currentPage() != SEQ_PTC_PAGE &&
+        if (current_page != SEQ_PTC_PAGE &&
             (key_interface.is_key_down(MDX_KEY_SCALE) ||
              key_interface.is_key_down(MDX_KEY_NO))) {
-          // Ignore scale + copy if page != seq_step_page
+          // Ignore scale + copy/paste if page != seq_step_page
           break;
         }
-        opt_paste = 2;
-        if (mcl.currentPage() == SEQ_PTC_PAGE ||
-            mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
-          opt_paste = SeqPage::recording ? 2 : 1;
+        uint8_t opt = 2;
+        if (current_page == SEQ_PTC_PAGE ||
+            current_page == SEQ_EXTSTEP_PAGE) {
+          opt = SeqPage::recording ? 2 : 1;
         }
         else {
           opt_midi_device_capture = &MD;
         }
-        reset_undo();
-        opt_paste_track_handler();
+        if (key == MDX_KEY_COPY) {
+          opt_copy = opt;
+          opt_copy_track_handler_cb();
+        } else {
+          opt_paste = opt;
+          reset_undo();
+          opt_paste_track_handler();
+        }
         break;
       }
       case MDX_KEY_CLEAR: {
-        if (mcl.currentPage() == SEQ_STEP_PAGE || mcl.currentPage() == PERF_PAGE_0)
+        if (current_page == SEQ_STEP_PAGE || current_page == PERF_PAGE_0)
           break;
         if ((note_interface.notes_count_on() > 0) ||
             (key_interface.is_key_down(MDX_KEY_SCALE) ||
              key_interface.is_key_down(MDX_KEY_NO)))
           break;
         opt_clear = 2;
-        //  MidiDevice *dev = midi_active_peering.get_device(UART2_PORT);
-        if (mcl.currentPage() == SEQ_PTC_PAGE) { opt_clear = 1; }
-        else if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
+        //  MidiDevice *dev = device_manager.secondary_device();
+        if (current_page == SEQ_PTC_PAGE) { opt_clear = 1; }
+        else if (current_page == SEQ_EXTSTEP_PAGE) {
           opt_clear = 1;
           if (seq_extstep_page.pianoroll_mode > 0) { opt_clear_locks_handler(); break; }
         }
@@ -485,16 +588,30 @@ bool mcl_handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
        case MDX_KEY_REC: {
-        if (!SeqPage::recording && (mcl.currentPage() == SEQ_PTC_PAGE ||
-                                    mcl.currentPage() == SEQ_EXTSTEP_PAGE)) {
+        if (!SeqPage::recording && (current_page == SEQ_PTC_PAGE ||
+                                    current_page == SEQ_EXTSTEP_PAGE)) {
             seq_step_page.prepare = true;
-            seq_step_page.last_page = mcl.currentPage();
+            seq_step_page.last_page = current_page;
             mcl.setPage(SEQ_STEP_PAGE);
           return true;
         }
+        break;
       }
       case MDX_KEY_REALTIME: {
+        mcl_seq.set_fill(false);
         return true;
+      }
+      case MDX_KEY_SCALE: {
+#ifdef PLATFORM_TBD
+        if (remote_fill_scale_down) {
+          remote_fill_scale_down = false;
+          return true;
+        }
+#endif
+        if (bank_key_down()) {
+          return true;
+        }
+        break;
       }
       case MDX_KEY_FUNCEXTENDED: {
         key_interface.ignoreNextEventClear(MDX_KEY_EXTENDED);
@@ -521,10 +638,10 @@ __attribute__((weak)) health_status health_check() {
 void sdcard_bench() {
 
   EmptyTrack empty_track;
-  DeviceTrack *ptrack;
   while (1) {
+#ifdef DEBUGMODE
     uint16_t cl = read_clock_ms();
-    proj.select_grid(0);
+#endif
     for (uint8_t n = 0; n < 16; n++) {
       auto *ptrack = empty_track.load_from_grid_512(n, 0);
       ptrack->init_track_type(MD_TRACK_TYPE);
@@ -533,8 +650,7 @@ void sdcard_bench() {
       if (ptrack) ptrack->store_in_mem(0);
       CLEAR_LOCK();
     }
-    proj.select_grid(1);
-    for (uint8_t n = 0; n < 16; n++) {
+    for (uint8_t n = 16; n < 32; n++) {
       auto *ptrack = empty_track.load_from_grid_512(n, 0);
       ptrack->init_track_type(A4_TRACK_TYPE);
       USE_LOCK();
@@ -542,11 +658,25 @@ void sdcard_bench() {
       if (ptrack) ptrack->store_in_mem(0);
       CLEAR_LOCK();
     }
+#ifdef DEBUGMODE
     uint16_t diff = clock_diff(cl, read_clock_ms());
     DEBUG_PRINT("Clock :");
     DEBUG_PRINTLN(diff);
+#endif
   }
 }
 
+
+void MCL::load_persistent_resources() {
+#if !defined(__AVR__)
+  R.Clear();
+  R.use_machine_param_names();
+  R.use_machine_names_short();
+#if defined(PLATFORM_TBD)
+  R.use_icons_knob();
+#endif
+  R.SetPersistent();
+#endif
+}
 
 MCL mcl;

@@ -6,22 +6,7 @@
 #include "MidiUart.h"
 #include "MidiSysex.h"
 #include "MidiClock.h"
-
-const midi_parse_t midi_parse[] = {
-    {MIDI_NOTE_OFF, midi_wait_byte_2},
-    {MIDI_NOTE_ON, midi_wait_byte_2},
-    {MIDI_AFTER_TOUCH, midi_wait_byte_2},
-    {MIDI_CONTROL_CHANGE, midi_wait_byte_2},
-    {MIDI_PROGRAM_CHANGE, midi_wait_byte_1},
-    {MIDI_CHANNEL_PRESSURE, midi_wait_byte_1},
-    {MIDI_PITCH_WHEEL, midi_wait_byte_2},
-    /* special handling for SYSEX */
-    {MIDI_MTC_QUARTER_FRAME, midi_wait_byte_1},
-    {MIDI_SONG_POSITION_PTR, midi_wait_byte_2},
-    {MIDI_SONG_SELECT, midi_wait_byte_1},
-    {MIDI_TUNE_REQUEST, midi_wait_status},
-    {0, midi_ignore_message}
-};
+#include "Devices/DeviceManager.h"
 
 MidiClass::MidiClass(MidiUartClass *_uart, MidiSysexClass *_sysex) {
   midiActive = true;
@@ -34,16 +19,18 @@ MidiClass::MidiClass(MidiUartClass *_uart, MidiSysexClass *_sysex) {
 }
 
 void MidiClass::init() {
-  last_status = running_status = 0;
+  last_status = 0;
   in_state = midi_ignore_message;
   in_state = midi_wait_status;
-  live_state = midi_wait_status;
+  // live_state now lives in MidiUartClass for ISR performance
+  uart->live_state = midi_wait_status;
 }
 
 void MidiClass::processSysex() {
     while (midiSysex->avail()) {
-        sysexEnd(midiSysex->msg_rd);
+        uint8_t msg_rd = midiSysex->msg_rd;
         midiSysex->get_next_msg();
+        sysexEnd(msg_rd);
     }
 }
 
@@ -108,6 +95,9 @@ again:
     return;
 
   switch (in_state) {
+  case midi_wait_sysex:
+    break;
+
   case midi_ignore_message:
     if (MIDI_IS_STATUS_BYTE(byte)) {
       in_state = midi_wait_status;
@@ -118,56 +108,62 @@ again:
     break;
 
   case midi_wait_status: {
+    bool running_status = false;
     if (MIDI_IS_STATUS_BYTE(byte)) {
       last_status = byte;
-      running_status = 0;
     } else {
       if (last_status == 0)
         break;
-      running_status = 1;
+      running_status = true;
     }
 
     uint8_t status = last_status;
     if (MIDI_IS_VOICE_STATUS_BYTE(status)) {
       status = MIDI_VOICE_TYPE_NIBBLE(status);
-    }
-
-    uint8_t i;
-    for (i = 0; midi_parse[i].midi_status != 0; i++) {
-      if (midi_parse[i].midi_status == status) {
-        in_state = midi_parse[i].next_state;
-        msg[0] = last_status;
-        in_msg_len = 1;
-        break;
-      }
-    }
-    callback = i;
-
-    if (midi_parse[i].midi_status == 0) {
+      callback = (status >> 4) - 8;
+      in_state = (status == MIDI_PROGRAM_CHANGE ||
+                  status == MIDI_CHANNEL_PRESSURE)
+                     ? midi_wait_byte_1
+                     : midi_wait_byte_2;
+    } else if (status >= MIDI_MTC_QUARTER_FRAME &&
+               status <= MIDI_SONG_SELECT) {
+      // F1-F3 are contiguous and keep the old midi_parse[] callback order.
+      callback = MIDI_MTC_QUARTER_FRAME_CB + (status - MIDI_MTC_QUARTER_FRAME);
+      in_state = status == MIDI_SONG_POSITION_PTR ? midi_wait_byte_2
+                                                  : midi_wait_byte_1;
+    } else if (status == MIDI_TUNE_REQUEST) {
+      callback = MIDI_TUNE_REQUEST_CB;
+      in_state = midi_wait_status;
+    } else {
       in_state = midi_ignore_message;
       return;
     }
+    msg[0] = last_status;
+    in_msg_len = 1;
+
     if (running_status)
       goto again;
   } break;
 
-  case midi_wait_byte_1:
+  case midi_wait_byte_1: {
     // trying to fix bug that causes midi messages to overlap
     // if a midicallback triggered another midi event then the status was not
     // update in time and collision occured between data streamss
     in_state = midi_wait_status;
 
     msg[in_msg_len++] = byte;
-    if (midi_parse[callback].midi_status == MIDI_NOTE_ON && msg[2] == 0) {
+    if (callback == MIDI_NOTE_ON_CB && msg[2] == 0) {
       callback = 0; // XXX ugly hack to recgnize NOTE on with velocity 0 as Note Off
     }
 
-    uint8_t buf[3];
-    memcpy(buf, msg, 3);
-
+    bool forwarded_cc = callback == MIDI_CC_CB;
     for (uint8_t n = 0; n < NUM_FORWARD_PORTS; n++) {
-      if (uart_forward[n]) {
-        uart_forward[n]->m_putc(buf, in_msg_len);
+      MidiUartClass *forward_uart = uart_forward[n];
+      if (forward_uart) {
+        forward_uart->m_putc(msg, in_msg_len);
+        if (forwarded_cc) {
+          device_manager.on_forwarded_cc(forward_uart, msg);
+        }
       }
     }
 
@@ -185,6 +181,7 @@ again:
 
     in_state = midi_wait_status;
     break;
+  }
 
   case midi_wait_byte_2:
     msg[in_msg_len++] = byte;

@@ -1,0 +1,8 @@
+// cstdlib — C++ wrapper.
+#pragma once
+#include <stdlib.h>
+namespace std {
+    using ::malloc; using ::free; using ::calloc; using ::realloc;
+    using ::rand; using ::srand;
+    using ::atoi; using ::atol;
+}
