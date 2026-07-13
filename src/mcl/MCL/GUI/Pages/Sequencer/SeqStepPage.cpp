@@ -80,10 +80,8 @@ void draw_active_step_masks(SeqStepPage &page, SeqStepTrackRef active_track,
     break;
   case MASK_SWING:
     display_mask = 0;
-    if (!SeqPage::swing_mask_edit_disabled()) {
-      active_track.get_mask(&slide_mask, MASK_SWING);
-      led_mask = slide_mask;
-    }
+    active_track.get_mask(&slide_mask, MASK_SWING);
+    led_mask = slide_mask;
     break;
   }
 
@@ -517,10 +515,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       return true;
     }
     uint8_t step = track + page_step_offset();
-    if (SeqPage::swing_mask_edit_disabled()) {
-      note_interface.clear_note(track);
-      return true;
-    }
     uint8_t length = active_track.length();
 
     step_select = track;

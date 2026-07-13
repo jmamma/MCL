@@ -241,11 +241,6 @@ bool SeqPage::active_device_is_md() {
   return idx_is_md_device(current_device_idx());
 }
 
-bool SeqPage::swing_mask_edit_disabled() {
-  return mask_type == MASK_SWING && active_device_is_md() &&
-         MD.pattern.swingEditAll > 0;
-}
-
 void SeqPage::select_device_idx(DeviceIdx device_idx) {
   mcl_cfg.seq_dev = static_cast<uint8_t>(device_idx);
   midi_device = device_for_seq_idx(device_idx);
@@ -1012,10 +1007,8 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       if (seq_track_menu_op_for_key(key, op)) {
         if (mcl.currentPage() == SEQ_STEP_PAGE && mask_type &&
             op < SEQ_TRACK_OP_REVERSE) {
-          if (!swing_mask_edit_disabled()) {
-            seq_page_active_step_track().rotate_mask(
-                mask_type, op == SEQ_TRACK_OP_ROTATE_RIGHT);
-          }
+          seq_page_active_step_track().rotate_mask(
+              mask_type, op == SEQ_TRACK_OP_ROTATE_RIGHT);
           return true;
         }
         bool is_md_device = opt_capture_is_md_device();
@@ -1185,10 +1178,8 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
         break;
       case MASK_SWING:
         display_mask = 0;
-        if (!swing_mask_edit_disabled()) {
-          track.get_mask(&slide_mask, MASK_SWING);
-          led_mask = slide_mask;
-        }
+        track.get_mask(&slide_mask, MASK_SWING);
+        led_mask = slide_mask;
         break;
       }
     });
