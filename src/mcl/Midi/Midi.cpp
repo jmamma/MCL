@@ -156,13 +156,20 @@ again:
       callback = 0; // XXX ugly hack to recgnize NOTE on with velocity 0 as Note Off
     }
 
+    // The AVR UART TX rings live in bank 1.  Their bulk writer switches banks
+    // before copying, so its source must not be a bank-0 global such as this
+    // MidiClass instance's msg buffer.  Keep a stack-local copy, as in 4.70;
+    // the internal SRAM stack remains visible while bank 1 is selected.
+    uint8_t forward_msg[3];
+    memcpy(forward_msg, msg, sizeof(forward_msg));
+
     bool forwarded_cc = callback == MIDI_CC_CB;
     for (uint8_t n = 0; n < NUM_FORWARD_PORTS; n++) {
       MidiUartClass *forward_uart = uart_forward[n];
       if (forward_uart) {
-        forward_uart->m_putc(msg, in_msg_len);
+        forward_uart->m_putc(forward_msg, in_msg_len);
         if (forwarded_cc) {
-          device_manager.on_forwarded_cc(forward_uart, msg);
+          device_manager.on_forwarded_cc(forward_uart, forward_msg);
         }
       }
     }
