@@ -99,7 +99,8 @@ bool MDGlobal::fromSysex(MidiClass *midi) {
   uint8_t byte = 0;
   decoder.get8(&byte);
   clockIn = IS_BIT_SET(byte, 0);
-  transportIn = IS_BIT_SET(byte, 4);
+  // The MD stores CTRL IN as a disable flag: bit 4 clear means enabled.
+  transportIn = !IS_BIT_SET(byte, 4);
   clockOut = IS_BIT_SET(byte, 5);
   transportOut = IS_BIT_SET(byte, 6);
   decoder.getb(&localOn);
@@ -157,7 +158,8 @@ uint16_t MDGlobal::toSysex(ElektronDataToSysexEncoder *encoder) {
   if (clockIn)
     //        byte = byte + 1;
     SET_BIT(byte, 0);
-  if (transportIn)
+  // The MD stores CTRL IN as a disable flag: bit 4 set means disabled.
+  if (!transportIn)
     SET_BIT(byte, 4);
   if (clockOut)
     //      byte = byte + 16;

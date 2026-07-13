@@ -1260,7 +1260,8 @@ void MDClass::setExternalSync() {
 
   b = global.clockIn;
 
-  if (global.transportIn) {
+  // The MD stores CTRL IN as a disable flag: bit 4 clear means enabled.
+  if (!global.transportIn) {
     b |= 1 << 4;
   }
 
