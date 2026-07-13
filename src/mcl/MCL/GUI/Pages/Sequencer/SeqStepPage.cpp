@@ -582,13 +582,15 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       resetEncoderFocus();
       if (!active_track.get_step(step, mask_type)) {
         reset_undo();
-        bool cond_plock;
-        uint8_t step_condition =
-            active_track.step_conditional_from_knob(condition, &cond_plock);
-        active_track.clear_step_oneshot(step);
-        active_track.set_conditional(step, step_condition, cond_plock);
-        active_track.set_timing_from_encoder(step, seq_param2.cur);
-        active_track.clear_mute(step);
+        if (mask_type == MASK_PATTERN) {
+          bool cond_plock;
+          uint8_t step_condition =
+              active_track.step_conditional_from_knob(condition, &cond_plock);
+          active_track.clear_step_oneshot(step);
+          active_track.set_conditional(step, step_condition, cond_plock);
+          active_track.set_timing_from_encoder(step, seq_param2.cur);
+          active_track.clear_mute(step);
+        }
         active_track.set_step(step, mask_type, true);
         SET_BIT16(ignore_release, track);
       }
@@ -615,12 +617,13 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
             TRIG_HOLD_TIME) {
           reset_undo();
           active_track.set_step(step, mask_type, false);
-          active_track.clear_step_oneshot(step);
-          active_track.clear_conditional(step);
-          active_track.reset_timing(step);
-          if (active_track.clears_mute_on_pattern_clear() &&
-              mask_type == MASK_PATTERN) {
-            active_track.clear_mute(step);
+          if (mask_type == MASK_PATTERN) {
+            active_track.clear_step_oneshot(step);
+            active_track.clear_conditional(step);
+            active_track.reset_timing(step);
+            if (active_track.clears_mute_on_pattern_clear()) {
+              active_track.clear_mute(step);
+            }
           }
         }
       }
