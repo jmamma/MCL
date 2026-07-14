@@ -21,7 +21,7 @@ python3 tools/docs/build_manual_site.py
 
 ## Platform Support
 
-MCL can now be run across different hardware platforms using PlatformIO.
+MCL can now be built to run across different hardware platforms using PlatformIO.
 
 **Current platforms:**
 - **AVR** - MegaCommand DIY and MegaCMD devices
