@@ -121,6 +121,11 @@ void platform_wait_poll() {
     // first sysex: older status exchanges can otherwise sit in front of the
     // request this wait is actually waiting for.
     pump_host_midi_output_for_wait();
+    // Modal waits run inside the service thread's existing WAMR entry. Advance
+    // the virtual hardware timers to the next published host sample before
+    // exposing timestamped MIDI, exactly as platform_poll() does. Reversing
+    // this order makes an on-time 0xF8 appear early or late to MidiClock.
+    drain_pending_audio_time();
     pump_host_midi_input();
     // handleIncomingMidi() dispatches already-recorded sysex before it drains
     // UART bytes into the sysex recorder. Prime that first stage here so the
