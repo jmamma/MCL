@@ -1,6 +1,7 @@
 # MCL
 
-A high-performance MIDI sequencer, controller and live performance system for the Machinedrum and other MIDI devices.
+A high-performance MIDI sequencer, controller and live performance system.
+Designed to for use with the Machinedrum and other MIDI devices.
 
 Visit the [releases page](https://github.com/jmamma/MCL/releases) for:
 - Latest firmware binaries
