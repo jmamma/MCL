@@ -62,6 +62,7 @@ file(GLOB RESOURCE_SRC CONFIGURE_DEPENDS
 
 # Smoke-test main.cpp is host-runnable, not part of the static lib.
 list(FILTER DESKTOP_SRC EXCLUDE REGEX ".*linktest_main\\.cpp$")
+list(FILTER DESKTOP_SRC EXCLUDE REGEX ".*mcl_wire_compat_test\\.cpp$")
 
 add_library(mcl_native_compile_oracle STATIC
     ${DESKTOP_COMMON_SRC}
@@ -145,4 +146,9 @@ target_compile_options(mcl_native_compile_oracle PRIVATE
 add_executable(mcl_native_compile_oracle_linktest EXCLUDE_FROM_ALL
     src/platform/desktop/linktest_main.cpp)
 target_link_libraries(mcl_native_compile_oracle_linktest PRIVATE
+    mcl_native_compile_oracle)
+
+add_executable(mcl_wire_compat_test EXCLUDE_FROM_ALL
+    src/platform/desktop/mcl_wire_compat_test.cpp)
+target_link_libraries(mcl_wire_compat_test PRIVATE
     mcl_native_compile_oracle)
