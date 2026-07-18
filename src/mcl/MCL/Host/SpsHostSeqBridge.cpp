@@ -10,6 +10,8 @@ SpsHostSeqBridge sps_host_seq_bridge;
 
 void SpsHostSeqBridge::setup() {
     ready_ = false;
+    negotiated_proto_version_ = kProtoVersionV1;
+    negotiated_lock_params_ = kNumLockParamsV1;
     MidiSysex.addSysexListener(this);
 }
 
@@ -220,6 +222,10 @@ void SpsHostSeqBridge::sendErr(uint8_t tag, uint8_t code, uint8_t detail) { uint
 
 void SpsHostSeqBridge::onHello(uint8_t tag, const uint8_t* b, uint16_t n) {
     if (n < 1 || b[0] == 0) return;
+    negotiated_proto_version_ = spsSeqNegotiateVersion(b[0]);
+    negotiated_lock_params_ =
+        spsSeqLockParamsForVersion(negotiated_proto_version_);
+    if (negotiated_lock_params_ == 0) return;
     ready_ = true;
     uint16_t caps = CAP_SPSX | CAP_LOCKS | CAP_DETAIL | CAP_PER_TRACK_LEN |
                     CAP_BATCH | CAP_STEP_CLIPBOARD | CAP_ACCENT |
@@ -227,8 +233,9 @@ void SpsHostSeqBridge::onHello(uint8_t tag, const uint8_t* b, uint16_t n) {
                     CAP_EXT_NOTE_TOGGLE | CAP_MIXER | CAP_PERF_PAGE |
                     CAP_LFO_PAGE;
     uint8_t body[7];
-    body[0] = kProtoVersion; putU16le(body + 1, caps);
-    body[3] = (uint8_t)NUM_MD_TRACKS; body[4] = (uint8_t)kNumSteps; body[5] = (uint8_t)kNumLockParams;
+    body[0] = negotiated_proto_version_; putU16le(body + 1, caps);
+    body[3] = (uint8_t)NUM_MD_TRACKS; body[4] = (uint8_t)kNumSteps;
+    body[5] = negotiated_lock_params_;
     body[6] = extStepTrackCount();
     sendFrame(CMD_HELLO_ACK, tag, body, (uint16_t)sizeof body);
 }

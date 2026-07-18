@@ -86,7 +86,7 @@ constexpr size_t NUM_LOCKS = 8;
 //
 // MDLFOTrack 226
 // MDRouteTrack 39
-// MDFXTrack 43
+// MDFXTrack 75 (non-AVR includes 32 routed user-FX parameter bytes)
 // MDTempoTrack 11
 
 #if !defined(MEMORY_ALIGN)
@@ -106,7 +106,11 @@ constexpr size_t GRID2_TRACK_LEN = MEMORY_ALIGN(2160);
 constexpr size_t DEVICE_TRACK_LEN = MEMORY_ALIGN(7);
 constexpr size_t MDLFO_TRACK_LEN = MEMORY_ALIGN(226);
 constexpr size_t MDROUTE_TRACK_LEN = MEMORY_ALIGN(39);
+#if !defined(__AVR__)
+constexpr size_t MDFX_TRACK_LEN = MEMORY_ALIGN(75);
+#else
 constexpr size_t MDFX_TRACK_LEN = MEMORY_ALIGN(43);
+#endif
 constexpr size_t MDTEMPO_TRACK_LEN = MEMORY_ALIGN(11);
 constexpr size_t PERF_TRACK_LEN = MEMORY_ALIGN(509);
 constexpr size_t GRIDCHAIN_TRACK_LEN = MEMORY_ALIGN(551);
@@ -123,7 +127,11 @@ constexpr size_t MD_CACHE_LEN = GRID1_TRACK_LEN * NUM_MD_TRACKS;
 #ifdef MCL_HAS_SPSX_TRACKS
 // SPSX tracks carry SPSMachine (34 params + 2 LFOs) + SeqDataUnion + extras.
 // Sized with headroom; static_assert in SPSXTrack.h enforces fit.
+#if !defined(__AVR__)
+constexpr size_t SPSX_TRACK_LEN = MEMORY_ALIGN(1168);
+#else
 constexpr size_t SPSX_TRACK_LEN = MEMORY_ALIGN(1160);
+#endif
 constexpr size_t SPSX_CACHE_LEN = SPSX_TRACK_LEN * NUM_MD_TRACKS;
 #endif
 

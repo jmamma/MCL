@@ -22,7 +22,8 @@ extern uint8_t get_random_byte();
 // ============================================================================
 // Lock Params
 // ============================================================================
-// 34 lock params per track (24 legacy + 4 envelope + 3 LFO-B + 3 retrig).
+// Generic/TBD step tracks retain their established 34-slot contract. SPS-X
+// supplies its wider lock count through a specialized hosted-only type.
 #define STEPSEQ_NUM_LOCKS 34
 
 // ============================================================================

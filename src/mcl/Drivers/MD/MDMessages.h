@@ -7,6 +7,73 @@
 #include "MDPattern.h"
 #include "MDParams.h"
 
+#define MDX_KIT_VERSION     64
+#define SPSX_KIT_VERSION_V1 65
+#define SPSX_KIT_VERSION    66
+
+static constexpr uint8_t SPS_USER_BUS_FX_COUNT = 3;
+static constexpr uint8_t SPS_USER_FX_PARAM_COUNT = 8;
+static constexpr uint8_t SPS_USER_FX_DEFAULT_PARAM = 64;
+static constexpr uint8_t SPSX_KIT_PARAMS_V2_PER_TRACK =
+    SPS_PARAMS_V1_PER_TRACK + 3;
+
+constexpr uint16_t mdKit7BitEncodedSize(uint16_t rawBytes) {
+  return static_cast<uint16_t>(rawBytes + (rawBytes + 6) / 7);
+}
+
+constexpr bool mdKitWireVersionSupported(uint8_t version) {
+  return (version >= 1 && version <= 4) || version == MDX_KIT_VERSION ||
+         version == SPSX_KIT_VERSION_V1 || version == SPSX_KIT_VERSION;
+}
+
+constexpr uint16_t mdKitParamsPerTrackForVersion(uint8_t version) {
+  return version == SPSX_KIT_VERSION ? SPSX_KIT_PARAMS_V2_PER_TRACK
+       : version == SPSX_KIT_VERSION_V1 ? SPS_PARAMS_V1_PER_TRACK
+                                         : MD_PARAMS_PER_TRACK;
+}
+
+constexpr uint16_t mdKitLfoARawSizeForVersion(uint8_t version) {
+  return version == 1 ? 0x340
+       : version == 2 ? 11 * 36
+       : (version == SPSX_KIT_VERSION_V1 || version == SPSX_KIT_VERSION)
+             ? 16 * 9
+             : 16 * 36;
+}
+
+constexpr uint16_t mdKitWireSizeForVersion(uint8_t version) {
+  return !mdKitWireVersionSupported(version) ? 0
+       : static_cast<uint16_t>(
+             1 + 5 + 3 +
+             1 + 16 +
+             16 * mdKitParamsPerTrackForVersion(version) + 16 +
+             mdKit7BitEncodedSize(16 * sizeof(uint32_t)) +
+             mdKit7BitEncodedSize(mdKitLfoARawSizeForVersion(version)) +
+             32 + mdKit7BitEncodedSize(32) +
+             ((version == SPSX_KIT_VERSION_V1 ||
+               version == SPSX_KIT_VERSION)
+                  ? mdKit7BitEncodedSize(16 * 9)
+                  : 0) +
+             (version == SPSX_KIT_VERSION
+                  ? (SPS_USER_BUS_FX_COUNT + 1) * SPS_USER_FX_PARAM_COUNT
+                  : 0) +
+             5);
+}
+
+constexpr uint16_t mdKitChecksumLengthForVersion(uint8_t version) {
+  return mdKitWireSizeForVersion(version) == 0
+             ? 0
+             : static_cast<uint16_t>(mdKitWireSizeForVersion(version) - 7);
+}
+
+static_assert(mdKitWireSizeForVersion(4) == 1233,
+              "stock kit wire size changed");
+static_assert(mdKitWireSizeForVersion(MDX_KIT_VERSION) == 1233,
+              "MDX kit wire size changed");
+static_assert(mdKitWireSizeForVersion(SPSX_KIT_VERSION_V1) == 1064,
+              "SPS-X v65 kit wire size changed");
+static_assert(mdKitWireSizeForVersion(SPSX_KIT_VERSION) == 1144,
+              "SPS-X v66 kit wire size changed");
+
 extern uint8_t machinedrum_sysex_hdr[5];
 extern const int8_t md_standard_drum_mapping[16] PROGMEM;
 
@@ -310,7 +377,7 @@ public:
   /** The LFO-A settings for each track. **/
   MDLFO lfos[16];
 #if !defined(__AVR__)
-  /** The LFO-B settings for each track (SPS-X v65 kits only). **/
+  /** The LFO-B settings for each track (SPS-X kits only). **/
   MDLFO lfosB[16];
 #endif
   /** The settings of the reverb effect. **/
@@ -321,6 +388,13 @@ public:
   uint8_t eq[8];
   /** The settings of the compressor effect. **/
   uint8_t dynamics[8];
+#if !defined(__AVR__)
+  /** Kit-scoped parameters for three routed bus effects and one post effect. **/
+  uint8_t userBusFx[SPS_USER_BUS_FX_COUNT][SPS_USER_FX_PARAM_COUNT];
+  uint8_t userPostFx[SPS_USER_FX_PARAM_COUNT];
+  uint8_t userBusFxOrig[SPS_USER_BUS_FX_COUNT][SPS_USER_FX_PARAM_COUNT];
+  uint8_t userPostFxOrig[SPS_USER_FX_PARAM_COUNT];
+#endif
   /** Duplicate fx params not included in the origin MD structure */
   uint8_t fx_orig[4][9];
   /** The trig group selected for each track (255: OFF). **/
@@ -341,6 +415,9 @@ public:
 
   void init_eq();
   void init_dynamix();
+#if !defined(__AVR__)
+  void init_user_fx();
+#endif
   uint8_t *fx_params(uint8_t fx);
 
   virtual uint8_t getPosition() { return origPosition; }

@@ -46,6 +46,13 @@ void use_spsx_longest_track_sync(uint8_t &length, uint8_t &speed,
 }
 
 } // namespace
+
+void MDClass::activate_encoder_interface(uint8_t *params, uint8_t count) {
+  if (is_spsx && count > spsxWireParamCount()) {
+    count = spsxWireParamCount();
+  }
+  ElektronDevice::activate_encoder_interface(params, count);
+}
 #endif
 
 void MDMidiEvents::track_cc(uint8_t *msg) {
@@ -60,7 +67,8 @@ void MDMidiEvents::track_cc(uint8_t *msg) {
     return;
   }
 
-  uint8_t param_limit = MD.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+  uint8_t param_limit =
+      MD.is_spsx ? MD.spsxWireParamCount() : MD_PARAMS_PER_TRACK;
   if (track_param == MODEL_LEVEL) {
     MD.kit.levels[track] = value;
   } else if (track_param == MODEL_MUTE) {
@@ -601,7 +609,7 @@ bool MDMixerCapability::param(const DeviceContext &ctx, uint8_t track,
     value = device.kit.levels[track];
   } else {
     uint8_t param_limit =
-        device.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+        device.is_spsx ? device.spsxWireParamCount() : MD_PARAMS_PER_TRACK;
     if (param_idx >= param_limit) {
       return false;
     }
@@ -624,7 +632,7 @@ bool MDMixerCapability::set_param(const DeviceContext &ctx, uint8_t track,
   }
   MDClass &device = md();
   uint8_t param_limit =
-      device.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+      device.is_spsx ? device.spsxWireParamCount() : MD_PARAMS_PER_TRACK;
   if (param_idx != MODEL_LEVEL && param_idx >= param_limit) {
     return false;
   }
@@ -684,7 +692,7 @@ void MDMixerCapability::restore_track_params(const DeviceContext &ctx,
   }
   MDClass &device = md();
   uint8_t num_params =
-      device.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+      device.is_spsx ? device.spsxWireParamCount() : MD_PARAMS_PER_TRACK;
   for (uint8_t param = 0; param < num_params; param++) {
     device.restore_kit_param(track, param);
   }
@@ -895,7 +903,7 @@ bool MDStepEditCapability::param_from_key(const DeviceContext &ctx,
   MDClass &device = md();
   uint8_t value = device.currentSynthPage * 8 + key - 0x10;
   uint8_t param_count =
-      device.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+      device.is_spsx ? device.spsxWireParamCount() : MD_PARAMS_PER_TRACK;
   if (value >= param_count) {
     return false;
   }
@@ -912,7 +920,7 @@ bool MDStepEditCapability::key_for_param(const DeviceContext &ctx,
   }
   MDClass &device = md();
   uint8_t param_count =
-      device.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+      device.is_spsx ? device.spsxWireParamCount() : MD_PARAMS_PER_TRACK;
   if (param >= param_count) {
     return false;
   }
@@ -931,7 +939,7 @@ bool MDStepEditCapability::begin_param_editor(const DeviceContext &ctx,
                                               uint8_t count) {
   (void)ctx;
   uint8_t param_count =
-      md().is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+      md().is_spsx ? md().spsxWireParamCount() : MD_PARAMS_PER_TRACK;
   if (target >= NUM_MD_TRACKS || params == nullptr || count < param_count) {
     return false;
   }
@@ -1054,7 +1062,7 @@ uint8_t MDParamCapability::param_count(const DeviceContext &ctx,
                                        uint8_t target) const {
   (void)ctx;
   if (target < NUM_MD_TRACKS) {
-    return md().is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+    return md().is_spsx ? md().spsxWireParamCount() : MD_PARAMS_PER_TRACK;
   }
   if (target < NUM_MD_TRACKS + 4) {
     return 8;
@@ -1482,14 +1490,20 @@ void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
     return;
   }
 
-  // Extended channels (base+4..+7): params 24-33
+  // Extended channels (base+4..+7): SPS-X parameters after the stock 24.
+#if !defined(__AVR__)
   if (expanded_channel_mode && control_ch >= 4) {
-    *track = (control_ch - 4) * 4;
-    if (cc > 39) { *track = 255; return; }
-    *track += cc % 4;
-    *param = (cc / 4) + MD_PARAMS_PER_TRACK;
+    SpsExtendedCcTarget target{};
+    if (!spsExtendedCcToParam(global.baseChannel, channel, cc, target) ||
+        target.param >= spsxWireParamCount()) {
+      *track = 255;
+      return;
+    }
+    *track = target.track;
+    *param = target.param;
     return;
   }
+#endif
 
   *track = control_ch * 4;
 
@@ -1568,12 +1582,20 @@ void MDClass::parallelTrig(uint16_t mask, MidiUartClass *uart_) {
 void MDClass::save_kit_params() {
   memcpy(kit.params_orig, kit.params, sizeof(kit.params));
   memcpy(kit.fx_orig, kit.reverb, sizeof(kit.reverb) * 4);
+#if !defined(__AVR__)
+  memcpy(kit.userBusFxOrig, kit.userBusFx, sizeof(kit.userBusFx));
+  memcpy(kit.userPostFxOrig, kit.userPostFx, sizeof(kit.userPostFx));
+#endif
 }
 
 
 void MDClass::restore_kit_params() {
   memcpy(kit.params, kit.params_orig, sizeof(kit.params));
   memcpy(kit.reverb, kit.fx_orig, sizeof(kit.reverb) * 4);
+#if !defined(__AVR__)
+  memcpy(kit.userBusFx, kit.userBusFxOrig, sizeof(kit.userBusFx));
+  memcpy(kit.userPostFx, kit.userPostFxOrig, sizeof(kit.userPostFx));
+#endif
 }
 
 void MDClass::restore_kit_param(uint8_t track, uint8_t param) {
@@ -1604,18 +1626,21 @@ void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value,
     if (update_kit) {
       kit.params[track][param] = value;
     }
-  } else if (param >= MD_PARAMS_PER_TRACK && param < SPS_PARAMS_PER_TRACK &&
+#if !defined(__AVR__)
+  } else if (param >= MD_PARAMS_PER_TRACK && param < spsxWireParamCount() &&
              is_spsx && global.channelMode) {
     // Extended params on extended channels (base+4..+7)
-    uint8_t ext_channel = channel + 4 + global.baseChannel;
-    cc = (param - MD_PARAMS_PER_TRACK) * 4 + b;
+    SpsExtendedCcAddress address{};
+    if (!spsExtendedParamToCc(global.baseChannel, track, param, address))
+      return;
     if (update_kit) {
       kit.params[track][param] = value;
-      sendCC(ext_channel, cc, value, uart_);
+      sendCC(address.channel, address.cc, value, uart_);
     } else {
-      sendPolyKeyPressure(ext_channel, cc, value, uart_);
+      sendPolyKeyPressure(address.channel, address.cc, value, uart_);
     }
     return;
+#endif
   } else if (param == MODEL_MUTE) { // MUTE
     cc = 12 + b;
   } else if (param == MODEL_LEVEL) { // LEV
@@ -1859,7 +1884,8 @@ void MDClass::setMachine(uint8_t track, MDKit *kit) {
   setTrigGroup(track, kit->trigGroups[track]);
   setMuteGroup(track, kit->muteGroups[track]);
   // uart->useRunningStatus = true;
-  uint8_t num_params = is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+  uint8_t num_params =
+      is_spsx ? spsxWireParamCount() : MD_PARAMS_PER_TRACK;
   for (uint8_t i = 0; i < num_params; i++) {
     setTrackParam(track, i, kit->params[track][i]);
   }
@@ -1899,7 +1925,9 @@ void MDClass::setMachine(uint8_t track, SPSMachine *machine) {
   } else {
     setMuteGroup(track, machine->muteGroup);
   }
-  uint8_t num_params = is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+  uint8_t num_params =
+      is_spsx ? spsxWireParamCount()
+              : MD_PARAMS_PER_TRACK;
   for (uint8_t i = 0; i < num_params; i++) {
     setTrackParam(track, i, machine->params[i]);
   }
@@ -1974,7 +2002,12 @@ end:
 #if !defined(__AVR__)
 uint8_t MDClass::assignMachineBulk(uint8_t track, SPSMachine *machine,
                                    uint8_t level, uint8_t mode, bool send) {
-  uint8_t data[54];
+  static constexpr uint8_t kHeaderBytes = 6;
+  static constexpr uint8_t kLfoBytes = 10;
+  static constexpr uint8_t kGroupBytes = 2;
+  static constexpr uint8_t kOptionalLevelBytes = 1;
+  uint8_t data[kHeaderBytes + SPS_PARAMS_PER_TRACK + kLfoBytes +
+               kGroupBytes + kOptionalLevelBytes];
   data[0] = 0x70;
   data[1] = 0x5b;
   uint8_t i = 2;
@@ -1994,7 +2027,9 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, SPSMachine *machine,
   }
   i++;
 
-  uint8_t num_params = is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+  uint8_t num_params =
+      is_spsx ? spsxWireParamCount()
+              : MD_PARAMS_PER_TRACK;
   uint8_t num_lfos = is_spsx ? 2 : 1;
 
   if (mode == 0) {

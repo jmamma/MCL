@@ -107,6 +107,93 @@ void SPSXTrack::clear_track() {
   init();
 }
 
+void SPSXTrack::on_storage_loaded() {
+  if (version >= SPSX_TRACK_LOCK37_STORAGE_VERSION) {
+    return;
+  }
+
+  constexpr size_t kParameterGrowth =
+      SPS_PARAMS_PER_TRACK - SPS_PARAMS_V1_PER_TRACK;
+  constexpr size_t kLockTableGrowth =
+      SPSX_NUM_LOCKS - SPSX_NUM_LOCKS_V1;
+  static_assert(kParameterGrowth == 3,
+                "SPSXTrack migration assumes three added machine parameters");
+  static_assert(kLockTableGrowth == 3,
+                "SPSXTrack migration assumes three added lock parameters");
+  static_assert(kParameterGrowth == kLockTableGrowth,
+                "machine and lock-table migrations must remain coordinated");
+  static_assert(sizeof(SPSXTrackSeqStorage::SeqDataUnion) ==
+                    sizeof(SPSXSeqTrackData),
+                "SPS-X sequence data must remain the storage union's largest member");
+  static_assert(sizeof(SPSXSeqTrackData) > kLockTableGrowth,
+                "invalid legacy SPS-X sequence size");
+  static_assert(sizeof(SPSMachine) > kParameterGrowth,
+                "invalid legacy SPS-X machine size");
+
+  // Version 5 stored a 34-parameter SPSMachine followed by a sequence union
+  // whose SPS-X member also had 34 lock mappings. Both members grew by three,
+  // so the old sequence storage starts three bytes before its current address,
+  // while the old mod/fade suffix starts six bytes before its current address.
+  // Snapshot the complete legacy pieces before moving either prefix.
+  constexpr size_t kLegacyMachineBytes =
+      sizeof(SPSMachine) - kParameterGrowth;
+  constexpr size_t kLegacySeqDataBytes =
+      sizeof(SPSXSeqTrackData) - kLockTableGrowth;
+  uint8_t legacy_machine[kLegacyMachineBytes];
+  uint8_t legacy_seq_data[kLegacySeqDataBytes];
+  SeqTrackModStorage legacy_mod;
+  TrackLoadFadeData legacy_fade;
+
+  auto *new_machine = reinterpret_cast<uint8_t *>(&machine);
+  auto *legacy_seq_storage =
+      reinterpret_cast<uint8_t *>(&seq_storage) - kParameterGrowth;
+  memcpy(legacy_machine, new_machine, sizeof(legacy_machine));
+  const uint8_t legacy_seq_version = legacy_seq_storage[0];
+  memcpy(legacy_seq_data, legacy_seq_storage + sizeof(uint8_t),
+         sizeof(legacy_seq_data));
+  memcpy(&legacy_mod,
+         legacy_seq_storage + sizeof(uint8_t) + sizeof(legacy_seq_data),
+         sizeof(legacy_mod));
+  memcpy(&legacy_fade,
+         legacy_seq_storage + sizeof(uint8_t) + sizeof(legacy_seq_data) +
+             sizeof(legacy_mod),
+         sizeof(legacy_fade));
+
+  // Preserve the 34 original values, initialize BUS1-3, then move every
+  // machine field following params to its new offset.
+  memcpy(new_machine, legacy_machine, SPS_PARAMS_V1_PER_TRACK);
+  memset(new_machine + SPS_PARAMS_V1_PER_TRACK, 0, kParameterGrowth);
+  memcpy(new_machine + SPS_PARAMS_PER_TRACK,
+         legacy_machine + SPS_PARAMS_V1_PER_TRACK,
+         sizeof(legacy_machine) - SPS_PARAMS_V1_PER_TRACK);
+
+  seq_storage.seq_version = legacy_seq_version;
+  memset(&seq_storage.seq_data, 0, sizeof(seq_storage.seq_data));
+  if (legacy_seq_version == SPSX_SEQ_VERSION_SPSX) {
+    memcpy(seq_storage.seq_data.spsx.data(), legacy_seq_data,
+           sizeof(legacy_seq_data));
+    auto &spsx = seq_storage.seq_data.spsx;
+    const uint8_t legacy_swing_amount =
+        spsx.locks_params[SPSX_NUM_LOCKS_V1];
+    auto *legacy_locks =
+        spsx.locks_params + SPSX_NUM_LOCKS_V1 + sizeof(uint8_t);
+    memmove(spsx.locks, legacy_locks, sizeof(spsx.locks));
+    memset(spsx.locks_params + SPSX_NUM_LOCKS_V1, 0,
+           SPSX_NUM_LOCKS - SPSX_NUM_LOCKS_V1);
+    spsx.swing_amount = legacy_swing_amount;
+  } else {
+    static_assert(sizeof(MDSeqTrackData) <= kLegacySeqDataBytes,
+                  "legacy MD sequence no longer fits the version-5 union");
+    memcpy(seq_storage.seq_data.legacy.data(), legacy_seq_data,
+           sizeof(MDSeqTrackData));
+  }
+
+  memcpy(static_cast<SeqTrackModStorage *>(&seq_storage), &legacy_mod,
+         sizeof(legacy_mod));
+  memcpy(&load_fade, &legacy_fade, sizeof(legacy_fade));
+  version = SPSX_TRACK_LOCK37_STORAGE_VERSION;
+}
+
 uint16_t SPSXTrack::grid_slot_label(GridSlotLabelContext ctx) {
   auto tmp = getMDMachineNameShort(ctx.model, 2);
   if (!tmp) {

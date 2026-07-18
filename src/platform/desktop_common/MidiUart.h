@@ -23,7 +23,8 @@ public:
     static constexpr uint16_t TX_RING_SIZE = UART1_TX_BUFFER_LEN;
     static constexpr uint16_t RT_RING_SIZE = UART1_RT_BUFFER_LEN;
 
-    MidiUartClass();
+    explicit MidiUartClass(uint8_t* external_tx_buffer = nullptr,
+                           uint16_t external_tx_size = 0);
 
     // MidiUartParent contract.
     void init() override;

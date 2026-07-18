@@ -1,4 +1,5 @@
 #include "Elektron.h"
+#include "../Drivers/MD/MDParams.h"
 #include "Project.h"
 #include "ResourceManager.h"
 #include "platform.h"
@@ -27,10 +28,16 @@ bool read_system_response(ElektronDevice *device, uint8_t command,
                           SysexView &sysex, uint8_t &begin) {
   send_system_command(device, command);
   uint8_t msgType = device->waitBlocking();
+  if (msgType != 0x72) {
+    return false;
+  }
   begin = device->sysex_protocol.header_size + 1;
   auto listener = device->getSysexListener();
+  if (listener->msg_rd >= NUM_SYSEX_MSGS) {
+    return false;
+  }
   sysex.init(listener->sysex, listener->msg_rd);
-  return msgType == 0x72 && sysex.getByte(begin) == command;
+  return sysex.get_recordLen() > begin && sysex.getByte(begin) == command;
 }
 
 uint16_t read_packed_u16_7bit(const SysexView &sysex, uint8_t offset) {
@@ -147,7 +154,8 @@ bool ElektronDevice::get_tempo(uint16_t &tempo) {
   uint8_t begin;
   SysexView sysex;
   tempo = 0;
-  if (read_system_response(this, 0x3F, sysex, begin)) {
+  if (read_system_response(this, 0x3F, sysex, begin) &&
+      sysex.get_recordLen() >= (uint16_t)(begin + 3)) {
       tempo = sysex.getByte(begin+1) << 7;
       tempo |= (sysex.getByte(begin+2));
       return true;
@@ -224,7 +232,7 @@ bool ElektronDevice::get_fw_caps() {
 
 void ElektronDevice::activate_encoder_interface(uint8_t *params, uint8_t count) {
   static constexpr uint8_t kLegacyParamCount = 24;
-  static constexpr uint8_t kMaxParamCount = 34;
+  static constexpr uint8_t kMaxParamCount = SPS_PARAMS_PER_TRACK;
   if (params == nullptr) {
     return;
   }
@@ -237,7 +245,8 @@ void ElektronDevice::activate_encoder_interface(uint8_t *params, uint8_t count) 
 
   encoder_interface = true;
   const uint8_t mask_count = (uint8_t)((count + 6) / 7);
-  uint8_t data[3 + 5 + kMaxParamCount] = {0x70, 0x36, 0x01};
+  uint8_t data[3 + (kMaxParamCount + 6) / 7 + kMaxParamCount] = {
+      0x70, 0x36, 0x01};
   uint8_t mod7 = 0;
   uint8_t cnt = 0;
 

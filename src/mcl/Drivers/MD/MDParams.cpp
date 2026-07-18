@@ -170,7 +170,7 @@ static uint16_t get_model_param_names(uint8_t model) {
 }
 
 #if !defined(__AVR__)
-// Extended param names (params 24-33) — hardcoded to avoid resource changes
+// Extended param names (params 24-36) — hardcoded to avoid resource changes
 static const char* ext_param_name(uint8_t param) {
   switch (param) {
     case MODEL_ENVATT:  return "ATK";
@@ -183,6 +183,9 @@ static const char* ext_param_name(uint8_t param) {
     case MODEL_RTRG:    return "RTG";
     case MODEL_RTIM:    return "RTM";
     case MODEL_RENV:    return "REN";
+    case MODEL_BUS1:    return "BUS1";
+    case MODEL_BUS2:    return "BUS2";
+    case MODEL_BUS3:    return "BUS3";
     default:            return NULL;
   }
 }

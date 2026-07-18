@@ -14,9 +14,11 @@
 
 // Seq data format stored in the track
 #define SPSX_SEQ_VERSION_LEGACY 0  // MDSeqTrackData (AVR + rp2040)
-#define SPSX_SEQ_VERSION_SPSX   1  // SPSXSeqTrackData (rp2040 only)
+#define SPSX_SEQ_VERSION_SPSX   1  // SPSXSeqTrackData (hosted/RP2040 only)
 
 #if !defined(__AVR__)
+
+static constexpr uint8_t SPSX_TRACK_LOCK37_STORAGE_VERSION = 6;
 
 #pragma pack(push, 1)
 
@@ -120,7 +122,10 @@ public:
                                       uint8_t tracknumber,
                                       SeqTrack *seq_track) override;
   virtual uint8_t get_model() override { return machine.get_model(); }
-  virtual uint8_t storage_version() const override { return SEQ_TRACK_LOAD_FADE_STORAGE_VERSION; }
+  uint8_t storage_version() const override {
+    return SPSX_TRACK_LOCK37_STORAGE_VERSION;
+  }
+  void on_storage_loaded() override;
   TrackLoadFadeData *load_fade_data() override { return &load_fade; }
   const TrackLoadFadeData *load_fade_data() const override { return &load_fade; }
 

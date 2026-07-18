@@ -6,18 +6,37 @@
 #include "ElektronPattern.h"
 #include "MDParams.h"
 #include <inttypes.h>
+#if !defined(__AVR__)
+#include "SPSXSeqDefines.h"
+#endif
 
 //#define MDPATTERN_TOSYSEX_ENABLE
 
 #if !defined(__AVR__)
-// Number of lock slots per track in the SPS-X (v0x40) pattern wire format.
-// Must match the host SPSXSeqDefines NUM_LOCKS so ext_locks_params round-trips
-// without truncation.
-#define MD_PATTERN_LOCK_SLOTS 34
-// Maximum number of distinct param-lock rows the host can transmit in a v0x40
+#define MD_PATTERN_VERSION_SPSX_V1 0x40
+#define MD_PATTERN_VERSION_SPSX    0x41
+#define MD_PATTERN_LOCK_SLOTS_V1   34
+#define MD_PATTERN_LOCK_SLOTS      SPS_PARAMS_PER_TRACK
+// Maximum number of distinct param-lock rows the host can transmit in an SPS-X
 // pattern. The base ElektronPattern::locks[64][64] array covers rows 0-63;
-// MDPattern adds an extension array (rp2040 only) for rows 64..MAX_LOCK_ROWS-1.
-#define MAX_LOCK_ROWS 544
+// Non-AVR MDPattern adds extension storage for rows 64..MAX_LOCK_ROWS-1.
+#define MAX_LOCK_ROWS SPS_MAX_LOCK_ROWS
+
+constexpr uint8_t mdPatternLockSlotCountForVersion(uint8_t version) {
+  return version == MD_PATTERN_VERSION_SPSX
+             ? MD_PATTERN_LOCK_SLOTS
+         : version == MD_PATTERN_VERSION_SPSX_V1
+             ? MD_PATTERN_LOCK_SLOTS_V1
+             : MD_PARAMS_PER_TRACK;
+}
+
+static_assert(MD_PATTERN_LOCK_SLOTS == SPSX_NUM_LOCKS,
+              "pattern and SPS-X sequencer lock mappings must match");
+static_assert(mdPatternLockSlotCountForVersion(MD_PATTERN_VERSION_SPSX_V1) ==
+                  34,
+              "v0x40 pattern width changed");
+static_assert(mdPatternLockSlotCountForVersion(MD_PATTERN_VERSION_SPSX) == 37,
+              "v0x41 pattern width changed");
 #endif
 
 /**
@@ -54,7 +73,8 @@ public:
   uint64_t trigPatterns[16];
   /**
    * Stores the lockPattern for each track as a bit mask (bit set:
-   *parameter is locked). uint64_t on rp2040 to support params 24-33.
+   *parameter is locked). uint64_t on hosted/rp2040 builds supports the full
+   *SPS-X parameter range.
    **/
 #if !defined(__AVR__)
   uint64_t lockPatterns[16];
@@ -99,7 +119,7 @@ public:
   bool isExtraPattern;
 
 #if !defined(__AVR__)
-  /** SPS-X extension fields (rp2040 only) **/
+  /** SPS-X extension fields (hosted/RP2040 only) **/
   uint8_t version;
   int8_t ext_microtiming[16][64];
   uint8_t ext_step_flags[16][64];
@@ -110,10 +130,10 @@ public:
   uint8_t chain_change;
 
   /** Extended lock rows (64..MAX_LOCK_ROWS-1). Base class locks[64][64]
-   *  covers the first 64 rows; this array extends storage for v0x40 patterns
-   *  with deep automation. ext_lockTracks/ext_lockParams are widened so they
-   *  can hold the matching track/param mapping for extended rows.
-   *  Memory cost: ~30.7 KB on rp2040 only. **/
+   *  covers the first 64 rows; this array extends storage for current SPS-X
+   *  patterns with deep automation. ext_lockTracks/ext_lockParams are widened
+   *  so they can hold the matching track/param mapping for extended rows.
+   *  Memory cost: about 35.1 KiB on hosted/rp2040 builds. **/
   int8_t  ext_locks[MAX_LOCK_ROWS - 64][64];
   int16_t ext_lockTracks[MAX_LOCK_ROWS - 64];
   int16_t ext_lockParams[MAX_LOCK_ROWS - 64];
@@ -175,6 +195,34 @@ public:
   }
 
   virtual void clearPattern();
+#if !defined(__AVR__)
+  ep_lock_idx_t getLockIdx(uint8_t track, uint8_t param) override {
+    return (track < 16 && param < SPS_PARAMS_PER_TRACK)
+               ? paramLocks[track][param]
+               : -1;
+  }
+  void setLockIdx(uint8_t track, uint8_t param,
+                  ep_lock_idx_t value) override {
+    if (track < 16 && param < SPS_PARAMS_PER_TRACK)
+      paramLocks[track][param] = value;
+  }
+  void clearLockPattern(ep_lock_idx_t lock) override;
+  bool addLock(uint8_t track, uint8_t step, uint8_t param,
+               uint8_t value) override;
+  void clearLock(uint8_t track, uint8_t step, uint8_t param) override;
+  uint8_t getLock(uint8_t track, uint8_t step, uint8_t param) override;
+  ep_lock_idx_t getNextEmptyLock() override;
+  void cleanupLocks() override;
+#else
+  ep_lock_idx_t getLockIdx(uint8_t track, uint8_t param) override {
+    return (track < 16 && param < 24) ? paramLocks[track][param] : -1;
+  }
+  void setLockIdx(uint8_t track, uint8_t param,
+                  ep_lock_idx_t value) override {
+    if (track < 16 && param < 24)
+      paramLocks[track][param] = value;
+  }
+#endif
   /*
   virtual void clearTrack(uint8_t track);
 
@@ -184,12 +232,8 @@ public:
   virtual void setNote(uint8_t track, uint8_t step, uint8_t pitch);
   virtual void clearTrig(uint8_t track, uint8_t trig);
 
-  virtual int8_t getLockIdx(uint8_t track, uint8_t param) {
-    return paramLocks[track][param];
-  }
-  virtual void setLockIdx(uint8_t track, uint8_t param, int8_t value) {
-    paramLocks[track][param] = value;
-  }
+  virtual int8_t getLockIdx(uint8_t track, uint8_t param);
+  virtual void setLockIdx(uint8_t track, uint8_t param, int8_t value);
   */
   virtual void recalculateLockPatterns();
   /** ElektronSysexObject implementation */
@@ -205,10 +249,8 @@ public:
 #endif
     maxTracks = 16;
     // Total addressable lock rows. Base ElektronPattern storage covers the
-    // first 64; MDPattern's ext_locks extension carries rows 64..MAX_LOCK_ROWS-1.
-    // The inherited base-class methods (addLock/cleanupLocks/getNextEmptyLock)
-    // self-cap at the base 64 slots; ext rows are populated only via
-    // set_lock_track_param/lock_row from sysex round-trip.
+    // first 64; MDPattern's overrides route normal editing operations to
+    // ext_locks for rows 64..MAX_LOCK_ROWS-1.
 #if !defined(__AVR__)
     maxLocks = MAX_LOCK_ROWS;
 #else

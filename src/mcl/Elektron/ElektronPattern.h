@@ -22,8 +22,8 @@
  * working on either kind of pattern.
  **/
 
-// Lock-row index/count types. On rp2040, MDPattern stores up to MAX_LOCK_ROWS
-// (=544) lock rows via its ext_locks extension, so the index/count types must
+// Lock-row index/count types. On hosted/rp2040 builds, MDPattern stores up to
+// MAX_LOCK_ROWS (=592) rows via its ext_locks extension, so the types must
 // be wide enough to address them. AVR has no SPSX extension and never sees
 // values > 64, so it stays on the original 8-bit types to save the byte and
 // keep linkage compatible with existing AVR-only code.
@@ -100,7 +100,11 @@ public:
 	/** Clear all the paramlocks on track. **/
 	void clearTrackLocks(uint8_t track);
 	/** Clear the lock pattern for the given lock. **/
+#if !defined(__AVR__)
+	virtual void clearLockPattern(ep_lock_idx_t lock);
+#else
 	void clearLockPattern(ep_lock_idx_t lock);
+#endif
 
 	/** Set the trigger at step on track (machine specific). **/
 	virtual void setTrig(uint8_t track, uint8_t step)                { }
@@ -110,11 +114,23 @@ public:
 	virtual void clearTrig(uint8_t track, uint8_t step)              { }
 
 	/** Add a param lock on track, for parameter param, at the step trig with the given value. **/
+#if !defined(__AVR__)
+	virtual bool addLock(uint8_t track, uint8_t trig, uint8_t param, uint8_t value);
+#else
 	bool addLock(uint8_t track, uint8_t trig, uint8_t param, uint8_t value);
+#endif
 	/** Remove the paramlock for parameter param on track track at the step trig. **/
+#if !defined(__AVR__)
+	virtual void clearLock(uint8_t track, uint8_t trig, uint8_t param);
+#else
 	void clearLock(uint8_t track, uint8_t trig, uint8_t param);
+#endif
 	/** Get the locked value for parameter param on track track at the step trig. **/
+#if !defined(__AVR__)
+	virtual uint8_t getLock(uint8_t track, uint8_t trig, uint8_t param);
+#else
 	uint8_t getLock(uint8_t track, uint8_t trig, uint8_t param);
+#endif
 
 	/** Get the lock index for parameter param on track track (machine specific). **/
 	virtual ep_lock_idx_t getLockIdx(uint8_t track, uint8_t param)             { return -1; }
@@ -124,9 +140,16 @@ public:
 	virtual void recalculateLockPatterns()                              { }
 
 	/** Get the index of the next empty lock, or -1 if no lock is available. **/
+#if !defined(__AVR__)
+	virtual ep_lock_idx_t getNextEmptyLock();
+#else
 	ep_lock_idx_t getNextEmptyLock();
+#endif
 	/** Reorganize the locks and remove empty locked parameters. **/
+#if !defined(__AVR__)
+	virtual void cleanupLocks();
+#else
 	void cleanupLocks();
+#endif
 	
 };
-

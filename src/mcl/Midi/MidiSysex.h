@@ -54,8 +54,16 @@ public:
 
 class MidiSysexLedger {
 public:
+#if defined(__AVR__)
   uint8_t state : 2;
   uint16_t recordLen : 14; // 16383 max record length
+#else
+  // Hosted/RP2040 SPS-X v0x41 patterns can legitimately exceed 16 KiB when
+  // all 592 lock rows contain incompressible data. Keep the compact ledger on
+  // AVR, which only supports the stock 24-parameter wire format.
+  uint8_t state;
+  uint16_t recordLen;
+#endif
   volatile uint8_t *ptr;
 };
 
@@ -154,11 +162,11 @@ public:
     // Since we want to read/write at offset n from current ptr
     uint16_t readPos = (uint16_t)((uint8_t *)ledger[rd_cur].ptr - rb->buf);
     // Adding n to readPos might exceed len, so wrap it
-    uint16_t targetPos = readPos + n;
+    uint32_t targetPos = (uint32_t)readPos + n;
     if (targetPos >= rb->len) {
       targetPos -= rb->len;
     }
-    volatile uint8_t *dst = rb->buf + targetPos;
+    volatile uint8_t *dst = rb->buf + (uint16_t)targetPos;
     put_bank1(dst, c);
   }
 
@@ -168,11 +176,11 @@ public:
 
   uint8_t getByte(uint16_t n) {
     uint16_t readPos = (uint16_t)((uint8_t *)ledger[rd_cur].ptr - rb->buf);
-    uint16_t targetPos = readPos + n;
+    uint32_t targetPos = (uint32_t)readPos + n;
     if (targetPos >= rb->len) {
       targetPos -= rb->len;
     }
-    volatile uint8_t *src = rb->buf + targetPos;
+    volatile uint8_t *src = rb->buf + (uint16_t)targetPos;
     return get_bank1(src);
   }
 
@@ -280,11 +288,11 @@ public:
   uint16_t get_recordLen() const { return recordLen; }
 
   uint8_t getByte(uint16_t n) const {
-    uint16_t targetPos = base + n;
+    uint32_t targetPos = (uint32_t)base + n;
     if (targetPos >= rb->len) {
       targetPos -= rb->len;
     }
-    volatile uint8_t *src = rb->buf + targetPos;
+    volatile uint8_t *src = rb->buf + (uint16_t)targetPos;
     return get_bank1(src);
   }
 

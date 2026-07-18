@@ -789,12 +789,117 @@
 #define MODEL_RTIM    32
 #define MODEL_RENV    33
 
-#define SPS_PARAMS_PER_TRACK  34
+#define SPS_PARAMS_V1_PER_TRACK 34
+#if !defined(__AVR__)
+#define MODEL_BUS1    34
+#define MODEL_BUS2    35
+#define MODEL_BUS3    36
+#define SPS_PARAMS_PER_TRACK    37
+#else
+// The AVR product retains its existing storage and packet dimensions. The
+// 37-parameter SPS-X contract is implemented only by the hosted/RP2040 build.
+#define SPS_PARAMS_PER_TRACK    SPS_PARAMS_V1_PER_TRACK
+#endif
 #define MD_PARAMS_PER_TRACK     24
+#define SPS_EXTENDED_PARAM_COUNT (SPS_PARAMS_PER_TRACK - MD_PARAMS_PER_TRACK)
+#define SPS_EXTENDED_CC_MAX      (SPS_EXTENDED_PARAM_COUNT * 4 - 1)
+#define SPS_MAX_LOCK_ROWS        (16 * SPS_PARAMS_PER_TRACK)
+
+#if !defined(__AVR__)
+struct SpsExtendedCcAddress {
+  uint8_t channel = 0;
+  uint8_t cc = 0;
+};
+
+struct SpsExtendedCcTarget {
+  uint8_t track = 0;
+  uint8_t param = 0;
+};
+
+constexpr bool spsExtendedParamToCc(uint8_t baseChannel, uint8_t track,
+                                    uint8_t param,
+                                    SpsExtendedCcAddress &result) {
+  if (baseChannel > 8 || track >= 16 || param < MD_PARAMS_PER_TRACK ||
+      param >= SPS_PARAMS_PER_TRACK) {
+    return false;
+  }
+  const unsigned channel = unsigned(baseChannel) + 4u + (track >> 2);
+  const unsigned cc =
+      unsigned(param - MD_PARAMS_PER_TRACK) * 4u + (track & 3u);
+  if (channel > 15 || cc > SPS_EXTENDED_CC_MAX)
+    return false;
+  result.channel = (uint8_t)channel;
+  result.cc = (uint8_t)cc;
+  return true;
+}
+
+constexpr bool spsExtendedCcToParam(uint8_t baseChannel, uint8_t channel,
+                                    uint8_t cc,
+                                    SpsExtendedCcTarget &result) {
+  if (baseChannel > 8 || cc > SPS_EXTENDED_CC_MAX)
+    return false;
+  const unsigned first = unsigned(baseChannel) + 4u;
+  if (channel < first || channel >= first + 4u)
+    return false;
+  result.track = (uint8_t)((channel - first) * 4u + cc % 4u);
+  result.param = (uint8_t)(MD_PARAMS_PER_TRACK + cc / 4u);
+  return result.track < 16 && result.param < SPS_PARAMS_PER_TRACK;
+}
+
+constexpr bool spsExtendedCcContractIsBijective() {
+  bool seen[4][SPS_EXTENDED_CC_MAX + 1] = {};
+  for (uint8_t track = 0; track < 16; ++track) {
+    for (uint8_t param = MD_PARAMS_PER_TRACK;
+         param < SPS_PARAMS_PER_TRACK; ++param) {
+      SpsExtendedCcAddress address{};
+      if (!spsExtendedParamToCc(0, track, param, address))
+        return false;
+      const uint8_t relativeChannel = address.channel - 4;
+      if (seen[relativeChannel][address.cc])
+        return false;
+      seen[relativeChannel][address.cc] = true;
+      SpsExtendedCcTarget target{};
+      if (!spsExtendedCcToParam(0, address.channel, address.cc, target) ||
+          target.track != track || target.param != param) {
+        return false;
+      }
+      SpsExtendedCcAddress highBase{};
+      SpsExtendedCcTarget highTarget{};
+      if (!spsExtendedParamToCc(8, track, param, highBase) ||
+          !spsExtendedCcToParam(8, highBase.channel, highBase.cc,
+                                highTarget) ||
+          highTarget.track != track || highTarget.param != param) {
+        return false;
+      }
+    }
+  }
+  SpsExtendedCcAddress address{};
+  SpsExtendedCcTarget target{};
+  return !spsExtendedParamToCc(9, 0, MD_PARAMS_PER_TRACK, address) &&
+         !spsExtendedParamToCc(0, 16, MD_PARAMS_PER_TRACK, address) &&
+         !spsExtendedParamToCc(0, 0, MD_PARAMS_PER_TRACK - 1, address) &&
+         !spsExtendedParamToCc(0, 0, SPS_PARAMS_PER_TRACK, address) &&
+         !spsExtendedCcToParam(9, 13, 0, target) &&
+         !spsExtendedCcToParam(0, 3, 0, target) &&
+         !spsExtendedCcToParam(0, 4, SPS_EXTENDED_CC_MAX + 1, target);
+}
+
+static_assert(spsExtendedCcContractIsBijective(),
+              "SPS-X extended CC mapping must round-trip uniquely");
+#endif
 
 // Virtual param IDs (not array indices, used by parseCC/setTrackParam)
 #define MODEL_MUTE  40
 #define MODEL_LEVEL 41
+
+#if !defined(__AVR__)
+static_assert(MODEL_BUS1 == SPS_PARAMS_V1_PER_TRACK,
+              "BUS parameters must append the SPS-X v1 layout");
+static_assert(MODEL_BUS3 + 1 == SPS_PARAMS_PER_TRACK,
+              "current SPS-X parameter count must include BUS1-3");
+static_assert(MODEL_BUS3 < MODEL_MUTE,
+              "real track parameters must not overlap virtual IDs");
+#endif
 
 #define MD_ECHO_TIME 0
 #define MD_ECHO_MOD 1

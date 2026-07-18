@@ -93,7 +93,8 @@ private:
   uint8_t bound_track_ = 255;
   uint8_t bound_sub_page_ = 255;
   // Param window selector. Each window covers 4 consecutive params;
-  // UI button + arrow cycles. Legacy MD kits expose 24 params, SPSX 34.
+  // UI button + arrow cycles. Legacy MD kits expose 24 params; hosted SPS-X
+  // exposes the current extended count.
   uint8_t sub_page_ = 0;
   // Per-encoder "last used" timestamp for the value-show timeout (matches
   // LightPage::encoders_used_clock). Reset whenever cur changes; cleared

@@ -63,7 +63,7 @@ static void copySnapshotStep(const HostStepTrackSnapshot& source,
 
     uint16_t valueIndex = data.get_lockidx(stepIndex);
     uint64_t lockMask = data.steps[stepIndex].locks;
-    for (uint8_t lock = 0; lock < STEPSEQ_NUM_LOCKS; ++lock) {
+    for (uint8_t lock = 0; lock < SPSX_NUM_LOCKS; ++lock) {
         if ((lockMask & (1ULL << lock)) == 0)
             continue;
         if (valueIndex < STEPSEQ_NUM_LOCK_SLOTS)
@@ -179,7 +179,8 @@ bool SpsHostSeqBridge::applySetLock(const uint8_t* b, uint16_t n) {
     if (n < 4) return false;
     grid_task.service_host_arranger_load_before_edit();
     SPSXSeqTrack* tr = spsxTrack(b[0]);
-    if (!tr || b[1] >= kNumSteps || b[2] >= kNumLockParams) return false;  // param range
+    if (!tr || b[1] >= kNumSteps || b[2] >= negotiated_lock_params_)
+        return false;
     tr->set_track_locks(b[1], b[2], (uint8_t)(b[3] & 0x7F));
     markArrangerLocalEdit(b[0]);
     return true;
@@ -189,7 +190,8 @@ bool SpsHostSeqBridge::applyClrLock(const uint8_t* b, uint16_t n) {
     if (n < 3) return false;
     grid_task.service_host_arranger_load_before_edit();
     SPSXSeqTrack* tr = spsxTrack(b[0]);
-    if (!tr || b[1] >= kNumSteps || b[2] >= kNumLockParams) return false;  // param range
+    if (!tr || b[1] >= kNumSteps || b[2] >= negotiated_lock_params_)
+        return false;
     tr->clear_step_lock(b[1], b[2]);
     markArrangerLocalEdit(b[0]);
     return true;

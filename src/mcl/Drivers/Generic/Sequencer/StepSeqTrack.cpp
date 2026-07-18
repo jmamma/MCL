@@ -117,16 +117,20 @@ bool StepSeqTrackCond::conditional(uint8_t condition, uint16_t fill_mask) {
 // StepSeqSlideTrack - Slide/Glide Implementation
 // ============================================================================
 
-void StepSeqSlideTrack::on_slide_dispatch_begin(uint8_t) {}
-void StepSeqSlideTrack::on_slide_dispatch_end() {}
+template <std::size_t LockCount>
+void BasicStepSeqSlideTrack<LockCount>::on_slide_dispatch_begin(uint8_t) {}
+template <std::size_t LockCount>
+void BasicStepSeqSlideTrack<LockCount>::on_slide_dispatch_end() {}
 
-void StepSeqSlideTrack::dispatch_slide_value(uint8_t param, uint8_t value, uint8_t channel) {
+template <std::size_t LockCount>
+void BasicStepSeqSlideTrack<LockCount>::dispatch_slide_value(uint8_t param, uint8_t value, uint8_t channel) {
     if (port) {
         port->sendCC(channel, param, value);
     }
 }
 
-void StepSeqSlideTrack::prepare_slide(uint8_t lock_idx, int32_t x0,
+template <std::size_t LockCount>
+void BasicStepSeqSlideTrack<LockCount>::prepare_slide(uint8_t lock_idx, int32_t x0,
                                       int32_t x1, int8_t y0, int8_t y1) {
     uint8_t c = lock_idx;
     locks_slide_data[c].x0 = x0;
@@ -145,9 +149,10 @@ void StepSeqSlideTrack::prepare_slide(uint8_t lock_idx, int32_t x0,
     }
 }
 
-void StepSeqSlideTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel) {
+template <std::size_t LockCount>
+void BasicStepSeqSlideTrack<LockCount>::send_slides(volatile uint8_t *locks_params, uint8_t channel) {
     on_slide_dispatch_begin(channel);
-    for (uint8_t c = 0; c < STEPSEQ_NUM_LOCKS; c++) {
+    for (uint8_t c = 0; c < LockCount; c++) {
         if (locks_params[c] == 0) continue;
         if (locks_slide_data[c].x0 >= locks_slide_data[c].x1) continue;
 
@@ -173,27 +178,33 @@ void StepSeqSlideTrack::send_slides(volatile uint8_t *locks_params, uint8_t chan
 // StepSeqDataTrack - Driver Hooks
 // ============================================================================
 
-bool StepSeqDataTrack::get_default_lock_value(uint8_t, uint8_t &) const {
+template <std::size_t LockCount>
+bool BasicStepSeqDataTrack<LockCount>::get_default_lock_value(uint8_t, uint8_t &) const {
     return false;
 }
 
-uint8_t StepSeqDataTrack::velocity_lock_param() const {
+template <std::size_t LockCount>
+uint8_t BasicStepSeqDataTrack<LockCount>::velocity_lock_param() const {
     return 255;
 }
 
-uint8_t StepSeqDataTrack::pitch_lock_param() const {
+template <std::size_t LockCount>
+uint8_t BasicStepSeqDataTrack<LockCount>::pitch_lock_param() const {
     return 0;
 }
 
-void StepSeqDataTrack::clear_step_oneshot(uint8_t) {}
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::clear_step_oneshot(uint8_t) {}
 
-void StepSeqDataTrack::on_modify_track_begin() {}
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::on_modify_track_begin() {}
 
 // ============================================================================
 // StepSeqDataTrack - Slide Scan
 // ============================================================================
 
-int16_t StepSeqDataTrack::effective_timing_offset(uint8_t step,
+template <std::size_t LockCount>
+int16_t BasicStepSeqDataTrack<LockCount>::effective_timing_offset(uint8_t step,
                                                   uint16_t tps) const {
     int8_t mt = microtiming[step];
     if (mt == 0 && swing_amount &&
@@ -203,7 +214,8 @@ int16_t StepSeqDataTrack::effective_timing_offset(uint8_t step,
     return stepseq_microtiming_to_ticks(mt, tps);
 }
 
-void StepSeqDataTrack::recalc_slides() {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::recalc_slides() {
     if (locks_slides_recalc == 255) return;
 
     int32_t x0, x1;
@@ -213,7 +225,7 @@ void StepSeqDataTrack::recalc_slides() {
 
     uint64_t find_mask = 0;
     uint64_t cur_mask = 1ULL;
-    for (uint8_t i = 0; i < STEPSEQ_NUM_LOCKS; i++) {
+    for (uint8_t i = 0; i < LockCount; i++) {
         if (locks_params[i] && (steps[step].locks & cur_mask)) {
             find_mask |= cur_mask;
         }
@@ -225,7 +237,7 @@ void StepSeqDataTrack::recalc_slides() {
 
     find_next_locks((uint8_t)lockidx, step, find_mask);
 
-    for (uint8_t c = 0; c < STEPSEQ_NUM_LOCKS; c++) {
+    for (uint8_t c = 0; c < LockCount; c++) {
         if (!locks_params[c] || !steps[step].is_lock_bit(c)) continue;
 
         auto cur_lockidx = lockidx++;
@@ -261,7 +273,8 @@ end:
     locks_slides_recalc = 255;
 }
 
-void StepSeqDataTrack::find_next_locks(uint8_t curidx, uint8_t step,
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::find_next_locks(uint8_t curidx, uint8_t step,
                                        uint64_t &mask) {
     uint8_t next_step = step + 1;
     uint8_t max_len = length;
@@ -275,7 +288,7 @@ again:
 
         if (!lcks && !next_step_has_trig) continue;
 
-        for (uint8_t i = 0; i < STEPSEQ_NUM_LOCKS; ++i) {
+        for (uint8_t i = 0; i < LockCount; ++i) {
             if (mask & cur_mask) {
                 if (lcks & cur_mask) {
                     locks_slide_next_lock_val[i] = locks[curidx];
@@ -309,7 +322,8 @@ again:
 // StepSeqDataTrack - Step Accessors
 // ============================================================================
 
-void StepSeqDataTrack::get_mask(uint64_t *_pmask, uint8_t mask_type) const {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::get_mask(uint64_t *_pmask, uint8_t mask_type) const {
     switch (mask_type) {
     case STEPSEQ_MASK_PATTERN: *_pmask = trig_mask; return;
     case STEPSEQ_MASK_SLIDE:   *_pmask = slide_mask; return;
@@ -329,7 +343,8 @@ void StepSeqDataTrack::get_mask(uint64_t *_pmask, uint8_t mask_type) const {
     }
 }
 
-bool StepSeqDataTrack::get_step(uint8_t step, uint8_t mask_type) const {
+template <std::size_t LockCount>
+bool BasicStepSeqDataTrack<LockCount>::get_step(uint8_t step, uint8_t mask_type) const {
     switch (mask_type) {
     case STEPSEQ_MASK_PATTERN: return STEPSEQ_IS_BIT_SET64(trig_mask, step);
     case STEPSEQ_MASK_LOCK:    return steps[step].locks != 0;
@@ -340,7 +355,8 @@ bool StepSeqDataTrack::get_step(uint8_t step, uint8_t mask_type) const {
     }
 }
 
-void StepSeqDataTrack::set_step(uint8_t step, uint8_t mask_type, bool val) {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::set_step(uint8_t step, uint8_t mask_type, bool val) {
     switch (mask_type) {
     case STEPSEQ_MASK_PATTERN:
         if (val) STEPSEQ_SET_BIT64(trig_mask, step);
@@ -369,11 +385,12 @@ void StepSeqDataTrack::set_step(uint8_t step, uint8_t mask_type, bool val) {
 // StepSeqDataTrack - Lock Management
 // ============================================================================
 
-void StepSeqDataTrack::get_step_locks(uint8_t step, uint8_t *params,
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::get_step_locks(uint8_t step, uint8_t *params,
                                       bool include_all_locks) {
     (void)include_all_locks;
     uint16_t lock_idx = get_lockidx(step);
-    for (uint8_t c = 0; c < STEPSEQ_NUM_LOCKS; c++) {
+    for (uint8_t c = 0; c < LockCount; c++) {
         bool lock_bit = steps[step].is_lock_bit(c);
         if (locks_params[c]) {
             uint8_t param = locks_params[c] - 1;
@@ -385,14 +402,16 @@ void StepSeqDataTrack::get_step_locks(uint8_t step, uint8_t *params,
     }
 }
 
-uint8_t StepSeqDataTrack::get_track_lock_implicit(uint8_t step,
+template <std::size_t LockCount>
+uint8_t BasicStepSeqDataTrack<LockCount>::get_track_lock_implicit(uint8_t step,
                                                   uint8_t param) {
     uint8_t lock_idx = find_param(param);
-    if (lock_idx < STEPSEQ_NUM_LOCKS) return get_track_lock(step, lock_idx);
+    if (lock_idx < LockCount) return get_track_lock(step, lock_idx);
     return 255;
 }
 
-uint8_t StepSeqDataTrack::get_track_lock(uint8_t step, uint8_t lock_idx) {
+template <std::size_t LockCount>
+uint8_t BasicStepSeqDataTrack<LockCount>::get_track_lock(uint8_t step, uint8_t lock_idx) {
     auto idx = get_lockidx(step, lock_idx);
     if (idx < STEPSEQ_NUM_LOCK_SLOTS) {
         return locks[idx];
@@ -400,10 +419,11 @@ uint8_t StepSeqDataTrack::get_track_lock(uint8_t step, uint8_t lock_idx) {
     return 255;
 }
 
-bool StepSeqDataTrack::set_track_locks(uint8_t step, uint8_t track_param,
+template <std::size_t LockCount>
+bool BasicStepSeqDataTrack<LockCount>::set_track_locks(uint8_t step, uint8_t track_param,
                                        uint8_t value) {
     uint8_t match = find_param(track_param);
-    for (uint8_t c = 0; c < STEPSEQ_NUM_LOCKS && match == 255; c++) {
+    for (uint8_t c = 0; c < LockCount && match == 255; c++) {
         if (locks_params[c] == 0) {
             locks_params[c] = track_param + 1;
             match = c;
@@ -413,7 +433,8 @@ bool StepSeqDataTrack::set_track_locks(uint8_t step, uint8_t track_param,
     return false;
 }
 
-bool StepSeqDataTrack::set_track_locks_i(uint8_t step, uint8_t lockidx,
+template <std::size_t LockCount>
+bool BasicStepSeqDataTrack<LockCount>::set_track_locks_i(uint8_t step, uint8_t lockidx,
                                          uint8_t value) {
     auto lock_slot = get_lockidx(step, lockidx);
     if (lock_slot == STEPSEQ_NUM_LOCK_SLOTS) {
@@ -431,11 +452,13 @@ bool StepSeqDataTrack::set_track_locks_i(uint8_t step, uint8_t lockidx,
     return true;
 }
 
-void StepSeqDataTrack::set_track_pitch(uint8_t step, uint8_t pitch) {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::set_track_pitch(uint8_t step, uint8_t pitch) {
     set_track_locks(step, pitch_lock_param(), pitch);
 }
 
-void StepSeqDataTrack::set_track_step(uint8_t step, int8_t microtiming_val,
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::set_track_step(uint8_t step, int8_t microtiming_val,
                                       uint8_t velocity) {
     clear_step_oneshot(step);
     STEPSEQ_SET_BIT64(trig_mask, step);
@@ -457,7 +480,8 @@ void StepSeqDataTrack::set_track_step(uint8_t step, int8_t microtiming_val,
 // StepSeqDataTrack - Recording
 // ============================================================================
 
-void StepSeqDataTrack::record_track(uint8_t velocity) {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::record_track(uint8_t velocity) {
     if (step_count >= length) return;
     int8_t mt = 0;
     uint8_t step = get_quantized_step(mt);
@@ -465,13 +489,15 @@ void StepSeqDataTrack::record_track(uint8_t velocity) {
     set_track_step(step, mt, velocity);
 }
 
-void StepSeqDataTrack::record_track_locks(uint8_t track_param, uint8_t value) {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::record_track_locks(uint8_t track_param, uint8_t value) {
     if (step_count >= length) return;
     int8_t mt = 0;
     set_track_locks(get_quantized_step(mt), track_param, value);
 }
 
-void StepSeqDataTrack::record_track_pitch(uint8_t pitch) {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::record_track_pitch(uint8_t pitch) {
     if (step_count >= length) return;
     int8_t mt = 0;
     set_track_pitch(get_quantized_step(mt), pitch);
@@ -481,19 +507,23 @@ void StepSeqDataTrack::record_track_pitch(uint8_t pitch) {
 // StepSeqDataTrack - Clear/Reset
 // ============================================================================
 
-void StepSeqDataTrack::clear_mute() {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::clear_mute() {
     mute_mask = 0;
 }
 
-void StepSeqDataTrack::clear_mutes() {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::clear_mutes() {
     mute_mask = 0;
 }
 
-void StepSeqDataTrack::clear_slide_data() {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::clear_slide_data() {
     slide_mask = 0;
 }
 
-void StepSeqDataTrack::clear_step(uint8_t step) {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::clear_step(uint8_t step) {
     uint16_t idx16 = get_lockidx(step);
     uint8_t cnt = stepseq_popcount(steps[step].locks);
     if (cnt != 0 && idx16 + cnt <= STEPSEQ_NUM_LOCK_SLOTS) {
@@ -514,7 +544,8 @@ void StepSeqDataTrack::clear_step(uint8_t step) {
     clear_step_oneshot(step);
 }
 
-void StepSeqDataTrack::clear_step_locks(uint8_t step) {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::clear_step_locks(uint8_t step) {
     uint16_t idx16 = get_lockidx(step);
     uint8_t cnt = stepseq_popcount(steps[step].locks);
     if (cnt == 0 || idx16 + cnt > STEPSEQ_NUM_LOCK_SLOTS) return;
@@ -526,19 +557,23 @@ void StepSeqDataTrack::clear_step_locks(uint8_t step) {
     clean_params();
 }
 
-void StepSeqDataTrack::disable_step_locks(uint8_t step) {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::disable_step_locks(uint8_t step) {
     (void)step;
 }
 
-void StepSeqDataTrack::enable_step_locks(uint8_t step) {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::enable_step_locks(uint8_t step) {
     (void)step;
 }
 
-uint64_t StepSeqDataTrack::get_step_locks_mask(uint8_t step) {
+template <std::size_t LockCount>
+uint64_t BasicStepSeqDataTrack<LockCount>::get_step_locks_mask(uint8_t step) {
     return steps[step].locks;
 }
 
-void StepSeqDataTrack::clear_conditional() {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::clear_conditional() {
     for (uint8_t c = 0; c < STEPSEQ_NUM_STEPS; c++) {
         steps[c].cond_id = 0;
         steps[c].cond_plock = 0;
@@ -548,7 +583,8 @@ void StepSeqDataTrack::clear_conditional() {
     ignore_step = 255;
 }
 
-void StepSeqDataTrack::clear_step_lock(uint8_t step, uint8_t param_id) {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::clear_step_lock(uint8_t step, uint8_t param_id) {
     uint8_t match = find_param(param_id);
     if (match == 255) return;
     uint64_t mask = (1ULL << match);
@@ -563,11 +599,12 @@ void StepSeqDataTrack::clear_step_lock(uint8_t step, uint8_t param_id) {
     clean_params();
 }
 
-void StepSeqDataTrack::clear_locks() {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::clear_locks() {
     for (uint8_t step = 0; step < STEPSEQ_NUM_STEPS; step++) {
         steps[step].locks = 0;
     }
-    for (uint8_t c = 0; c < STEPSEQ_NUM_LOCKS; c++) {
+    for (uint8_t c = 0; c < LockCount; c++) {
         locks_params[c] = 0;
         locks_slide_data[c].init();
     }
@@ -577,7 +614,8 @@ void StepSeqDataTrack::clear_locks() {
     locks_slides_idx = 0;
 }
 
-void StepSeqDataTrack::clear_track(bool clear_locks_too) {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::clear_track(bool clear_locks_too) {
     clear_conditional();
     if (clear_locks_too) clear_locks();
     memset(steps, 0, sizeof(steps));
@@ -589,7 +627,8 @@ void StepSeqDataTrack::clear_track(bool clear_locks_too) {
     memset(microtiming, 0, sizeof(microtiming));
 }
 
-void StepSeqDataTrack::clear_param_locks(uint8_t param_id) {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::clear_param_locks(uint8_t param_id) {
     uint8_t match = find_param(param_id);
     if (match == 255) return;
 
@@ -620,8 +659,9 @@ void StepSeqDataTrack::clear_param_locks(uint8_t param_id) {
     clean_params();
 }
 
-bool StepSeqDataTrack::is_param(uint8_t param_id) {
-    for (uint8_t c = 0; c < STEPSEQ_NUM_LOCKS; c++) {
+template <std::size_t LockCount>
+bool BasicStepSeqDataTrack<LockCount>::is_param(uint8_t param_id) {
+    for (uint8_t c = 0; c < LockCount; c++) {
         if (locks_params[c] > 0 && locks_params[c] - 1 == param_id) return true;
     }
     return false;
@@ -631,7 +671,8 @@ bool StepSeqDataTrack::is_param(uint8_t param_id) {
 // StepSeqDataTrack - Track Editing
 // ============================================================================
 
-void StepSeqDataTrack::set_length(uint8_t len, bool expand) {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::set_length(uint8_t len, bool expand) {
     uint8_t old_length = length;
     if (len == 0) len = STEPSEQ_NUM_STEPS;
     if (len > STEPSEQ_NUM_STEPS) len = STEPSEQ_NUM_STEPS;
@@ -679,7 +720,8 @@ void StepSeqDataTrack::set_length(uint8_t len, bool expand) {
     }
 }
 
-void StepSeqDataTrack::set_speed(uint8_t new_speed, uint8_t old_speed,
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::set_speed(uint8_t new_speed, uint8_t old_speed,
                                  bool timing_adjust) {
     if (old_speed == 255) old_speed = speed;
     (void)old_speed;
@@ -690,7 +732,8 @@ void StepSeqDataTrack::set_speed(uint8_t new_speed, uint8_t old_speed,
     if (tick_counter > tps) tick_counter = tick_counter % tps;
 }
 
-void StepSeqDataTrack::request_swing_amount_change(uint8_t amount) {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::request_swing_amount_change(uint8_t amount) {
     if (amount > 30) amount = 30;
     if (MidiClock.state != MidiClockClass::STARTED) {
         swing_amount = amount;
@@ -704,7 +747,8 @@ void StepSeqDataTrack::request_swing_amount_change(uint8_t amount) {
     CLEAR_LOCK();
 }
 
-void StepSeqDataTrack::apply_pending_swing_amount() {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::apply_pending_swing_amount() {
     if (pending_swing_amount == NO_PENDING_SWING_AMOUNT) return;
 
     USE_LOCK();
@@ -715,12 +759,13 @@ void StepSeqDataTrack::apply_pending_swing_amount() {
     swing_amount = amount;
 }
 
-void StepSeqDataTrack::modify_track(uint8_t dir) {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::modify_track(uint8_t dir) {
     uint8_t old_mute_state = mute_state;
     on_modify_track_begin();
 
     constexpr size_t ncopy = sizeof(steps) - sizeof(StepSeqStepDescriptor);
-    uint8_t lock_buf[STEPSEQ_NUM_LOCKS];
+    uint8_t lock_buf[LockCount];
     StepSeqStepDescriptor step_buf;
     int8_t mt_buf;
     uint16_t total_nlock = get_lockidx(length);
@@ -811,7 +856,8 @@ void StepSeqDataTrack::modify_track(uint8_t dir) {
     mute_state = old_mute_state;
 }
 
-void StepSeqDataTrack::copy_step(uint8_t n, StepSeqStep *step) {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::copy_step(uint8_t n, StepSeqStep *step) {
     step->active = true;
     step->microtiming = microtiming[n];
     step->trig = STEPSEQ_IS_BIT_SET64(trig_mask, n);
@@ -822,7 +868,7 @@ void StepSeqDataTrack::copy_step(uint8_t n, StepSeqStep *step) {
     uint16_t idx = get_lockidx(n);
     uint64_t lcks = steps[n].locks;
     uint64_t mask = 1ULL;
-    for (uint8_t a = 0; a < STEPSEQ_NUM_LOCKS; a++) {
+    for (uint8_t a = 0; a < LockCount; a++) {
         if (lcks & mask) {
             step->locks[a] = locks[idx++] + 1;
         } else {
@@ -833,12 +879,13 @@ void StepSeqDataTrack::copy_step(uint8_t n, StepSeqStep *step) {
     memcpy(&step->data, &steps[n], sizeof(StepSeqStepDescriptor));
 }
 
-void StepSeqDataTrack::paste_step(uint8_t n, StepSeqStep *step,
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::paste_step(uint8_t n, StepSeqStep *step,
                                   const uint8_t *source_locks_params) {
     clear_step(n);
     microtiming[n] = step->microtiming;
     const uint8_t *lp = source_locks_params ? source_locks_params : locks_params;
-    for (uint8_t a = 0; a < STEPSEQ_NUM_LOCKS; a++) {
+    for (uint8_t a = 0; a < LockCount; a++) {
         if (step->locks[a] != 0 && lp[a] != 0) {
             set_track_locks(n, lp[a] - 1, step->locks[a] - 1);
         }
@@ -854,7 +901,8 @@ void StepSeqDataTrack::paste_step(uint8_t n, StepSeqStep *step,
     else STEPSEQ_CLEAR_BIT64(swing_mask, n);
 }
 
-void StepSeqDataTrack::transpose(int8_t offset) {
+template <std::size_t LockCount>
+void BasicStepSeqDataTrack<LockCount>::transpose(int8_t offset) {
     for (uint8_t n = 0; n < STEPSEQ_NUM_STEPS; n++) {
         uint8_t pitch = get_track_lock_implicit(n, pitch_lock_param());
         if (pitch == 255) continue;
@@ -864,5 +912,12 @@ void StepSeqDataTrack::transpose(int8_t offset) {
         set_track_pitch(n, (uint8_t)new_pitch);
     }
 }
+
+// Generic/TBD and hosted SPS-X share the algorithms but instantiate distinct
+// runtime/storage widths. No 37-slot object is reachable from AVR builds.
+template class BasicStepSeqSlideTrack<STEPSEQ_NUM_LOCKS>;
+template class BasicStepSeqDataTrack<STEPSEQ_NUM_LOCKS>;
+template class BasicStepSeqSlideTrack<STEPSEQ_TRANSFER_LOCK_CAPACITY>;
+template class BasicStepSeqDataTrack<STEPSEQ_TRANSFER_LOCK_CAPACITY>;
 
 #endif // !defined(__AVR__)

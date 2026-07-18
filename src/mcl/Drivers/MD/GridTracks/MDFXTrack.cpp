@@ -59,6 +59,12 @@ void MDFXTrack::place_fx_in_kit() {
   DEBUG_PRINTLN("place");
   memcpy(MD.kit.reverb, reverb, sizeof(reverb) * 4);
   memcpy(MD.kit.fx_orig, reverb, sizeof(reverb) * 4);
+#if !defined(__AVR__)
+  memcpy(MD.kit.userBusFx, userBusFx, sizeof(userBusFx));
+  memcpy(MD.kit.userPostFx, userPostFx, sizeof(userPostFx));
+  memcpy(MD.kit.userBusFxOrig, userBusFx, sizeof(userBusFx));
+  memcpy(MD.kit.userPostFxOrig, userPostFx, sizeof(userPostFx));
+#endif
   /*
   if (enable_reverb) {
     memcpy(&MD.kit.reverb, &reverb, sizeof(reverb));
@@ -77,6 +83,10 @@ void MDFXTrack::place_fx_in_kit() {
 
 void MDFXTrack::get_fx_from_kit_extra(KitExtra *kit_extra) {
   memcpy(&reverb, &kit_extra->reverb, 32);
+#if !defined(__AVR__)
+  memcpy(userBusFx, kit_extra->userBusFx, sizeof(userBusFx));
+  memcpy(userPostFx, kit_extra->userPostFx, sizeof(userPostFx));
+#endif
   /*
   enable_reverb = true;
   enable_delay = true;
@@ -87,6 +97,10 @@ void MDFXTrack::get_fx_from_kit_extra(KitExtra *kit_extra) {
 
 void MDFXTrack::get_fx_from_kit() {
   memcpy(&reverb, &MD.kit.reverb, 32);
+#if !defined(__AVR__)
+  memcpy(userBusFx, MD.kit.userBusFx, sizeof(userBusFx));
+  memcpy(userPostFx, MD.kit.userPostFx, sizeof(userPostFx));
+#endif
   /*
   enable_reverb = true;
   enable_delay = true;

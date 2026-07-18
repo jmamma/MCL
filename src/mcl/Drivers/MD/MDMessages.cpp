@@ -7,8 +7,6 @@
 
 #include "MD.h"
 
-#define MDX_KIT_VERSION 64
-
 const int8_t md_standard_drum_mapping[16] PROGMEM = {
     36, 38, 40, 41, 43, 45, 47, 48,
     50, 52, 53, 55, 57, 59, 60, 62};
@@ -66,10 +64,20 @@ float MDMachine::normalize_level() {
 
 bool MDGlobal::fromSysex(MidiClass *midi) {
   SysexView sysex(midi->midiSysex);
-  uint16_t len = sysex.get_recordLen() - 5;
+  uint16_t record_len = sysex.get_recordLen();
+  if (record_len < 9) {
+    return false;
+  }
+  uint16_t len = record_len - 5;
   uint16_t offset = 5;
 
-  if (len < 4) {
+  uint8_t version = sysex.getByte(offset + 1);
+  // Minimum encoded lengths, including the four-byte message envelope and
+  // checksum/length trailer: v1-4=188, v5-6=190, v7+=192.
+  uint16_t min_len = 188;
+  if (version >= 5) min_len += 2;
+  if (version >= 7) min_len += 2;
+  if (len < min_len) {
     return false;
   }
 
@@ -77,7 +85,6 @@ bool MDGlobal::fromSysex(MidiClass *midi) {
     return false;
   }
 
-  uint8_t version = sysex.getByte(offset + 1);
   origPosition = sysex.getByte(offset + 3);
   ElektronSysexDecoder decoder(sysex, offset + 4);
   decoder.stop7Bit();
@@ -247,7 +254,7 @@ bool SPSMachine::get_tonal() {
   return false;
 }
 
-// ---- Compact LFO state pack/unpack (SPS-X v65 kits) ----
+// ---- Compact LFO state pack/unpack (SPS-X v65+ kits) ----
 // State layout matches host/elektron/MDTypes.cpp (pack/unpack_compact_lfo_state).
 // type % 3: 0=FREE (saves 2-byte phase), 1=TRIG (no state), 2=HOLD (saves two int16 holds).
 static void pack_compact_lfo_state(const MDLFO &lfo, uint8_t out[4]) {
@@ -323,37 +330,42 @@ uint8_t *MDKit::fx_params(uint8_t fx) {
 
 bool MDKit::fromSysex(MidiClass *midi) {
   SysexView sysex(midi->midiSysex);
-  uint16_t len = sysex.get_recordLen() - 5;
+  uint16_t record_len = sysex.get_recordLen();
+  if (record_len < 9) {
+    return false;
+  }
+  uint16_t len = record_len - 5;
   uint16_t offset = 5;
-
-  // Minimum: header(4) + name(16) + params(16*24) + levels(16) = 420
-  if (len < 420) {
-    DEBUG_PRINTLN(F("kit too short"));
-    return false;
-  }
-
-  if (!ElektronHelper::checkSysexChecksum(sysex, offset, len)) {
-    DEBUG_PRINTLN("wrong checksum");
-    return false;
-  }
 
   uint8_t version = sysex.getByte(1 + offset);
 
-  // Accept stock (1-4), MDX (64), SPS-X (65). Reject anything else.
+  // Accept stock (1-4), MDX (64), and SPS-X v65/v66.
 #if !defined(__AVR__)
   bool is_spsx_kit = false;
 #endif
   if ((version >= 1 && version <= 4) || version == MDX_KIT_VERSION) {
     /* legacy/MDX layout: 24 params/track, full 36-byte LFO-A, no LFO-B */
-  } else if (version == 65) {
+  } else if (version == SPSX_KIT_VERSION_V1 ||
+             version == SPSX_KIT_VERSION) {
 #if !defined(__AVR__)
-    is_spsx_kit = true;   /* 34 params/track, compact LFO-A + LFO-B */
+    is_spsx_kit = true;
 #else
     DEBUG_PRINTLN(F("SPS-X kit on AVR — reject"));
     return false;
 #endif
   } else {
     DEBUG_PRINTLN(F("unknown kit version"));
+    return false;
+  }
+
+  const uint16_t expected_len = mdKitChecksumLengthForVersion(version);
+  if (len != expected_len) {
+    DEBUG_PRINTLN(F("kit too short"));
+    return false;
+  }
+
+  if (!ElektronHelper::checkSysexChecksum(sysex, offset, len)) {
+    DEBUG_PRINTLN("wrong checksum");
     return false;
   }
 
@@ -366,8 +378,10 @@ bool MDKit::fromSysex(MidiClass *midi) {
 #if defined(__AVR__)
   const uint8_t params_per_track = MD_KIT_PARAMS_PER_TRACK;
 #else
-  uint8_t params_per_track =
-      is_spsx_kit ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+  const uint8_t params_per_track =
+      version == SPSX_KIT_VERSION ? SPS_PARAMS_PER_TRACK
+      : version == SPSX_KIT_VERSION_V1 ? SPS_PARAMS_V1_PER_TRACK
+                                        : MD_PARAMS_PER_TRACK;
 #endif
   for (uint8_t i = 0; i < 16; i++) {
     decoder.get((uint8_t *)params[i], params_per_track);
@@ -436,6 +450,18 @@ bool MDKit::fromSysex(MidiClass *midi) {
       // params[] as the single source of truth (MDTypes.cpp:454-466).
     }
     decoder.stop7Bit();
+
+    if (version == SPSX_KIT_VERSION) {
+      decoder.get(&userBusFx[0][0], sizeof(userBusFx));
+      decoder.get(userPostFx, sizeof(userPostFx));
+    } else {
+      for (uint8_t i = 0; i < 16; ++i) {
+        params[i][MODEL_BUS1] = 0;
+        params[i][MODEL_BUS2] = 0;
+        params[i][MODEL_BUS3] = 0;
+      }
+      init_user_fx();
+    }
   } else {
     // Legacy/MDX kit: synthesize SPS-X side state with safe defaults so a
     // later toSysex(SPS-X) round-trips cleanly. Mirrors host MDTypes.cpp
@@ -452,8 +478,12 @@ bool MDKit::fromSysex(MidiClass *midi) {
       params[i][MODEL_RTRG]    = 0;
       params[i][MODEL_RTIM]    = 0;
       params[i][MODEL_RENV]    = 1;   // envelope reset ON
+      params[i][MODEL_BUS1]    = 0;
+      params[i][MODEL_BUS2]    = 0;
+      params[i][MODEL_BUS3]    = 0;
       lfosB[i].init(i);
     }
+    init_user_fx();
   }
 #endif
 
@@ -467,16 +497,22 @@ uint16_t MDKit::toSysex() {
 }
 
 uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
-  // Pick wire version: SPS-X (65) when SPS firmware is connected, else MDX (64).
+  // Pick the current SPS-X wire version when SPS firmware is connected.
   // Stock MD firmware accepts version 64 with the legacy 24-param/36-byte-LFO
   // layout. Real differentiation between stock and MDX isn't needed: both parse
   // the same body; only the version byte differs.
 #if !defined(__AVR__)
-  bool emit_spsx = MD.is_spsx;
-#else
-  bool emit_spsx = false;
+  const bool emit_spsx = MD.is_spsx;
+  const bool emit_spsx_v2 = emit_spsx && MD.supportsSpsx37Params();
 #endif
-  uint8_t kit_ver = emit_spsx ? 65 : MDX_KIT_VERSION;
+#if !defined(__AVR__)
+  const uint8_t kit_ver =
+      emit_spsx ? (emit_spsx_v2 ? SPSX_KIT_VERSION
+                                : SPSX_KIT_VERSION_V1)
+                : MDX_KIT_VERSION;
+#else
+  const uint8_t kit_ver = MDX_KIT_VERSION;
+#endif
 
   ElektronHelper::beginSysexEncode(encoder, machinedrum_sysex_hdr,
                                    sizeof(machinedrum_sysex_hdr),
@@ -488,8 +524,9 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
 #if defined(__AVR__)
   const uint8_t params_per_track = MD_KIT_PARAMS_PER_TRACK;
 #else
-  uint8_t params_per_track =
-      emit_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+  const uint8_t params_per_track =
+      emit_spsx ? MD.spsxWireParamCount()
+                : MD_PARAMS_PER_TRACK;
 #endif
   for (uint8_t i = 0; i < 16; i++) {
     encoder->pack((uint8_t *)params[i], params_per_track);
@@ -545,6 +582,11 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
       encoder->pack(compact_state, 4);
     }
     encoder->stop7Bit();
+
+    if (emit_spsx_v2) {
+      encoder->pack(&userBusFx[0][0], sizeof(userBusFx));
+      encoder->pack(userPostFx, sizeof(userPostFx));
+    }
   }
 #endif
 
@@ -669,6 +711,13 @@ void MDKit::init_dynamix() {
   dynamics[MD_DYN_OUTG] = 0;
   dynamics[MD_DYN_MIX]  = 0;
 }
+
+#if !defined(__AVR__)
+void MDKit::init_user_fx() {
+  memset(userBusFx, SPS_USER_FX_DEFAULT_PARAM, sizeof(userBusFx));
+  memset(userPostFx, SPS_USER_FX_DEFAULT_PARAM, sizeof(userPostFx));
+}
+#endif
 
 uint16_t MDSong::toSysex(ElektronDataToSysexEncoder *encoder) {
   ElektronHelper::beginSysexEncode(encoder, machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr), MD_PATTERN_MESSAGE_ID, 0x04, origPosition);

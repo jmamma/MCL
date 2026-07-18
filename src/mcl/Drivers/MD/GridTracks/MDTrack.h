@@ -32,6 +32,10 @@ public:
   uint8_t eq[8];
   /** The settings of the compressor effect. **/
   uint8_t dynamics[8];
+#if !defined(__AVR__)
+  uint8_t userBusFx[SPS_USER_BUS_FX_COUNT][SPS_USER_FX_PARAM_COUNT];
+  uint8_t userPostFx[SPS_USER_FX_PARAM_COUNT];
+#endif
   uint32_t swingAmount;
   uint8_t accentAmount;
   uint8_t patternLength;

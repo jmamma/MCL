@@ -35,7 +35,8 @@ namespace spsseq {
 static const uint8_t  kMfrId   = 0x7D;   // MIDI non-commercial / private-use id
 static const uint8_t  kSubId0  = 0x53;   // 'S'
 static const uint8_t  kSubId1  = 0x51;   // 'Q'
-static const uint8_t  kProtoVersion = 1;
+static const uint8_t  kProtoVersionV1 = 1;
+static const uint8_t  kProtoVersion = 2;
 
 static const uint8_t  kSysexStart = spswire::kSysexStart;
 static const uint8_t  kSysexEnd   = spswire::kSysexEnd;
@@ -44,7 +45,8 @@ static const uint8_t  kSysexEnd   = spswire::kSysexEnd;
 static const int kNumTracks     = 16;
 static const int kNumExtTracks  = 16;   // protocol maximum; HELLO_ACK reports actual
 static const int kNumSteps      = 64;
-static const int kNumLockParams = 34;   // SPS-X superset
+static const int kNumLockParamsV1 = 34;
+static const int kNumLockParams = 37;   // current SPS-X superset
 static const int kMaxBodyRaw    = 512;  // cap per frame (TRACK_LOCKS paginates)
 static const int kExtNoteWireBytes = 11; // start(4), width(4), note, velocity, condition
 static const int kExtLockWireBytes = 6; // tick(4), value, slide
@@ -52,6 +54,20 @@ static const int kLfoParams = 2;
 static const int kLfoLabelBytes = 4;
 static const int kLfoParamWireBytes = 6 + kLfoLabelBytes + kLfoLabelBytes;
 static const int kLfoStateWireBytes = 18 + kLfoParams * kLfoParamWireBytes;
+
+// HELLO is initiated by the host. The responder selects the newest version
+// no newer than the request, and both peers derive the parameter width from
+// that selected version.
+inline uint8_t spsSeqNegotiateVersion(uint8_t requestedVersion) {
+    if (requestedVersion < kProtoVersionV1)
+        return 0;
+    return requestedVersion < kProtoVersion ? requestedVersion
+                                             : kProtoVersion;
+}
+inline uint8_t spsSeqLockParamsForVersion(uint8_t version) {
+    return version >= kProtoVersion ? kNumLockParams :
+           version >= kProtoVersionV1 ? kNumLockParamsV1 : 0;
+}
 
 // ---- command ids (byte[3]) ----
 enum Cmd {

@@ -34,6 +34,9 @@ DeviceTrack *load_grid_512(DeviceTrack *track, GridSlot column, GridRow row,
       }
     }
   }
+#if !defined(__AVR__)
+  ptrack->on_storage_loaded();
+#endif
   return ptrack;
 }
 
@@ -128,6 +131,9 @@ DeviceTrack *DeviceTrack::load_from_mem(GridSlot col, uint8_t track_type,
     return nullptr;
   }
   if (that->active == track_type) {
+#if !defined(__AVR__)
+    that->on_storage_loaded();
+#endif
     return that;
   }
 
@@ -140,6 +146,9 @@ DeviceTrack *DeviceTrack::load_from_mem(GridSlot col, uint8_t track_type,
   if (!p->GridTrack::load_from_mem(col) || p->active != source_active) {
     return nullptr;
   }
+#if !defined(__AVR__)
+  p->on_storage_loaded();
+#endif
   return p->materialize_as(track_type, col, nullptr);
 }
 
@@ -195,6 +204,10 @@ DeviceTrack *DeviceTrack::load_from_grid(GridSlot column, GridRow row) {
       return nullptr;
     }
   }
+
+#if !defined(__AVR__)
+  ptrack->on_storage_loaded();
+#endif
 
   return ptrack;
 }

@@ -84,8 +84,24 @@ public:
   // the local sequencer is in SPSX mode — see MCLSeq::using_spsx_tracks.
 #if defined(__AVR__)
   static constexpr bool is_spsx = false;
+  static constexpr bool supportsSpsx37Params() { return false; }
+  static constexpr uint8_t spsxWireParamCount() {
+    return SPS_PARAMS_V1_PER_TRACK;
+  }
 #else
   bool is_spsx = false;
+
+  // The device-facing kit/pattern format is negotiated by firmware
+  // capabilities, independently of the host sequencer bridge. Old SPS-X
+  // peers advertise FW_CAP_SPSX only and therefore stay on 34 params/v65;
+  // current peers also advertise FW_CAP_SPSX_PARAMS_37.
+  bool supportsSpsx37Params() const {
+    return is_spsx && (fw_caps & FW_CAP_SPSX_PARAMS_37) != 0;
+  }
+  uint8_t spsxWireParamCount() const {
+    return supportsSpsx37Params() ? SPS_PARAMS_PER_TRACK
+                                 : SPS_PARAMS_V1_PER_TRACK;
+  }
 #endif
 
   virtual void setup_listeners() override;
@@ -154,9 +170,9 @@ public:
    *
    * track is set from 0 to 15, or to 255 if the message could not be parsed.
    *
-   * param is set from 0 to 23.
-   * If the controlled parameter is a mute, the param value is 32.
-   * If the controlled parameter is a channel LEVEL, the param value is 33.
+   * Real parameters use their track-array index. Mute and level use the
+   * separate virtual IDs MODEL_MUTE and MODEL_LEVEL; those values are parser
+   * tokens, not indices into a machine parameter array.
    *
    *
    * If the messages could not be interpreted, track is set to 255.
@@ -179,8 +195,8 @@ public:
   void restore_kit_param(uint8_t track, uint8_t param);
 
   /**
-   * Set the parameter param (0 to 23, or 32 for mute, and 33 for
-   * LEVEL) of the given track (from 0 to 15) to value.
+   * Set a real track parameter, or the virtual MODEL_MUTE/MODEL_LEVEL token,
+   * on the given track (from 0 to 15) to value.
    *
    * Uses the channel settings out of the global settings.
    **/
@@ -286,6 +302,9 @@ public:
    *the track mapped to the give note. Returns 128 if no track could be found.
    **/
   uint8_t noteToTrack(uint8_t pitch);
+#if !defined(__AVR__)
+  void activate_encoder_interface(uint8_t *params, uint8_t count = 24);
+#endif
   /**
    * Returns true if the machine on the given track (0 to 15) is melodic.
    **/

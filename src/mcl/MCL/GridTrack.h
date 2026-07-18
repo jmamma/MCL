@@ -157,6 +157,9 @@ public:
   }
   virtual uint8_t get_model() { return EMPTY_TRACK_TYPE; }
   virtual uint8_t storage_version() const { return 0; }
+#if !defined(__AVR__)
+  virtual void on_storage_loaded() {}
+#endif
   virtual void init_defaults() {}
 
 private:

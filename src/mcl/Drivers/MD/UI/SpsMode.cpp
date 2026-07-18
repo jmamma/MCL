@@ -112,7 +112,7 @@ void SpsMode::restore_display_mode() {
 }
 
 uint8_t SpsMode::param_count() const {
-  return MD.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+  return MD.is_spsx ? MD.spsxWireParamCount() : MD_PARAMS_PER_TRACK;
 }
 
 uint8_t SpsMode::param_window_count() const {
@@ -378,7 +378,7 @@ bool SpsMode::handle_arrow_subpage(gui_event_t *event) {
     //   UP    → upper half of the current page.
     //   DOWN  → lower half of the current page, if it exists.
     //   LEFT/RIGHT → step pages by ±2 columns, clamped.
-    // Stock MD firmware exposes 24 params; SPS firmware exposes 34.
+    // Stock MD firmware exposes 24 params; SPS-X uses its current contract.
     // max_columns clips the
     // wrap range so we don't scroll into blank pages on a stock MD.
     const uint8_t max_columns = param_window_count();

@@ -45,7 +45,7 @@ bool SeqStepTrackGenericBackend::request_speed_change(uint8_t new_speed) {
   if (kind_ == KIND_MD) {
     return tracks_.md->request_speed_change(new_speed);
   }
-  StepSeqDataTrack *t = tracks_.stepseq;
+  StepSeqDataTrackBase *t = tracks_.stepseq;
   if (t->count_down || t->speed == new_speed) {
     return false;
   }
@@ -69,7 +69,7 @@ void SeqStepTrackGenericBackend::set_pattern_step_from_edit(
     set_conditional(step, condition, cond_plock);
     set_timing_from_encoder(step, timing_encoder);
   } else {
-    StepSeqDataTrack *t = tracks_.stepseq;
+    StepSeqDataTrackBase *t = tracks_.stepseq;
     t->set_step(step, STEPSEQ_MASK_PATTERN, true);
     set_conditional(step, condition, cond_plock);
     set_timing_from_encoder(step, timing_encoder);

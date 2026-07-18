@@ -132,14 +132,11 @@ void reset_slide_track_locks(SeqSlideTrack &track) {
 }
 
 #if !defined(__AVR__)
-// SPSXSeqTrack derives from StepSeqSlideTrack, not SeqSlideTrack, so the
-// SeqSlideTrack& overload above doesn't accept it. Both bases expose the same
-// {locks_slides_recalc, locks_slide_data[].init()} surface, so the body is
-// identical — this overload exists purely so for_each_md_track's SPSX-branch
-// lambda instantiation type-checks. AVR has no SPSX engine so it stays at one
-// function and the dedup commit's flash savings are preserved there.
-void reset_slide_track_locks(StepSeqSlideTrack &track) NOINLINE();
-void reset_slide_track_locks(StepSeqSlideTrack &track) {
+// Hosted step-sequence tracks specialize their runtime lock width. This
+// template clears either the generic/TBD 34-slot state or SPS-X's 37-slot
+// state without widening the generic persisted type.
+template <std::size_t LockCount>
+void reset_slide_track_locks(BasicStepSeqSlideTrack<LockCount> &track) {
   track.locks_slides_recalc = 255;
   for (auto &sd : track.locks_slide_data) {
     sd.init();

@@ -204,25 +204,75 @@ public:
     bool neighbor_fired() const;
 };
 
+// The UI/device layer stores either a generic 34-lock track or the hosted
+// SPS-X 37-lock specialization behind this non-owning runtime interface.
+// Persistent fields stay in the lock-count-specialized data base below.
+class StepSeqDataTrackBase : public StepSeqTrackCond {
+public:
+    virtual uint8_t lock_slot_count() const = 0;
+    virtual uint8_t swing_amount_value() const = 0;
+    virtual int8_t microtiming_value(uint8_t step) const = 0;
+    virtual void set_microtiming_value(uint8_t step, int8_t value) = 0;
+    virtual uint8_t conditional_id_value(uint8_t step) const = 0;
+    virtual bool conditional_plock_value(uint8_t step) const = 0;
+    virtual void set_conditional_value(uint8_t step, uint8_t condition,
+                                       bool plock) = 0;
+    virtual uint64_t mute_mask_value() const = 0;
+    virtual void clear_step_mute(uint8_t step) = 0;
+    virtual void toggle_step_mute(uint8_t step) = 0;
+    virtual bool step_has_lock(uint8_t step, uint8_t lock_idx) const = 0;
+
+    virtual void get_mask(uint64_t* mask, uint8_t mask_type) const = 0;
+    virtual bool get_step(uint8_t step, uint8_t mask_type) const = 0;
+    virtual void set_step(uint8_t step, uint8_t mask_type, bool value) = 0;
+    virtual void get_step_locks(uint8_t step, uint8_t* params,
+                                bool include_all_locks = false) = 0;
+    virtual void clear_step(uint8_t step) = 0;
+    virtual void clear_step_locks(uint8_t step) = 0;
+    virtual void enable_step_locks(uint8_t step) = 0;
+    virtual void clear_step_lock(uint8_t step, uint8_t param_id) = 0;
+    virtual void clear_param_locks(uint8_t param_id) = 0;
+    virtual void clear_locks() = 0;
+    virtual bool set_track_locks(uint8_t step, uint8_t track_param,
+                                 uint8_t value) = 0;
+    virtual uint8_t find_param(uint8_t param_id) const = 0;
+    virtual uint8_t get_track_lock_implicit(uint8_t step,
+                                            uint8_t param) = 0;
+    virtual void clean_params() = 0;
+    virtual void set_track_pitch(uint8_t step, uint8_t pitch) = 0;
+    virtual void record_track(uint8_t velocity) = 0;
+    virtual void record_track_locks(uint8_t track_param, uint8_t value) = 0;
+    virtual void set_speed(uint8_t new_speed, uint8_t old_speed = 255,
+                           bool timing_adjust = true) = 0;
+    virtual void request_swing_amount_change(uint8_t amount) = 0;
+    virtual void copy_step(uint8_t step, StepSeqStep* out) = 0;
+    virtual void paste_step(uint8_t step, StepSeqStep* source,
+                            const uint8_t* source_locks_params = nullptr) = 0;
+    virtual void clear_step_oneshot_state(uint8_t step) = 0;
+    virtual bool owns_sound_data() const = 0;
+    virtual bool preview_step(uint8_t step) = 0;
+};
+
 // ============================================================================
-// StepSeqSlideTrack - Generic parameter slide/glide state
+// Lock-count-specialized parameter slide/glide state
 // ============================================================================
 
-class StepSeqSlideTrack : public StepSeqTrackCond {
+template <std::size_t LockCount>
+class BasicStepSeqSlideTrack : public StepSeqDataTrackBase {
 public:
-    StepSeqSlideData locks_slide_data[STEPSEQ_NUM_LOCKS];
-    uint8_t locks_slide_next_lock_val[STEPSEQ_NUM_LOCKS];
-    uint8_t locks_slide_next_lock_step[STEPSEQ_NUM_LOCKS];
+    StepSeqSlideData locks_slide_data[LockCount];
+    uint8_t locks_slide_next_lock_val[LockCount];
+    uint8_t locks_slide_next_lock_step[LockCount];
     uint8_t locks_slides_recalc = 255;
     uint16_t locks_slides_idx = 0;
 
-    StepSeqSlideTrack() : StepSeqTrackCond() {}
+    BasicStepSeqSlideTrack() : StepSeqDataTrackBase() {}
 
     void reset() {
-        for (uint8_t n = 0; n < STEPSEQ_NUM_LOCKS; n++) {
+        for (std::size_t n = 0; n < LockCount; ++n) {
             locks_slide_data[n].init();
         }
-        StepSeqTrackCond::reset();
+        StepSeqDataTrackBase::reset();
     }
 
     void prepare_slide(uint8_t lock_idx, int32_t x0, int32_t x1, int8_t y0,
@@ -236,65 +286,143 @@ protected:
 };
 
 // ============================================================================
-// StepSeqDataTrack - Generic SPS-style step data operations
+// Lock-count-specialized SPS-style step data operations
 // ============================================================================
 
-class StepSeqDataTrack : public StepSeqTrackData, public StepSeqSlideTrack {
+template <std::size_t LockCount>
+class BasicStepSeqDataTrack
+    : public BasicStepSeqTrackData<LockCount>,
+      public BasicStepSeqSlideTrack<LockCount> {
 public:
+    using DataBase = BasicStepSeqTrackData<LockCount>;
+    using SlideBase = BasicStepSeqSlideTrack<LockCount>;
+
+    using DataBase::accent_mask;
+    using DataBase::find_param;
+    using DataBase::get_lockidx;
+    using DataBase::locks;
+    using DataBase::locks_params;
+    using DataBase::microtiming;
+    using DataBase::mute_mask;
+    using DataBase::slide_mask;
+    using DataBase::steps;
+    using DataBase::swing_amount;
+    using DataBase::swing_mask;
+    using DataBase::track_length;
+    using DataBase::track_speed;
+    using DataBase::trig_mask;
+
+    using SlideBase::cur_event_idx;
+    using SlideBase::get_quantized_step;
+    using SlideBase::get_ticks_per_step;
+    using SlideBase::ignore_step;
+    using SlideBase::length;
+    using SlideBase::locks_slide_data;
+    using SlideBase::locks_slide_next_lock_step;
+    using SlideBase::locks_slide_next_lock_val;
+    using SlideBase::locks_slides_idx;
+    using SlideBase::locks_slides_recalc;
+    using SlideBase::mute_state;
+    using SlideBase::prepare_slide;
+    using SlideBase::record_mutes;
+    using SlideBase::speed;
+    using SlideBase::step_count;
+    using SlideBase::tick_counter;
+
     static constexpr uint8_t NO_PENDING_SWING_AMOUNT = 0xFF;
 
     volatile uint8_t pending_swing_amount;
 
-    StepSeqDataTrack() : StepSeqSlideTrack() {
-        StepSeqTrackData::init();
+    BasicStepSeqDataTrack() : SlideBase() {
+        DataBase::init();
         mute_mask = 0;
         pending_swing_amount = NO_PENDING_SWING_AMOUNT;
     }
 
     void reset() {
-        StepSeqSlideTrack::reset();
+        SlideBase::reset();
         record_mutes = false;
         pending_swing_amount = NO_PENDING_SWING_AMOUNT;
     }
 
-    void get_mask(uint64_t *_pmask, uint8_t mask_type) const;
-    bool get_step(uint8_t step, uint8_t mask_type) const;
-    void set_step(uint8_t step, uint8_t mask_type, bool val);
+    uint8_t lock_slot_count() const override {
+        return static_cast<uint8_t>(LockCount);
+    }
+    uint8_t swing_amount_value() const override { return swing_amount; }
+    int8_t microtiming_value(uint8_t step) const override {
+        return microtiming[step];
+    }
+    void set_microtiming_value(uint8_t step, int8_t value) override {
+        microtiming[step] = value;
+    }
+    uint8_t conditional_id_value(uint8_t step) const override {
+        return steps[step].cond_id;
+    }
+    bool conditional_plock_value(uint8_t step) const override {
+        return steps[step].cond_plock;
+    }
+    void set_conditional_value(uint8_t step, uint8_t condition,
+                               bool plock) override {
+        auto& descriptor = steps[step];
+        if (descriptor.cond_id != condition || descriptor.cond_plock != plock)
+            clear_step_oneshot_state(step);
+        descriptor.cond_id = condition;
+        descriptor.cond_plock = plock;
+    }
+    uint64_t mute_mask_value() const override { return mute_mask; }
+    void clear_step_mute(uint8_t step) override {
+        mute_mask &= ~(uint64_t{1} << step);
+    }
+    void toggle_step_mute(uint8_t step) override {
+        mute_mask ^= uint64_t{1} << step;
+    }
+    bool step_has_lock(uint8_t step, uint8_t lock_idx) const override {
+        return lock_idx < LockCount && steps[step].is_lock(lock_idx);
+    }
+    uint8_t find_param(uint8_t param_id) const override {
+        return DataBase::find_param(param_id);
+    }
+    void clean_params() override { DataBase::clean_params(); }
+
+    void get_mask(uint64_t *_pmask, uint8_t mask_type) const override;
+    bool get_step(uint8_t step, uint8_t mask_type) const override;
+    void set_step(uint8_t step, uint8_t mask_type, bool val) override;
 
     void get_step_locks(uint8_t step, uint8_t *params,
-                        bool include_all_locks = false);
+                        bool include_all_locks = false) override;
     int16_t effective_timing_offset(uint8_t step, uint16_t tps) const;
     void recalc_slides();
     void find_next_locks(uint8_t curidx, uint8_t step, uint64_t &mask);
 
-    void set_track_pitch(uint8_t step, uint8_t pitch);
+    void set_track_pitch(uint8_t step, uint8_t pitch) override;
     void set_track_step(uint8_t step, int8_t microtiming_val,
                         uint8_t velocity = 127);
     bool set_track_locks_i(uint8_t step, uint8_t lockidx, uint8_t value);
-    bool set_track_locks(uint8_t step, uint8_t track_param, uint8_t value);
+    bool set_track_locks(uint8_t step, uint8_t track_param,
+                         uint8_t value) override;
     uint8_t get_track_lock(uint8_t step, uint8_t lockidx);
-    uint8_t get_track_lock_implicit(uint8_t step, uint8_t param);
+    uint8_t get_track_lock_implicit(uint8_t step, uint8_t param) override;
 
-    void record_track(uint8_t velocity);
-    void record_track_locks(uint8_t track_param, uint8_t value);
+    void record_track(uint8_t velocity) override;
+    void record_track_locks(uint8_t track_param, uint8_t value) override;
     void record_track_pitch(uint8_t pitch);
 
     void clear_mute();
     virtual void clear_mutes();
     void clear_slide_data();
-    void clear_step(uint8_t step);
-    void clear_step_locks(uint8_t step);
+    void clear_step(uint8_t step) override;
+    void clear_step_locks(uint8_t step) override;
     void disable_step_locks(uint8_t step);
-    void enable_step_locks(uint8_t step);
+    void enable_step_locks(uint8_t step) override;
     uint64_t get_step_locks_mask(uint8_t step);
     void clear_conditional();
-    void clear_step_lock(uint8_t step, uint8_t param_id);
-    void clear_locks();
+    void clear_step_lock(uint8_t step, uint8_t param_id) override;
+    void clear_locks() override;
     void clear_track(bool locks = true) override;
-    void clear_param_locks(uint8_t param_id);
+    void clear_param_locks(uint8_t param_id) override;
     bool is_param(uint8_t param_id);
-    virtual bool owns_sound_data() const { return false; }
-    virtual bool preview_step(uint8_t step) {
+    bool owns_sound_data() const override { return false; }
+    bool preview_step(uint8_t step) override {
         (void)step;
         return false;
     }
@@ -306,16 +434,18 @@ public:
     void modify_track(uint8_t dir);
 
     void set_speed(uint8_t new_speed, uint8_t old_speed = 255,
-                   bool timing_adjust = true);
-    void request_swing_amount_change(uint8_t amount);
+                   bool timing_adjust = true) override;
+    void request_swing_amount_change(uint8_t amount) override;
     void apply_pending_swing_amount();
 
-    void copy_step(uint8_t n, StepSeqStep *step);
+    void copy_step(uint8_t n, StepSeqStep *step) override;
     void paste_step(uint8_t n, StepSeqStep *step,
-                    const uint8_t *source_locks_params = nullptr);
+                    const uint8_t *source_locks_params = nullptr) override;
 
     void transpose(int8_t offset) override;
-    void clear_step_oneshot_state(uint8_t step) { clear_step_oneshot(step); }
+    void clear_step_oneshot_state(uint8_t step) override {
+        clear_step_oneshot(step);
+    }
 
 protected:
     virtual bool get_default_lock_value(uint8_t param_id, uint8_t &value) const;
@@ -324,6 +454,9 @@ protected:
     virtual void clear_step_oneshot(uint8_t step);
     virtual void on_modify_track_begin();
 };
+
+using StepSeqSlideTrack = BasicStepSeqSlideTrack<STEPSEQ_NUM_LOCKS>;
+using StepSeqDataTrack = BasicStepSeqDataTrack<STEPSEQ_NUM_LOCKS>;
 
 #endif // !defined(__AVR__)
 #endif // STEP_SEQ_TRACK_H__

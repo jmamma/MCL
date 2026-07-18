@@ -39,9 +39,17 @@ public:
     void notifyLfoDirty(uint8_t device, int track, uint8_t regions);
     void notifyTransport(bool running, uint8_t masterStep);
     void notifyActive();
+    uint8_t negotiatedProtoVersion() const {
+        return negotiated_proto_version_;
+    }
+    uint8_t negotiatedLockParams() const {
+        return negotiated_lock_params_;
+    }
 
 private:
     bool ready_ = false;
+    uint8_t negotiated_proto_version_ = spsseq::kProtoVersionV1;
+    uint8_t negotiated_lock_params_ = spsseq::kNumLockParamsV1;
 
     void handle(const spsseq::Parsed& p, const uint8_t* b, uint16_t n);
 

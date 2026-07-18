@@ -1270,7 +1270,8 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
   }
 
 #if !defined(__AVR__)
-  uint8_t num_params = pattern->version >= 0x40 ? SPS_PARAMS_PER_TRACK : 24;
+  const uint8_t num_params =
+      mdPatternLockSlotCountForVersion(pattern->version);
 #else
   uint8_t num_params = 24;
 #endif

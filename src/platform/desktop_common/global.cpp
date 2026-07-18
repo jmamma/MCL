@@ -25,10 +25,12 @@
 #include "Devices/MidiActivePeering.h"
 #include "global.h"
 
-// MidiUart instances. Desktop MidiUartClass owns its own ring buffers
-// internally (see MidiUart.cpp); no per-uart RingBuffer<>* needs to be
-// passed in like the rp2040 path.
-MidiUartClass    MidiUart;
+// Hosted port 0 is the manifest-declared SPS link and can carry a worst-case
+// v0x41 pattern dump. Other UARTs retain the compact internal TX ring.
+namespace {
+uint8_t sps_tx_buf[SPS_TX_BUF_SIZE];
+}
+MidiUartClass    MidiUart(sps_tx_buf, (uint16_t)sizeof(sps_tx_buf));
 MidiUartClass    MidiUart2;
 MidiUartUSBClass MidiUartUSB;
 MidiUartClass    seq_tx1;
@@ -36,9 +38,8 @@ MidiUartClass    seq_tx2;
 MidiUartClass    seq_tx3;
 MidiUartClass    seq_tx4;
 
-// Sysex parsers. The constructor signature mirrors rp2040 — needs a
-// MidiUart and a backing RingBuffer<>. Use a 6 KB buffer per parser
-// (SYSEX*_DATA_LEN from memory.h).
+// Sysex parsers. Port 0 uses the hosted SPS capacity from memory.h; the
+// external/USB parsers retain their compact legacy buffers.
 namespace {
 uint8_t sysex_buf1   [SYSEX1_DATA_LEN];
 uint8_t sysex_buf2   [SYSEX2_DATA_LEN];

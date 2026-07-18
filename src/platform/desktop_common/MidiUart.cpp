@@ -53,9 +53,13 @@ void update_tx_message_state(int8_t& in_message_tx, uint8_t c) {
 
 }
 
-MidiUartClass::MidiUartClass()
+MidiUartClass::MidiUartClass(uint8_t* external_tx_buffer,
+                             uint16_t external_tx_size)
     : rx_storage_(rx_buf_, RX_RING_SIZE),
-      tx_storage_(tx_buf_, TX_RING_SIZE),
+      tx_storage_(external_tx_buffer ? external_tx_buffer : tx_buf_,
+                  external_tx_buffer && external_tx_size
+                      ? external_tx_size
+                      : TX_RING_SIZE),
       rt_storage_(rt_buf_, RT_RING_SIZE) {
     rxRb             = &rx_storage_;
     txRb             = &tx_storage_;

@@ -148,6 +148,15 @@ void MDSysexListenerClass::end() {
       uint8_t flags_byte = view.getByte(offset++);
       uint8_t data_flags = view.getByte(offset++);
 
+      const uint16_t record_len = view.get_recordLen();
+      const uint8_t trailing_bytes =
+          ((data_flags & 0x02) ? 5 : 0) +
+          ((data_flags & 0x04) ? 1 : 0) +
+          ((data_flags & 0x08) ? 2 : 0);
+      if (record_len < offset + trailing_bytes) {
+        return;
+      }
+
       // Decode model: flags_byte = (tonal << 1) | uwFlag
       uint8_t uwFlag = flags_byte & 0x01;
       uint8_t tonal = (flags_byte >> 1) & 0x01;
@@ -157,9 +166,22 @@ void MDSysexListenerClass::end() {
       }
       MD.kit.models[track] = tonal ? ((uint32_t)model + 0x20000) : model;
 
-      // Params (34 bytes for SPS-X, 24 for legacy)
+      // Current SPS-X parameters, or the stock 24-byte payload.
       if (data_flags & 0x01) {
-        uint8_t num_params = MD.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+        const uint16_t available_params =
+            record_len - offset - trailing_bytes;
+        uint8_t num_params = MD_PARAMS_PER_TRACK;
+#if !defined(__AVR__)
+        if (MD.is_spsx && available_params >= SPS_PARAMS_PER_TRACK) {
+          num_params = SPS_PARAMS_PER_TRACK;
+        } else if (MD.is_spsx &&
+                   available_params >= SPS_PARAMS_V1_PER_TRACK) {
+          num_params = SPS_PARAMS_V1_PER_TRACK;
+        }
+#endif
+        if (available_params < num_params) {
+          return;
+        }
         for (int i = 0; i < num_params; i++) {
           MD.kit.params[track][i] = view.getByte(offset++);
         }

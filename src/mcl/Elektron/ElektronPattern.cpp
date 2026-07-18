@@ -2,7 +2,7 @@
 #include "ElektronPattern.h"
 
 // The base ElektronPattern storage (lockTracks, lockParams, locks) is sized
-// at 64 rows. Subclasses may report a larger maxLocks (MDPattern uses 544 to
+// at 64 rows. Subclasses may report a larger maxLocks (MDPattern uses 592 to
 // describe the total addressable range including its ext_locks extension),
 // but the inherited methods can only safely iterate the base 64 slots.
 #define EP_BASE_LOCK_SLOTS 64
@@ -79,7 +79,7 @@ void ElektronPattern::clearLock(uint8_t track, uint8_t step, uint8_t param) {
 	if (idx == -1)
 		return;
 	locks[idx][step] = 255;
-	if (isLockEmpty(track, param)) {
+	if (isLockEmpty((uint8_t)idx)) {
 		clearLockPattern(idx);
 	}
 }

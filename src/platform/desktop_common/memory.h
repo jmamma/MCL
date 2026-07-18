@@ -18,6 +18,7 @@
 
 #define RX_BUF_SIZE 0x80UL
 #define TX_BUF_SIZE 0x0C00UL
+#define SPS_TX_BUF_SIZE 60000UL
 #define TX_SEQBUF_SIZE 0x200UL
 #define RT_BUF_SIZE 0x08UL
 
@@ -33,7 +34,10 @@
 #define UARTUSB_TX_BUFFER_LEN TX_BUF_SIZE
 #define UARTUSB_RT_BUFFER_LEN RT_BUF_SIZE
 
-#define SYSEX1_DATA_LEN     0x1800UL
+// Hosted port 0 is the manifest-declared SPS link. A maximally populated,
+// deliberately incompressible v0x41 pattern is about 45 KiB on the wire.
+// Keep the other ports at their legacy sizes; they do not carry SPS dumps.
+#define SYSEX1_DATA_LEN     60000UL
 #define SYSEX2_DATA_LEN     0x1800UL
 #define SYSEXUSB_DATA_LEN   0x1800UL
 

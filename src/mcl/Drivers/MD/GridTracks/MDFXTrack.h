@@ -6,6 +6,9 @@
 #include "MDFXTrack.h"
 #include "MDTrack.h"
 
+#if !defined(__AVR__)
+constexpr uint8_t MDFX_TRACK_STORAGE_VERSION_ROUTED_FX = 1;
+#endif
 
 class ATTR_PACKED() MDFXData {
 public:
@@ -21,6 +24,10 @@ public:
   uint8_t eq[8];
   /** The settings of the compressor effect. **/
   uint8_t dynamics[8];
+#if !defined(__AVR__)
+  uint8_t userBusFx[SPS_USER_BUS_FX_COUNT][SPS_USER_FX_PARAM_COUNT];
+  uint8_t userPostFx[SPS_USER_FX_PARAM_COUNT];
+#endif
 };
 
 class ATTR_PACKED() MDFXTrack : public AUXTrack, public MDFXData {
@@ -36,6 +43,10 @@ public:
      enable_delay = false;
      enable_eq = false;
      enable_dynamics = false;
+#if !defined(__AVR__)
+     memset(userBusFx, SPS_USER_FX_DEFAULT_PARAM, sizeof(userBusFx));
+     memset(userPostFx, SPS_USER_FX_DEFAULT_PARAM, sizeof(userPostFx));
+#endif
   }
   void init_defaults() override { init(); }
 
@@ -62,6 +73,24 @@ public:
     return make_grid_slot_label('F', 'X');
   }
   virtual uint8_t get_model() override { return MDFX_TRACK_TYPE; }
+#if !defined(__AVR__)
+  uint8_t storage_version() const override {
+    return MDFX_TRACK_STORAGE_VERSION_ROUTED_FX;
+  }
+  void on_storage_loaded() override {
+    if (!storage_version_at_least(MDFX_TRACK_STORAGE_VERSION_ROUTED_FX)) {
+      memset(userBusFx, SPS_USER_FX_DEFAULT_PARAM, sizeof(userBusFx));
+      memset(userPostFx, SPS_USER_FX_DEFAULT_PARAM, sizeof(userPostFx));
+      version = MDFX_TRACK_STORAGE_VERSION_ROUTED_FX;
+    }
+  }
+#endif
   virtual void* get_sound_data_ptr() override { return &reverb; }
-  virtual size_t get_sound_data_size() override { return 8 * 4; }
+  virtual size_t get_sound_data_size() override {
+    return sizeof(MDFXData) - 4 * sizeof(bool);
+  }
 };
+
+static_assert(MEMORY_ALIGN(sizeof(MDFXTrack) - sizeof(void*)) <=
+                  MDFX_TRACK_LEN,
+              "MDFXTrack outgrew MDFX_TRACK_LEN");

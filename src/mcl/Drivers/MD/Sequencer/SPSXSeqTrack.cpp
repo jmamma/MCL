@@ -639,7 +639,9 @@ void SPSXSeqTrack::merge_from_md(uint8_t trk, MDPattern *pattern) {
 
     // Import lock values from pattern rows. Row indices are int16_t now and
     // can exceed 64; use lock_row() to handle the extended-rows extension array.
-    for (uint8_t p = 0; p < pattern->maxParams; p++) {
+    const uint8_t pattern_param_count =
+        mdPatternLockSlotCountForVersion(pattern->version);
+    for (uint8_t p = 0; p < pattern_param_count; p++) {
         int16_t row = pattern->paramLocks[trk][p];
         if (row < 0) continue;
 
@@ -669,8 +671,13 @@ void SPSXSeqTrack::merge_from_md(uint8_t trk, MDPattern *pattern) {
         // host NUM_LOCKS (== SPSX_NUM_LOCKS), so this is a 1:1 copy.
         static_assert(MD_PATTERN_LOCK_SLOTS == SPSX_NUM_LOCKS,
                       "ext_locks_params width must match SPSX track lock slots");
-        for (uint8_t i = 0; i < SPSX_NUM_LOCKS; i++) {
+        const uint8_t lock_slot_count =
+            mdPatternLockSlotCountForVersion(pattern->version);
+        for (uint8_t i = 0; i < lock_slot_count; i++) {
             locks_params[i] = pattern->ext_locks_params[trk][i];
+        }
+        for (uint8_t i = lock_slot_count; i < SPSX_NUM_LOCKS; ++i) {
+            locks_params[i] = 0;
         }
 
         // Per-track length/speed override pattern-level defaults

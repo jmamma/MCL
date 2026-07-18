@@ -18,8 +18,8 @@ class MDPattern;
 using SPSXSlideData = StepSeqSlideData;
 using SPSXSeqTrackBase = StepSeqTrack;
 using SPSXSeqTrackCond = StepSeqTrackCond;
-using SPSXSeqSlideTrack = StepSeqSlideTrack;
-using SPSXSeqDataTrack = StepSeqDataTrack;
+using SPSXSeqSlideTrack = BasicStepSeqSlideTrack<SPSX_NUM_LOCKS>;
+using SPSXSeqDataTrack = BasicStepSeqDataTrack<SPSX_NUM_LOCKS>;
 
 // ============================================================================
 // TrigNotes - Note state for MID machines

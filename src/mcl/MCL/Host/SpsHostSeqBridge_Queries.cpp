@@ -19,7 +19,7 @@ void SpsHostSeqBridge::sendTrackSummary(int track) {
     if (!tr) return;
     uint8_t body[7 + 6 * 8];
     body[0] = (uint8_t)track;
-    body[1] = 0x40;                      // ver (SPS-X)
+    body[1] = negotiated_proto_version_ >= kProtoVersion ? 0x41 : 0x40;
     body[2] = tr->length;                // pattern length proxy (effective)
     body[3] = tr->track_length;          // 0 = follow pattern
     body[4] = tr->track_speed;
@@ -42,7 +42,8 @@ void SpsHostSeqBridge::sendTrackDetail(int track) {
     SPSXSeqTrack* tr = spsxTrack(track);
     if (!tr) return;
     uint8_t body[2 + kNumSteps + kNumSteps];
-    body[0] = (uint8_t)track; body[1] = 0x40;
+    body[0] = (uint8_t)track;
+    body[1] = negotiated_proto_version_ >= kProtoVersion ? 0x41 : 0x40;
     for (int s = 0; s < kNumSteps; s++) body[2 + s] = (uint8_t)(int8_t)tr->microtiming[s];
     for (int s = 0; s < kNumSteps; s++) {
         uint8_t c = (uint8_t)(tr->steps[s].cond_id & 0x3F);
@@ -57,7 +58,7 @@ void SpsHostSeqBridge::sendTrackLocks(int track) {
     if (!tr) return;
     // active params, ascending
     uint8_t params[kNumLockParams]; int np = 0;
-    for (int param = 0; param < kNumLockParams; param++)
+    for (int param = 0; param < negotiated_lock_params_; param++)
         if (tr->find_param((uint8_t)param) != 255) params[np++] = (uint8_t)param;
     int colBytes = (np + 6) / 7;
     if (colBytes < 1) colBytes = 1;
@@ -93,7 +94,8 @@ void SpsHostSeqBridge::sendTrackLocks(int track) {
     int e = 0;
     for (int page = 0; page < pageCount; page++) {
         uint8_t body[kMaxBodyRaw]; uint16_t off = 0;
-        body[off++] = (uint8_t)track; body[off++] = 0x40;
+        body[off++] = (uint8_t)track;
+        body[off++] = negotiated_proto_version_ >= kProtoVersion ? 0x41 : 0x40;
         body[off++] = (uint8_t)page; body[off++] = (uint8_t)pageCount;
         body[off++] = (uint8_t)np;
         for (int q = 0; q < np; q++) body[off++] = params[q];
@@ -116,7 +118,7 @@ void SpsHostSeqBridge::sendPatternMeta(uint8_t cmd, uint8_t tag) {
     // optional accent amount for NOTIFY_ACTIVE]. Existing field offsets stay
     // fixed so protocol-v1 peers can ignore the appended capability field.
     uint8_t body[13];
-    body[0] = 0x40;                                  // version
+    body[0] = negotiated_proto_version_ >= kProtoVersion ? 0x41 : 0x40;
     body[1] = 0;                                     // currentPattern (TODO: MD globals)
     body[2] = 0;                                     // kit            (TODO)
     body[3] = spsxLongestTrackLength();              // fake master length
