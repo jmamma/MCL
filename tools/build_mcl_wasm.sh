@@ -16,6 +16,72 @@ set -euo pipefail
 MCL_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DSP_ROOT="$(cd "${MCL_ROOT}/.." && pwd)"
 
+is_wasm_build_input() {
+    local path="$1"
+
+    # These trees live below src/mcl but are deliberately excluded from the
+    # hosted build's source discovery below.
+    case "${path}" in
+        src/mcl/Drivers/TBD/* | src/mcl/Tests/* | src/mcl/build/* | \
+            src/mcl/tools/* | src/mcl/ceph-ansible/*)
+            return 1
+            ;;
+    esac
+
+    case "${path}" in
+        src/mcl/*.c | src/mcl/*.cpp | src/mcl/*.h | \
+            src/platform/desktop_common/*.c | \
+            src/platform/desktop_common/*.cpp | \
+            src/platform/desktop_common/*.h | \
+            src/platform/wasm/*.c | src/platform/wasm/*.cpp | \
+            src/platform/wasm/*.h | src/platform/wasm/sps/*.def | \
+            src/platform/wasm/sps/*.json | \
+            src/resources/rp2040/*.c | src/resources/rp2040/*.cpp | \
+            src/resources/rp2040/*.h | include/*.h | \
+            tools/build_mcl_wasm.sh | tools/wasm_abi_codegen.cpp)
+            return 0
+            ;;
+    esac
+
+    return 1
+}
+
+# A release package must name one Git tree that contains every source input.
+# Development builds can opt out explicitly, but never do so implicitly: the
+# resulting artifact cannot truthfully claim HEAD as its provenance.
+if command -v git >/dev/null 2>&1 &&
+   git -C "${MCL_ROOT}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    DIRTY_BUILD_INPUTS="$({
+        git -C "${MCL_ROOT}" diff --name-only HEAD -- \
+            src/mcl src/platform/desktop_common src/platform/wasm \
+            src/resources/rp2040 include tools/build_mcl_wasm.sh \
+            tools/wasm_abi_codegen.cpp
+        git -C "${MCL_ROOT}" ls-files --others --exclude-standard -- \
+            src/mcl src/platform/desktop_common src/platform/wasm \
+            src/resources/rp2040 include tools/build_mcl_wasm.sh \
+            tools/wasm_abi_codegen.cpp
+    } | LC_ALL=C sort -u | while IFS= read -r path; do
+        if is_wasm_build_input "${path}"; then
+            printf '%s\n' "${path}"
+        fi
+    done)"
+    if [ -n "${DIRTY_BUILD_INPUTS}" ] &&
+       [ "${MCL_WASM_ALLOW_DIRTY:-0}" = "0" ]; then
+        echo "[mcl-wasm] refusing non-reproducible dirty source inputs:" >&2
+        while IFS= read -r path; do
+            printf '  %s\n' "${path}" >&2
+        done <<< "${DIRTY_BUILD_INPUTS}"
+        echo "[mcl-wasm] commit them or set MCL_WASM_ALLOW_DIRTY=1 for a development-only build" >&2
+        exit 1
+    fi
+    if [ -n "${DIRTY_BUILD_INPUTS}" ]; then
+        echo "[mcl-wasm] WARNING: development build includes dirty source inputs"
+    fi
+    SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git -C "${MCL_ROOT}" log -1 --format=%ct)}"
+    export SOURCE_DATE_EPOCH
+fi
+export ZERO_AR_DATE=1
+
 LLVM="${DSP_ROOT}/llvm-build"
 CC="${LLVM}/bin/clang"
 CXX="${LLVM}/bin/clang++"
@@ -52,9 +118,9 @@ ABI_HEADER="${ABI_GENERATED_DIR}/mcl_wasm_exports.generated.h"
 ABI_LINKER_RSP="${ABI_GENERATED_DIR}/wasm_exports.rsp"
 SPEC_SRC="${ABI_GENERATED_DIR}/module.json"
 mkdir -p "${ABI_GENERATED_DIR}"
-if [ ! -x "${ABI_CODEGEN}" ] || [ "${ABI_CODEGEN_SOURCE}" -nt "${ABI_CODEGEN}" ]; then
-    /usr/bin/c++ -std=c++17 -O2 "${ABI_CODEGEN_SOURCE}" -o "${ABI_CODEGEN}"
-fi
+# Build the checked-in C++ generator every time. This avoids reusing an
+# executable produced from another checkout or compiler invocation.
+/usr/bin/c++ -std=c++17 -O2 "${ABI_CODEGEN_SOURCE}" -o "${ABI_CODEGEN}"
 "${ABI_CODEGEN}" "${ABI_SCHEMA}" "${ABI_TEMPLATE}" "${SPEC_SRC}" \
     "${ABI_HEADER}" "${ABI_LINKER_RSP}"
 
@@ -186,33 +252,49 @@ MCL_C=()
 while IFS= read -r f; do MCL_CPP+=("$f"); done < <(
     find "${MCL_ROOT}/src/mcl" -name "*.cpp" \
         ! -path "*/.pio/*" ! -path "*/build/*" ! -path "*/tools/*" \
-        ! -path "*/Drivers/TBD/*" ! -path "*/Tests/*" ! -path "*/ceph-ansible/*"
+        ! -path "*/Drivers/TBD/*" ! -path "*/Tests/*" ! -path "*/ceph-ansible/*" \
+        | LC_ALL=C sort
 )
 while IFS= read -r f; do MCL_C+=("$f"); done < <(
     find "${MCL_ROOT}/src/mcl" -name "*.c" \
         ! -path "*/.pio/*" ! -path "*/build/*" ! -path "*/tools/*" \
-        ! -path "*/ceph-ansible/*"
+        ! -path "*/ceph-ansible/*" | LC_ALL=C sort
 )
 
 DESKTOP_COMMON_CPP=()
 while IFS= read -r f; do DESKTOP_COMMON_CPP+=("$f"); done < <(
-    find "${MCL_ROOT}/src/platform/desktop_common" -name "*.cpp"
+    find "${MCL_ROOT}/src/platform/desktop_common" -name "*.cpp" \
+        | LC_ALL=C sort
 )
 
 WASM_CPP=()
 while IFS= read -r f; do WASM_CPP+=("$f"); done < <(
-    find "${MCL_ROOT}/src/platform/wasm" -name "*.cpp"
+    find "${MCL_ROOT}/src/platform/wasm" -name "*.cpp" | LC_ALL=C sort
 )
 WASM_LIBC_C=("${MCL_ROOT}/src/platform/wasm/libc/libc.c")
 
 RESOURCE_CPP=()
 while IFS= read -r f; do RESOURCE_CPP+=("$f"); done < <(
-    find "${MCL_ROOT}/src/resources/rp2040" -name "*.cpp"
+    find "${MCL_ROOT}/src/resources/rp2040" -name "*.cpp" | LC_ALL=C sort
 )
 
-ADAFRUIT_CPP=(
-    "${MCL_ROOT}/.pio/libdeps/tbd/Adafruit GFX Library/Adafruit_GFX.cpp"
-)
+ADAFRUIT_ROOT="${MCL_ROOT}/.pio/libdeps/tbd/Adafruit GFX Library"
+ADAFRUIT_SOURCE_DIGEST="1ecea977274d5b2b1146f87fb6a8c5bb3f05bec0c616555f85ad14166704536f"
+[ -f "${ADAFRUIT_ROOT}/Adafruit_GFX.cpp" ] || {
+    echo "Adafruit GFX 1.12.1 source is unavailable at ${ADAFRUIT_ROOT}" >&2
+    exit 1
+}
+ADAFRUIT_ACTUAL_DIGEST="$(
+    find "${ADAFRUIT_ROOT}" -type f \( -name '*.cpp' -o -name '*.h' \) \
+        -print | LC_ALL=C sort | while IFS= read -r file; do
+            shasum -a 256 "${file}" | awk '{print $1}'
+        done | shasum -a 256 | awk '{print $1}'
+)"
+if [ "${ADAFRUIT_ACTUAL_DIGEST}" != "${ADAFRUIT_SOURCE_DIGEST}" ]; then
+    echo "Adafruit GFX source checksum mismatch: expected ${ADAFRUIT_SOURCE_DIGEST}, got ${ADAFRUIT_ACTUAL_DIGEST}" >&2
+    exit 1
+fi
+ADAFRUIT_CPP=("${ADAFRUIT_ROOT}/Adafruit_GFX.cpp")
 
 echo "[mcl-wasm] sources: ${#MCL_CPP[@]} cpp, ${#MCL_C[@]} c, ${#DESKTOP_COMMON_CPP[@]} desktop_common, ${#WASM_CPP[@]} wasm, ${#RESOURCE_CPP[@]} resources"
 echo "[mcl-wasm] compiling → ${WASM}"
