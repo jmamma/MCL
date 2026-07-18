@@ -106,7 +106,9 @@ struct smplchunk_t : public chunk_t {
             uint32_t SDS_loop_end) {
     activate<smplchunk_t>(0);
     dwManufacturer = 0;
-    memcpy(&dwProduct, "MCL ", 4);
+    // MCL2 writes standard WAV sample-frame loop indices. Older MCL releases
+    // used "MCL " while storing byte offsets instead.
+    memcpy(&dwProduct, "MCL2", 4);
     dwSamplePeriod = 0;
     dwMIDIUnityNote = 60; // middle C
     dwMIDIPitchFraction = 0;

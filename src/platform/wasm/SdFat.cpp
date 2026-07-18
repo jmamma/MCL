@@ -195,7 +195,20 @@ bool FsFile::truncate(uint32_t length) {
     return host_fs_truncate(handle_, (int32_t)length) >= 0;
 }
 
-bool FsFile::remove()                  { return false; } // require host_fs_remove via SdFat::remove
+bool FsFile::remove() {
+    if (!open_ || is_dir_) return false;
+
+    // The host may not permit unlinking an open file. Close the handle without
+    // clearing path_ first, then remove the same logical path.
+    host_fs_close(handle_);
+    handle_ = -1;
+    open_ = false;
+    bool removed = host_fs_remove(path_) >= 0;
+    is_dir_ = false;
+    name_[0] = '\0';
+    path_[0] = '\0';
+    return removed;
+}
 
 bool FsFile::preAllocate(uint32_t length) {
     if (!open_ || is_dir_) return false;

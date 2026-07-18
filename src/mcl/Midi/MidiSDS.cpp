@@ -188,7 +188,15 @@ struct WavReader : SDSFileReader {
     if (wav->header.smpl.is_active()) {
       wav->header.smpl.to_sds(loopType, loopStart, loopEnd);
       uint16_t block_align = wav->header.fmt.blockAlign;
-      if ((loopEnd > total_samples) && (block_align > 1)) {
+      // MCL 4.70 and earlier tagged files as "MCL " but stored loop points as
+      // byte offsets. MCL2 files and third-party WAVs use standard sample-frame
+      // indices. Both legacy offsets are block-aligned, which also means an
+      // unmarked 5.00/5.01 MCL file whose standard points are both aligned is
+      // inherently ambiguous and will be migrated as legacy.
+      const bool legacy_mcl =
+          memcmp(&wav->header.smpl.dwProduct, "MCL ", 4) == 0;
+      if (legacy_mcl && block_align > 1 &&
+          loopStart % block_align == 0 && loopEnd % block_align == 0) {
         loopStart /= block_align;
         loopEnd /= block_align;
       }
