@@ -53,6 +53,7 @@ public:
   MidiSeqTrack();
 
   void reset();
+  void reset_legacy_program_oneshot() { legacy_program_sent_ = false; }
   void seq(MidiUartClass *uart_);
   void defer_cache_load(uint8_t track_type, GridSlot slot);
   void load_cache();
@@ -137,6 +138,7 @@ public:
 
 private:
   MidiUartClass *port_ = nullptr;
+  bool legacy_program_sent_ = false;
   uint8_t pending_cache_track_type_ = EMPTY_TRACK_TYPE;
   GridSlot pending_cache_slot_ = 255;
 

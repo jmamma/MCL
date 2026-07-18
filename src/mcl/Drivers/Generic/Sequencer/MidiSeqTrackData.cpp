@@ -36,6 +36,20 @@ uint16_t value14_from_value7(uint8_t value7) {
   return (uint16_t)(((uint32_t)value7 * 0x3FFFu + 63u) / 127u);
 }
 
+uint16_t legacy_lock_default(const ExtSeqTrackData &legacy, uint8_t lock_idx,
+                             uint8_t param) {
+  if (param == PARAM_PB) return 8192;
+  if (param == PARAM_CHP || param == PARAM_PRG) return 0;
+  return value14_from_value7(legacy.locks_params_orig[lock_idx]);
+}
+
+uint16_t legacy_lock_value(uint8_t param, uint8_t value) {
+  // The legacy engine sent pitch bend as value << 7, not as a full-range
+  // rescaling of 0..127 onto 0..16383.
+  return param == PARAM_PB ? (uint16_t)value << 7
+                           : value14_from_value7(value);
+}
+
 } // namespace
 
 uint16_t MidiSeqTrackData::add_event(
@@ -292,11 +306,17 @@ void MidiSeqTrackData::import_legacy_ext(const ExtSeqTrackData &legacy,
           continue;
         }
         uint8_t param = legacy.locks_params[lock_idx] - 1;
-        locks[lock_idx].init(lock_type_for_legacy_param(param), param, 0, 0);
+        locks[lock_idx].init(lock_type_for_legacy_param(param), param,
+                             legacy_lock_default(legacy, lock_idx, param),
+                             param == PARAM_PRG
+                                 ? MIDI_SEQ_LOCK_FLAG_LEGACY_PROGRAM
+                                 : 0);
         event.init(MIDI_SEQ_EVENT_LOCK, lock_idx,
-                   value14_from_value7(legacy_event.event_value),
+                   legacy_lock_value(param, legacy_event.event_value),
                    MIDI_SEQ_TIMING_CENTER, SEQ_COND_100PCT,
-                   legacy_event.event_on ? MIDI_SEQ_EVENT_FLAG_SLIDE : 0);
+                   param != PARAM_PRG && legacy_event.event_on
+                       ? MIDI_SEQ_EVENT_FLAG_SLIDE
+                       : 0);
       } else {
         event.init(legacy_event.event_on ? MIDI_SEQ_EVENT_NOTE_ON
                                          : MIDI_SEQ_EVENT_NOTE_OFF,

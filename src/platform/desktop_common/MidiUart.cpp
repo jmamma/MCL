@@ -68,7 +68,9 @@ MidiUartClass::MidiUartClass(uint8_t* external_tx_buffer,
     speed = 31250;
     sendActiveSenseTimer = 0;
     sendActiveSenseTimeout = 0;
-    recvActiveSenseTimer = 0;
+    // No peer has spoken yet. Starting at zero makes MidiActivePeering treat
+    // the first 100 ms of a fast hosted boot as recent MIDI traffic.
+    recvActiveSenseTimer = 0xffff;
     activeSenseEnabled = false;
     mode = 0;
     midi = nullptr;
@@ -79,6 +81,7 @@ void MidiUartClass::init() {
     txRb->init();
     txRb_realtime->init();
     txRb_sidechannel = nullptr;
+    recvActiveSenseTimer = 0xffff;
     in_message_tx_ = 0;
 }
 

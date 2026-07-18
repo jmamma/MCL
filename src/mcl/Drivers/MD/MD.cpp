@@ -1454,6 +1454,11 @@ bool MDClass::probe() {
     get_mutes();
     md_track_select.on();
     activate_enhanced_gui();
+    // CMD_SET_ENGUI has a reply. Complete that exchange before sending the
+    // fire-and-forget enhanced-MIDI command; hosted/cooperative transports
+    // service one request boundary at a time during setup, so stacking both
+    // commands could leave the second one behind the outstanding response.
+    waitBlocking(CALLBACK_TIMEOUT);
     activate_enhanced_midi();
     MD.set_key_repeat(1);
     MD.set_trigleds(0, TRIGLED_EXCLUSIVE);

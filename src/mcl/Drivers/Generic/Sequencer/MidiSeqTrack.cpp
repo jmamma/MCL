@@ -66,6 +66,19 @@ uint16_t value14_from_value7(uint8_t value7) {
   return (uint16_t)(((uint32_t)value7 * 0x3FFFu + 63u) / 127u);
 }
 
+uint16_t legacy_lock_default(const ExtSeqTrackData &legacy, uint8_t lock_idx,
+                             uint8_t param) {
+  if (param == PARAM_PB) return 8192;
+  if (param == PARAM_CHP || param == PARAM_PRG) return 0;
+  return value14_from_value7(legacy.locks_params_orig[lock_idx]);
+}
+
+uint16_t legacy_lock_value(uint8_t param, uint8_t value) {
+  // Preserve the legacy engine's exact pitch-bend conversion.
+  return param == PARAM_PB ? (uint16_t)value << 7
+                           : value14_from_value7(value);
+}
+
 uint16_t clamp_value14(int32_t value) {
   if (value < 0) return 0;
   if (value > 0x3FFF) return 0x3FFF;
@@ -103,6 +116,7 @@ MidiSeqTrack::MidiSeqTrack() : SeqTrackCond() {
 
 void MidiSeqTrack::reset() {
   SeqTrackCond::reset();
+  reset_legacy_program_oneshot();
   tick_counter = 0;
   mod12_counter = 0;
   memset(ignore_notes, 0, sizeof(ignore_notes));
@@ -185,6 +199,9 @@ int32_t MidiSeqTrack::event_tick(uint8_t step,
 }
 
 void MidiSeqTrack::set_channel(uint8_t channel_) {
+  // Loading every MIDI-backed track re-applies its channel. This also resets
+  // the legacy program gate when the runtime track is rebound or rerouted.
+  reset_legacy_program_oneshot();
   seq_data.channel = channel_ < PTC_EXT_ROUTE_CHANNEL_END ? channel_
                                                           : (channel_ & 0x0F);
 }
@@ -242,6 +259,13 @@ void MidiSeqTrack::remove_event(uint16_t index) {
     start += bucket;
   }
   MidiSeqEvent event = seq_data.events[index];
+  if (event.type == MIDI_SEQ_EVENT_LOCK &&
+      event.target < MIDI_SEQ_NUM_LOCKS &&
+      (seq_data.locks[event.target].flags &
+       MIDI_SEQ_LOCK_FLAG_LEGACY_PROGRAM)) {
+    // Legacy editing cleared pgm_oneshot when a program event was removed.
+    reset_legacy_program_oneshot();
+  }
   seq_data.remove_event(index);
   if (step < step_count && cur_event_idx > 0) {
     cur_event_idx--;
@@ -828,7 +852,8 @@ void MidiSeqTrack::reset_params() {
   if (!port_) return;
   for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
     const auto &lock = seq_data.locks[i];
-    if (!lock.is_active()) continue;
+    if (!lock.is_active() ||
+        (lock.flags & MIDI_SEQ_LOCK_FLAG_LEGACY_PROGRAM)) continue;
     MidiSeqEvent event;
     event.init(MIDI_SEQ_EVENT_LOCK, i, lock.default_value);
     send_lock_value(lock, event);
@@ -865,7 +890,14 @@ void MidiSeqTrack::send_lock_value(const MidiSeqLockDefinition &lock,
     port_->sendChannelPressure(ch, value7);
     break;
   case MIDI_SEQ_LOCK_PROGRAM_CHANGE:
+    if ((lock.flags & MIDI_SEQ_LOCK_FLAG_LEGACY_PROGRAM) &&
+        legacy_program_sent_) {
+      break;
+    }
     port_->sendProgramChange(ch, value7);
+    if (lock.flags & MIDI_SEQ_LOCK_FLAG_LEGACY_PROGRAM) {
+      legacy_program_sent_ = true;
+    }
     break;
   case MIDI_SEQ_LOCK_POLY_PRESSURE:
     port_->sendPolyKeyPressure(ch, (uint8_t)lock.parameter, value7);
@@ -1184,6 +1216,7 @@ void MidiSeqTrack::clear_track(bool) {
   seq_data.length = len;
   seq_data.speed = spd;
   memset(oneshot_mask, 0, sizeof(oneshot_mask));
+  reset_legacy_program_oneshot();
   memset(ignore_notes, 0, sizeof(ignore_notes));
   memset(mute_mask, 0, sizeof(mute_mask));
   length = len;
@@ -1219,6 +1252,7 @@ void MidiSeqTrack::transpose(int8_t offset) {
 
 void MidiSeqTrack::import_legacy_ext(const ExtSeqTrackData &legacy,
                                      const GridLink &link) {
+  reset_legacy_program_oneshot();
   seq_data.clear();
   seq_data.channel = legacy.channel;
   seq_data.length = link.length ? link.length : 16;
@@ -1252,11 +1286,17 @@ void MidiSeqTrack::import_legacy_ext(const ExtSeqTrackData &legacy,
         }
         uint8_t param = legacy.locks_params[lock_idx] - 1;
         seq_data.locks[lock_idx].init(lock_type_for_legacy_param(param), param,
-                                      0, 0);
+                                      legacy_lock_default(legacy, lock_idx,
+                                                          param),
+                                      param == PARAM_PRG
+                                          ? MIDI_SEQ_LOCK_FLAG_LEGACY_PROGRAM
+                                          : 0);
         event.init(MIDI_SEQ_EVENT_LOCK, lock_idx,
-                   value14_from_value7(legacy_event.event_value),
+                   legacy_lock_value(param, legacy_event.event_value),
                    MIDI_SEQ_TIMING_CENTER, SEQ_COND_100PCT,
-                   legacy_event.event_on ? MIDI_SEQ_EVENT_FLAG_SLIDE : 0);
+                   param != PARAM_PRG && legacy_event.event_on
+                       ? MIDI_SEQ_EVENT_FLAG_SLIDE
+                       : 0);
       } else {
         event.init(legacy_event.event_on ? MIDI_SEQ_EVENT_NOTE_ON
                                          : MIDI_SEQ_EVENT_NOTE_OFF,
