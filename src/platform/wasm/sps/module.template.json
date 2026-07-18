@@ -19,6 +19,14 @@
   "storage": {
     "root": "data"
   },
+  "capabilities": {
+    "spsx": {
+      "track_params": 37,
+      "kit_wire_version": 66,
+      "pattern_wire_version": 65,
+      "routed_fx_param_bytes": 32
+    }
+  },
   "build": {
     "script": "tools/build_mcl_wasm.sh",
     "package": "build_wasm/package/mcl"
