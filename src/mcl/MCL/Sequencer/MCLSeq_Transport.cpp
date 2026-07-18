@@ -370,6 +370,9 @@ bool MCLSeq::switch_to_spsx() {
     spsx_tracks[i].seq_class = this;
     spsx_tracks[i].reset();
   }
+  // Preserve the active MD pattern's global accent strength when the live
+  // engine changes representation. Grid loads may subsequently replace it.
+  set_spsx_accent_amount((uint8_t)(MD.pattern.accentAmount >> 3), false);
   using_spsx_tracks = true;
   configure_clock_interpolation();
   neighbor_trig_mask = 0;

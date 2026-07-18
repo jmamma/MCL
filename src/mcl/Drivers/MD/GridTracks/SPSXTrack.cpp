@@ -244,10 +244,14 @@ void SPSXTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   // mixer-owned unless it is explicitly driven by automation or fades.
   MD.insertMachineInKit(tracknumber, &machine, false);
   load_seq_data(seq_track);
+  if (tracknumber == 0)
+    mcl_seq.set_spsx_accent_amount((uint8_t)(reserved & 0x0F));
 }
 
 void SPSXTrack::load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) {
   load_seq_data(seq_track);
+  if (tracknumber == 0)
+    mcl_seq.set_spsx_accent_amount((uint8_t)(reserved & 0x0F));
 }
 
 void SPSXTrack::paste_track(uint8_t src_track, uint8_t dest_track,
@@ -306,6 +310,11 @@ bool SPSXTrack::store_in_grid(GridSlot column, GridRow row,
                               bool online, Grid *grid) {
   active = MDSPSX_TRACK_TYPE;
   uint8_t tracknumber = column & 0x0F;
+  // Store the pattern-global amount in every SPS-X track header so a row
+  // remains self-contained. Only destination track zero applies it on load.
+  reserved = (uint8_t)(mcl_seq.spsx_accent_amount & 0x0F);
+  if (merge == SAVE_MD_PATTERN_IMPORT)
+    reserved = (uint8_t)((MD.pattern.accentAmount >> 3) & 0x0F);
   SeqTrack::store_mod_data(seq_storage.mod(), true, tracknumber);
 
 #if !defined(__AVR__)

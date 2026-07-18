@@ -65,6 +65,10 @@ public:
 
 #if !defined(__AVR__)
   SPSXSeqTrack spsx_tracks[NUM_MD_TRACKS];
+  // SPS-X accent strength is pattern-global (0..15). Accent membership stays
+  // per track in spsx_tracks[].accent_mask; this scalar is persisted with the
+  // SPS-X grid row and mirrored to the SPS host through PATTERN_META.
+  uint8_t spsx_accent_amount = 0;
   // Engine-mode flag: true when the sequencer is running the SPSX track
   // engine (spsx_tracks[]) instead of legacy md_tracks[]. Distinct from
   // MD.is_spsx (firmware capability) — readers asking "what does the engine
@@ -74,6 +78,7 @@ public:
   // refused (transport playing). Callers must stop transport first.
   bool switch_to_spsx();
   bool switch_to_legacy();
+  void set_spsx_accent_amount(uint8_t amount, bool notify_host = true);
 #else
   // AVR has no SPSX engine. Provide a constant so portable readers compile.
   static constexpr bool using_spsx_tracks = false;

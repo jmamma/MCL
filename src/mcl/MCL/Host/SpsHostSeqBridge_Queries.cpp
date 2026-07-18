@@ -17,14 +17,14 @@ void SpsHostSeqBridge::onReqTrackSummary(uint8_t tag, const uint8_t* b, uint16_t
 void SpsHostSeqBridge::sendTrackSummary(int track) {
     SPSXSeqTrack* tr = spsxTrack(track);
     if (!tr) return;
-    uint8_t body[7 + 5 * 8];
+    uint8_t body[7 + 6 * 8];
     body[0] = (uint8_t)track;
     body[1] = 0x40;                      // ver (SPS-X)
     body[2] = tr->length;                // pattern length proxy (effective)
     body[3] = tr->track_length;          // 0 = follow pattern
     body[4] = tr->track_speed;
     body[5] = 0;                         // scale (TODO: from pattern)
-    body[6] = 0;                         // swing amount (TODO)
+    body[6] = tr->swing_amount;
     uint8_t* m = body + 7;
     spsSeqPutU64(m + 0 * 8, tr->trig_mask);
     spsSeqPutU64(m + 1 * 8, tr->slide_mask);
@@ -34,6 +34,7 @@ void SpsHostSeqBridge::sendTrackSummary(int track) {
     for (int s = 0; s < kNumSteps; s++)
         if (tr->steps[s].locks != 0) lockPresent |= (1ULL << s);
     spsSeqPutU64(m + 4 * 8, lockPresent);
+    spsSeqPutU64(m + 5 * 8, tr->accent_mask);
     sendFrame(CMD_TRACK_SUMMARY, 0, body, (uint16_t)sizeof body);
 }
 
@@ -111,8 +112,10 @@ void SpsHostSeqBridge::sendTrackLocks(int track) {
 }
 
 void SpsHostSeqBridge::sendPatternMeta(uint8_t cmd, uint8_t tag) {
-    // PATTERN_META(10) [+ activeTrack + transport for NOTIFY_ACTIVE]
-    uint8_t body[12];
+    // PATTERN_META(10 + optional accent amount) [+ activeTrack + transport +
+    // optional accent amount for NOTIFY_ACTIVE]. Existing field offsets stay
+    // fixed so protocol-v1 peers can ignore the appended capability field.
+    uint8_t body[13];
     body[0] = 0x40;                                  // version
     body[1] = 0;                                     // currentPattern (TODO: MD globals)
     body[2] = 0;                                     // kit            (TODO)
@@ -125,9 +128,11 @@ void SpsHostSeqBridge::sendPatternMeta(uint8_t cmd, uint8_t tag) {
     if (cmd == CMD_NOTIFY_ACTIVE) {
         body[10] = 0;                                // activeTrack    (TODO)
         body[11] = 0;                                // transport      (TODO)
-        sendFrame(cmd, tag, body, 12);
+        body[12] = mcl_seq.spsx_accent_amount;
+        sendFrame(cmd, tag, body, 13);
     } else {
-        sendFrame(cmd, tag, body, 10);
+        body[10] = mcl_seq.spsx_accent_amount;
+        sendFrame(cmd, tag, body, 11);
     }
 }
 

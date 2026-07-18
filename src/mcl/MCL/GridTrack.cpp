@@ -19,7 +19,10 @@ bool GridTrack::write_grid(void *data, size_t len, GridSlot column, GridRow row,
 
 void GridTrack::stamp_storage_version() {
   version = 0;
-  reserved = 0;
+  // `reserved` is owner-defined storage metadata. It used to be cleared here,
+  // which made the byte impossible for a concrete track type to use even
+  // though it is part of the persisted header. Constructors/migrations still
+  // initialise it to zero; preserve an explicitly assigned value on save.
   if (proj.version == PROJ_VERSION) {
     version = storage_version();
   }

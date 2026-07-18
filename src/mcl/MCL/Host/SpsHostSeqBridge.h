@@ -82,6 +82,7 @@ private:
     bool applyClrLock(const uint8_t* b, uint16_t n);
     bool applyClearStepLocks(const uint8_t* b, uint16_t n);
     bool applyClearStepRange(const uint8_t* b, uint16_t n);
+    bool applyStepClipboard(const uint8_t* b, uint16_t n);
     bool applySetTrackProp(const uint8_t* b, uint16_t n);
     bool applySetPatternProp(const uint8_t* b, uint16_t n);
     bool applyExtAddNote(const uint8_t* b, uint16_t n);

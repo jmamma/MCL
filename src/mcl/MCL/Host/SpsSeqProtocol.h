@@ -120,6 +120,7 @@ enum Cmd {
     CMD_LFO_SET_MASK     = 0x79,  // H->M  lfo_device, track, step, value
     CMD_LFO_ACTION       = 0x7A,  // H->M  lfo_device, track, action
     CMD_CLEAR_STEP_RANGE = 0x7B,  // H->M  track_mask(2), start_step, step_count
+    CMD_STEP_CLIPBOARD   = 0x7C,  // H->M  action, scope, track, page, step
 
     CMD_NOTIFY_TRANSPORT = 0x70,  // M->H  running, master_step, sub_tick(2)
     CMD_NOTIFY_DIRTY     = 0x71,  // M->H  track, regions
@@ -140,8 +141,8 @@ enum Caps {
     CAP_DETAIL        = 1 << 2,
     CAP_PER_TRACK_LEN = 1 << 3,
     CAP_BATCH         = 1 << 4,
-    CAP_PER_TRACK_PH  = 1 << 5,
-    CAP_AUTOMATION    = 1 << 6,
+    CAP_STEP_CLIPBOARD= 1 << 5,
+    CAP_ACCENT        = 1 << 6,
     CAP_EXT_NOTES     = 1 << 7,
     CAP_PTC_ARP       = 1 << 8,
     CAP_EXT_LOCKS     = 1 << 9,
@@ -278,10 +279,25 @@ enum WMask {
     WMASK_SLIDE         = 2,
     WMASK_SWING         = 3,
     WMASK_LOCKS_ON_STEP = 4,  // read-only "step has >=1 lock"; not a SET_STEP target
-    WMASK_COUNT         = 5
-    // No accent (MCL has no accent) and NO lock-enable gate: host MASK_LOCK toggles
-    // steps[].locks_enabled, but MCL has no such bit (descriptor reserved:1) and its
-    // STEPSEQ_MASK_LOCK setter is a no-op. Lock VALUES are edited via SET_LOCK/CLR_LOCK.
+    WMASK_ACCENT        = 5,
+    WMASK_COUNT         = 6
+    // No lock-enable gate: host MASK_LOCK toggles steps[].locks_enabled, but
+    // MCL has no such bit (descriptor reserved:1) and its STEPSEQ_MASK_LOCK
+    // setter is a no-op. Lock VALUES are edited via SET_LOCK/CLR_LOCK.
+};
+
+enum StepClipboardAction {
+    STEP_CLIP_COPY  = 0,
+    STEP_CLIP_PASTE = 1,
+    STEP_CLIP_CLEAR = 2
+};
+
+enum StepClipboardScope {
+    STEP_CLIP_STEP     = 0,
+    STEP_CLIP_PAGE     = 1,
+    STEP_CLIP_TRACK    = 2,
+    STEP_CLIP_ALL_PAGE = 3,
+    STEP_CLIP_ALL      = 4
 };
 
 // ---- NOTIFY_DIRTY region bits ----
@@ -313,7 +329,7 @@ enum ExtTrackProp {
 };
 enum PatternProp {
     PPROP_LENGTH = 0, PPROP_SCALE = 1, PPROP_TEMPO = 2,
-    PPROP_KIT = 3, PPROP_SCALE_MODE = 4
+    PPROP_KIT = 3, PPROP_SCALE_MODE = 4, PPROP_ACCENT_AMOUNT = 5
 };
 
 // Shared SPS wire helpers with step-protocol names kept for compatibility.

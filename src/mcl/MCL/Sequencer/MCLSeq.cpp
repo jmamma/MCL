@@ -265,6 +265,7 @@ void MCLSeq::setup() {
   configure_clock_interpolation();
   TrackLoadFadeRunner::clear();
 #if !defined(__AVR__)
+  spsx_accent_amount = 0;
   sps_host_arr_bridge.setup();  // register SPS host arranger cell listener
   sps_host_seq_bridge.setup();  // register SPS host sequencer-control listener
 #endif
@@ -385,6 +386,16 @@ void MCLSeq::configure_clock_interpolation() {
   legacy_tick_counter = 0;
 #endif
 }
+
+#if !defined(__AVR__)
+void MCLSeq::set_spsx_accent_amount(uint8_t amount, bool notify_host) {
+  if (amount > 15) amount = 15;
+  if (spsx_accent_amount == amount) return;
+  spsx_accent_amount = amount;
+  if (notify_host)
+    sps_host_seq_bridge.notifyDirty(0xFF, spsseq::DIRTY_META);
+}
+#endif
 
 bool MCLSeq::legacy_tick_due() {
 #if !defined(__AVR__)

@@ -52,6 +52,12 @@ void SpsHostSeqBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
             if (applyClearStepRange(b, n))
                 notifyDirty(0xFF, (uint8_t)(DIRTY_SUMMARY | DIRTY_DETAIL | DIRTY_LOCKS));
             break;
+        case CMD_STEP_CLIPBOARD:
+            if (applyStepClipboard(b, n) && n >= 1 &&
+                b[0] != STEP_CLIP_COPY)
+                notifyDirty(0xFF, (uint8_t)(DIRTY_SUMMARY | DIRTY_DETAIL |
+                                            DIRTY_LOCKS | DIRTY_META));
+            break;
         case CMD_SET_TRACK_PROP:  if (applySetTrackProp(b, n))   { if (n) notifyDirty(b[0], DIRTY_SUMMARY); } break;
         case CMD_SET_PATTERN_PROP:if (applySetPatternProp(b, n)) { notifyDirty(0xFF, DIRTY_META); }          break;
         case CMD_EXT_ADD_NOTE:
@@ -216,7 +222,8 @@ void SpsHostSeqBridge::onHello(uint8_t tag, const uint8_t* b, uint16_t n) {
     if (n < 1 || b[0] == 0) return;
     ready_ = true;
     uint16_t caps = CAP_SPSX | CAP_LOCKS | CAP_DETAIL | CAP_PER_TRACK_LEN |
-                    CAP_BATCH | CAP_EXT_NOTES | CAP_PTC_ARP | CAP_EXT_LOCKS |
+                    CAP_BATCH | CAP_STEP_CLIPBOARD | CAP_ACCENT |
+                    CAP_EXT_NOTES | CAP_PTC_ARP | CAP_EXT_LOCKS |
                     CAP_EXT_NOTE_TOGGLE | CAP_MIXER | CAP_PERF_PAGE |
                     CAP_LFO_PAGE;
     uint8_t body[7];
