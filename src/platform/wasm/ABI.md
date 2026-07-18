@@ -81,6 +81,19 @@ apply absolute SPS tick96 transport positions after DAW seek/loop/start
 discontinuities. It also adds diagnostic clock IDs `300..303` for headless
 sync probes.
 
+Minor 9 adds `host_headless_boot()`. Product composition now selects whether
+MCL auto-loads persistent storage or exposes its normal startup/project UI, so
+the same module artifact can serve embedded and interactive hosts.
+
+Minor 10 adds `mcl_panel_leds_offset()` and `mcl_panel_led_count()`. The
+returned stable array contains logical panel outputs as packed `0xRRGGBB`
+values; hosts copy it after a GUI tick just as they copy the OLED framebuffer.
+
+Minor 11 adds optional `mcl_panel_encoder_values()`. It packs the four active
+page encoder values into four bytes in the 0..127 display domain; `0xff` marks
+an unassigned slot. Host encoder deltas are logical steps and MCL applies the
+active encoder's resolution before updating it.
+
 ## Naming convention
 
 - Host → wasm (imports MCL calls): `host_*`. Registered with WAMR under

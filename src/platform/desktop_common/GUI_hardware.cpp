@@ -27,7 +27,15 @@ void ButtonsClass::poll(uint8_t /*sr*/) {
 void EncodersClass::poll(uint16_t /*sr*/) {
     const uint32_t button_mask = mcl_platform_encoder_button_mask();
     for (uint8_t i = 0; i < GUI_NUM_ENCODERS; ++i) {
-        int delta = (int)encoders[i].normal + mcl_platform_encoder_delta(i);
+        int delta = (int)encoders[i].normal;
+#if defined(PLATFORM_WASM)
+        // Hosted controls arrive as complete detents. Keep them out of the
+        // signed 8-bit physical sample so the active page can apply all of
+        // them with its own encoder semantics.
+        logical_steps[i] = mcl_platform_encoder_delta(i);
+#else
+        delta += mcl_platform_encoder_delta(i);
+#endif
         delta = delta > 127 ? 127 : (delta < -128 ? -128 : delta);
         encoders[i].normal = (int8_t)delta;
         encoders[i].button = (button_mask & (1u << i)) != 0 ? 1 : 0;

@@ -81,8 +81,8 @@ void platform_poll();
 void platform_wait_poll();
 
 // Hosted platforms can request non-interactive boot behavior. Native desktop
-// keeps the normal firmware UI flow; wasm is driven by the SPS host and must not
-// block forever on modal boot pages.
+// keeps the normal firmware UI flow; wasm delegates the choice to its host so
+// embedded products can auto-load while interactive products show startup UI.
 #define MCL_HAS_PLATFORM_HEADLESS_BOOT 1
 bool mcl_platform_headless_boot();
 

@@ -10,7 +10,7 @@
   "abi": {
     "id": "sps.panel_device.v1",
     "version": 1,
-    "min_minor": 8,
+    "min_minor": 11,
     "import_module": "env"
   },
   "service": {
@@ -59,7 +59,8 @@
       "down": 15,
       "right": 16,
       "trig_1": 17,
-      "scale": 36
+      "scale": 36,
+      "tbd_mode": 37
     },
     "mappings": {
       "record": "record",
@@ -73,6 +74,7 @@
       "enter": "button4",
       "escape": "button1",
       "scale": "scale",
+      "extended": "tbd_mode",
       "bank_group": "page",
       "bankgroup": "page",
       "page": "page",

@@ -35,6 +35,11 @@ uint32_t host_micros(void);
 // sleeps/yields a little so a modal page does not spin a CPU core.
 void host_yield(void);
 
+// Product-selected boot policy. Embedded/headless hosts return non-zero and
+// MCL auto-loads persistent storage; interactive hosts show the normal
+// startup/project UI.
+int32_t host_headless_boot(void);
+
 // ---- File I/O (back the SdFat shim) --------------------------------------
 //
 // File handles are positive int32. Negative = error. Mode bits match

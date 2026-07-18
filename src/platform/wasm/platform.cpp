@@ -140,7 +140,7 @@ void platform_wait_poll() {
 }
 
 bool mcl_platform_headless_boot() {
-    return true;
+    return host_headless_boot() != 0;
 }
 
 uint64_t mcl_platform_button_mask() {
@@ -148,6 +148,8 @@ uint64_t mcl_platform_button_mask() {
 }
 
 int mcl_platform_encoder_delta(uint8_t encoder_id) {
+    if (encoder_id >= GUI_NUM_ENCODERS)
+        return 0;
     return (int)host_input_encoder_delta((int32_t)encoder_id);
 }
 

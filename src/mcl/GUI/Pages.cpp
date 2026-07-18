@@ -44,16 +44,28 @@ LightPage::LightPage(Encoder *e1, Encoder *e2, Encoder *e3, Encoder *e4) {
 
 void LightPage::update() {
   encoder_t _encoders[GUI_NUM_ENCODERS];
+#if defined(PLATFORM_WASM)
+  int logical_steps[GUI_NUM_ENCODERS];
+#endif
 
   USE_LOCK();
   SET_LOCK();
   memcpy(_encoders, Encoders.encoders, sizeof(_encoders));
+#if defined(PLATFORM_WASM)
+  for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
+    logical_steps[i] = Encoders.takeLogicalSteps(i);
+  }
+#endif
   Encoders.clearEncoders();
   CLEAR_LOCK();
 
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
     if (encoders[i] != NULL) {
       encoders[i]->update(_encoders + i);
+#if defined(PLATFORM_WASM)
+      encoders[i]->applyLogicalSteps(logical_steps[i],
+                                     _encoders[i].button != 0);
+#endif
       if (encoders[i]->hasChanged()) {
         GUI.wake_screen_saver();
         g_clock_minutes = 0;
@@ -277,15 +289,7 @@ void LightPage::applyMouseEncoderDelta(uint8_t i, int16_t ticks, bool fast) {
   }
 
   Encoder *encoder = encoders[i];
-  const int8_t step = ticks > 0 ? 1 : -1;
-  while (ticks != 0) {
-    encoder_t mouse_encoder = {};
-    mouse_encoder.normal =
-        step * (encoder->rot_res * ENCODER_RES_MULTIPLIER + 1);
-    mouse_encoder.button = fast;
-    encoder->update(&mouse_encoder);
-    ticks -= step;
-  }
+  encoder->applyLogicalSteps(ticks, fast);
 
   encoder_focus = i;
   GUI.wake_screen_saver();

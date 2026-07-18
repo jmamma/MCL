@@ -64,3 +64,29 @@ int Encoder::update(encoder_t *enc) {
     cur += inc;
     return cur;
 }
+
+int Encoder::applyLogicalSteps(int steps, bool fast) {
+    if (steps == 0) {
+        return cur;
+    }
+
+    const int direction = steps > 0 ? 1 : -1;
+    int remainingSteps = abs(steps);
+    const int rawUnitsPerStep = rot_res * ENCODER_RES_MULTIPLIER + 1;
+
+    // update() remains the single owner of each encoder type's value
+    // semantics. Feed it one complete detent at a time, splitting unusually
+    // large resolutions so encoder_t::normal never overflows its int8 field.
+    while (remainingSteps-- > 0) {
+        int remainingRawUnits = rawUnitsPerStep;
+        while (remainingRawUnits > 0) {
+            const int chunk = remainingRawUnits > 127 ? 127 : remainingRawUnits;
+            encoder_t logical = {};
+            logical.normal = (int8_t)(direction * chunk);
+            logical.button = fast ? 1 : 0;
+            update(&logical);
+            remainingRawUnits -= chunk;
+        }
+    }
+    return cur;
+}

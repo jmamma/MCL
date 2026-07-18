@@ -70,6 +70,15 @@ LightPage *GuiClass::currentPage() {
   return page;
 }
 
+LightPage *GuiClass::encoderPage() {
+#ifdef MCL_HAS_TBD_DRIVER
+  if (overlayCapturesEncoders()) {
+    return overlay;
+  }
+#endif
+  return currentPage();
+}
+
 bool GuiClass::handleTopEvent(gui_event_t *event) {
 #ifdef MCL_HAS_EXTENDED_PANEL_INPUT
   // Extended panel input (TBD hardware or wasm host buttons) preempts the

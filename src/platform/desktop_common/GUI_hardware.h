@@ -27,14 +27,27 @@ public:
 class EncodersClass {
 public:
     encoder_t encoders[GUI_NUM_ENCODERS] = {};
+#if defined(PLATFORM_WASM)
+    int logical_steps[GUI_NUM_ENCODERS] = {};
+#endif
 
     EncodersClass() = default;
     void poll(uint16_t sr);
     void clearEncoders() {
         for (auto& e : encoders) { e.normal = 0; e.button = 0; }
+#if defined(PLATFORM_WASM)
+        for (auto& steps : logical_steps) { steps = 0; }
+#endif
     }
 
     ALWAYS_INLINE() int8_t getNormal(uint8_t i) { return encoders[i].normal; }
+#if defined(PLATFORM_WASM)
+    ALWAYS_INLINE() int takeLogicalSteps(uint8_t i) {
+        const int steps = logical_steps[i];
+        logical_steps[i] = 0;
+        return steps;
+    }
+#endif
     ALWAYS_INLINE() int8_t limitValue(int8_t v, int8_t lo, int8_t hi) {
         return v > hi ? hi : (v < lo ? lo : v);
     }

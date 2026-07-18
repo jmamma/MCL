@@ -51,3 +51,15 @@ int MCLRelativeEncoder::update(encoder_t *enc) {
   }
   return cur;
 }
+
+int MCLRelativeEncoder::applyLogicalSteps(int steps, bool fast) {
+  const int speed = fast ? fast_speed : 1;
+  const int delta = steps * speed;
+  const int combined = cur + delta;
+
+  // Relative consumers expose the result through an int8 delta. Saturating
+  // preserves direction for an extreme single-frame gesture instead of
+  // wrapping it into the opposite direction.
+  cur = combined > 127 ? 127 : (combined < -127 ? -127 : combined);
+  return cur;
+}

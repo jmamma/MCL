@@ -40,10 +40,13 @@ typedef struct encoder_s {
 // C++-only because helpers.c doesn't need them.
 inline void toggleLed()  {}
 inline void toggleLed2() {}
-inline void setLed()     {}
-inline void clearLed()   {}
-inline void setLed2()    {}
-inline void clearLed2()  {}
+// Virtual front-panel status LEDs. Desktop/WASM implements these through
+// GUI_hardware.led so the hosting product can render the same state as the
+// physical target.
+void setLed();
+void clearLed();
+void setLed2();
+void clearLed2();
 #endif
 
 // USB / SPI mode macros — empty stubs.

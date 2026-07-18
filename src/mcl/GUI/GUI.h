@@ -52,6 +52,9 @@ public:
 
   // Page management methods
   LightPage *currentPage();
+  // The page whose four logical encoders currently own the physical panel.
+  // A transient overlay may capture them without replacing currentPage().
+  LightPage *encoderPage();
   void setPage(LightPage *page);
   void pushPage(LightPage *page);
   void popPage(bool re_init = true);

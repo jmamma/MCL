@@ -9,6 +9,7 @@
 #include "SPI.h"
 #include "HardwareSerial.h"
 #include "DebugBuffer.h"
+#include "GUI_hardware.h"
 
 extern "C" {
 uint8_t desktop_gpio_state[256] = {0};
@@ -40,3 +41,19 @@ DebugBuffer    debugBuffer(&Serial);
 // mode switch — also irrelevant.
 void change_usb_mode(uint8_t /*mode*/) {}
 void picow_init() {}
+
+void setLed() {
+    GUI_hardware.led.set_led(STRIP_LED1);
+}
+
+void clearLed() {
+    GUI_hardware.led.clear_led(STRIP_LED1);
+}
+
+void setLed2() {
+    GUI_hardware.led.set_led(STRIP_LED2);
+}
+
+void clearLed2() {
+    GUI_hardware.led.clear_led(STRIP_LED2);
+}

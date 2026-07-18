@@ -28,6 +28,7 @@
 #include "Devices/DeviceManager.h"
 #include "MCLSysConfig.h"
 #include "GUI/MCLMenus.h"
+#include "ResourceManager.h"
 #include "MD.h"
 #include "MDSysex.h"
 #include "platform.h"
@@ -63,7 +64,7 @@ extern volatile uint16_t g_clock_minutes;
 
 // ABI version. Bump major when removing/renaming/changing signatures.
 static constexpr uint16_t MCL_ABI_MAJOR = 1;
-static constexpr uint16_t MCL_ABI_MINOR = 8;
+static constexpr uint16_t MCL_ABI_MINOR = 11;
 
 static uint32_t s_timer1_remainder_us = 0;
 static uint32_t s_timer2_remainder_us = 0;
@@ -79,6 +80,14 @@ static uint8_t s_sysex_ingress_trace_lines = 0;
 static constexpr uint16_t kDebugMenuSnapshotMaxBytes = 255;
 static char s_debug_menu_snapshot[kDebugMenuSnapshotMaxBytes + 1];
 static uint16_t s_debug_menu_snapshot_len = 0;
+static ResourceManager s_debug_saved_resources;
+static Oled s_debug_saved_oled;
+static MCLEncoder s_debug_menu_value_encoder(0, 17, ENCODER_RES_SYS);
+static MCLEncoder s_debug_menu_entry_encoder(0, 17, ENCODER_RES_SYS);
+static MenuPage<mcl_config_page_N> s_debug_mcl_config_page(
+    &s_debug_menu_value_encoder, &s_debug_menu_entry_encoder);
+static SystemMenuPage s_debug_system_page(&s_debug_menu_value_encoder,
+                                          &s_debug_menu_entry_encoder);
 
 struct PendingHostMidiByte {
     bool valid = false;
@@ -114,38 +123,63 @@ static void debug_menu_copy_snapshot(const char* text) {
     s_debug_menu_snapshot[s_debug_menu_snapshot_len] = '\0';
 }
 
-static uint16_t debug_menu_build_page_snapshot(PageIndex page,
-                                               uint8_t selected_item) {
-    const PageIndex previous_page = mcl.currentPage();
+static void debug_menu_snapshot_begin() {
+    // Render with private menu/page instances. Saving the resource manager and
+    // OLED by value keeps this diagnostic from disturbing the live page stack,
+    // shared menu encoders, resource bindings, or framebuffer.
+    s_debug_saved_resources = R;
+    s_debug_saved_oled = oled_display;
+    R.Clear();
+    R.use_menu_options();
+    R.use_menu_layouts();
+}
 
-    if (page == MCL_CONFIG_PAGE)
-        mcl_config_page.select_item(selected_item);
-    else if (page == SYSTEM_PAGE)
-        system_page.select_item(selected_item);
-
-    mcl.setPage(page);
-    oled_display.debugCaptureTextBegin();
-    GUI.display();
+static uint16_t debug_menu_snapshot_end() {
     debug_menu_copy_snapshot(oled_display.debugCaptureTextEnd());
-
-    if (previous_page < NUM_PAGES && previous_page != page)
-        mcl.setPage(previous_page);
-
+    oled_display = s_debug_saved_oled;
+    R = s_debug_saved_resources;
     return s_debug_menu_snapshot_len;
 }
 
 static uint16_t debug_menu_build_mcl_config_snapshot() {
-    return debug_menu_build_page_snapshot(MCL_CONFIG_PAGE, 0);
+    debug_menu_snapshot_begin();
+    memset(s_debug_mcl_config_page.menu.disabled_entry_mask, 0,
+           sizeof(s_debug_mcl_config_page.menu.disabled_entry_mask));
+    s_debug_mcl_config_page.set_layout(R.menu_layouts->mclconfig_menu_layout);
+    s_debug_mcl_config_page.select_item(0);
+    oled_display.debugCaptureTextBegin();
+    s_debug_mcl_config_page.display();
+    return debug_menu_snapshot_end();
 }
 
 static uint16_t debug_menu_build_system_snapshot() {
-    return debug_menu_build_page_snapshot(SYSTEM_PAGE, 0);
+    debug_menu_snapshot_begin();
+    memset(s_debug_system_page.menu.disabled_entry_mask, 0,
+           sizeof(s_debug_system_page.menu.disabled_entry_mask));
+    s_debug_system_page.set_layout(R.menu_layouts->system_menu_layout);
+    s_debug_system_page.prepare_menu_entries();
+    s_debug_system_page.select_item(0);
+    oled_display.debugCaptureTextBegin();
+    s_debug_system_page.display();
+    return debug_menu_snapshot_end();
 }
 
 static uint16_t debug_menu_build_system_no_devices_snapshot() {
-    for (uint8_t port = UART1_PORT; port <= MIDI_PORT_COUNT; ++port)
-        device_manager.detach_port(port);
-    return debug_menu_build_page_snapshot(SYSTEM_PAGE, 5);
+    debug_menu_snapshot_begin();
+    memset(s_debug_system_page.menu.disabled_entry_mask, 0,
+           sizeof(s_debug_system_page.menu.disabled_entry_mask));
+    s_debug_system_page.set_layout(R.menu_layouts->system_menu_layout);
+    // These are the two optional driver-configuration rows. Model the
+    // no-device menu locally instead of detaching live MIDI ports.
+    s_debug_system_page.menu.enable_entry(2, false);
+    s_debug_system_page.menu.enable_entry(3, false);
+    // The old live-page path selected 5 and then SystemMenuPage::init()
+    // clamped it back to the first enabled row.  This private page deliberately
+    // skips init(), so apply the same clamped result explicitly.
+    s_debug_system_page.select_item(0);
+    oled_display.debugCaptureTextBegin();
+    s_debug_system_page.display();
+    return debug_menu_snapshot_end();
 }
 
 static uint32_t debug_menu_snapshot_chunk(uint16_t offset) {
@@ -477,6 +511,37 @@ extern "C" uint32_t mcl_framebuffer_offset(void) {
 extern "C" uint32_t mcl_framebuffer_stride(void) { return OLED_WIDTH / 8; }
 extern "C" uint32_t mcl_framebuffer_width (void) { return OLED_WIDTH;     }
 extern "C" uint32_t mcl_framebuffer_height(void) { return OLED_HEIGHT;    }
+
+// ---- Panel LEDs ----------------------------------------------------------
+//
+// Like the OLED framebuffer, desktop/WASM LED hardware retains a stable BSS
+// buffer. The host snapshots the 0xRRGGBB values after each GUI tick so its
+// message thread never reads mutable wasm memory directly.
+
+extern "C" uint32_t mcl_panel_leds_offset(void) {
+    return (uint32_t)(uintptr_t)GUI_hardware.led.panelLedColors();
+}
+extern "C" uint32_t mcl_panel_led_count(void) {
+    return LEDHardware::PANEL_LED_COUNT;
+}
+
+// Packed active-page encoder values, one byte per physical encoder. 0xff
+// means the active page has no encoder in that slot. Values deliberately use
+// the same 0..127 domain passed to MCLGUI::draw_encoder().
+extern "C" uint32_t mcl_panel_encoder_values(void) {
+    LightPage* page = GUI.encoderPage();
+    uint32_t packed = 0;
+    for (uint8_t i = 0; i < GUI_NUM_ENCODERS; ++i) {
+        uint32_t value = 0xffu;
+        if (page && page->encoders[i]) {
+            int current = page->encoders[i]->cur;
+            current = current < 0 ? 0 : (current > 127 ? 127 : current);
+            value = (uint32_t)current;
+        }
+        packed |= value << (i * 8u);
+    }
+    return packed;
+}
 
 // ---- MIDI bridge ---------------------------------------------------------
 

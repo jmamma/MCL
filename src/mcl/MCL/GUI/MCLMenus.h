@@ -27,8 +27,6 @@ public:
       : MenuPage(e1, e2, e3, e4) {}
 
   virtual void init() override;
-
-private:
   void prepare_menu_entries();
 };
 
