@@ -4,16 +4,18 @@
 #include "MCLMemory.h"
 #include "MCLGUI.h"
 #include "MCLClipBoard.h"
+#include "MDParams.h"
 #include "GUI/Pages/Performance/PerfPageTargetRef.h"
 #include "GUI/Pages/Sequencer/SeqPages.h"
 #include "MCLStrings.h"
 
 // AVR/classic MD encoder-interface packets only carry the 24 legacy params.
-// Hosted SPS-X builds can also preview params 24..33.
+// Hosted SPS-X builds can preview the complete negotiated SPS parameter set.
 #if defined(__AVR__)
 static constexpr uint8_t PERF_PARAM_EDITOR_PARAM_COUNT = 24;
 #else
-static constexpr uint8_t PERF_PARAM_EDITOR_PARAM_COUNT = 34;
+static constexpr uint8_t PERF_PARAM_EDITOR_PARAM_COUNT =
+    SPS_PARAMS_PER_TRACK;
 #endif
 static constexpr uint8_t PERF_LEARN_OFF = 0;
 

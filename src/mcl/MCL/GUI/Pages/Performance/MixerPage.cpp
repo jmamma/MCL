@@ -325,6 +325,7 @@ void MixerPage::init() {
   key_interface.on();
   mcl_gui.set_trigleds(0, mixer_led_mode());
   preview_mute_set = 255;
+  fill_edit_mode = false;
   oled_display.clearDisplay();
   set_display_mode(default_mixer_param());
   first_track = 255;
