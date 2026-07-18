@@ -65,7 +65,9 @@ uint64_t mdPreviewTrigMask(const MDSeqTrackData &seq, int8_t *trigTiming,
   return mask;
 }
 
-uint64_t stepSeqPreviewTrigMask(const StepSeqTrackData &seq,
+template <std::size_t LockCount>
+uint64_t stepSeqPreviewTrigMask(
+                                const BasicStepSeqTrackData<LockCount> &seq,
                                 int8_t *trigTiming, uint8_t maxTrigTiming,
                                 uint16_t ticksPerStep) {
   uint64_t mask = 0;
