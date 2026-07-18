@@ -122,7 +122,7 @@ public:
   void switch_global(uint8_t global_page);
   void kit_reload(uint8_t pattern);
   void row_update(GridSlot last_slot);
-  void save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t merge,
+  bool save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t merge,
                    uint8_t readpattern = 255);
 
   void load_tracks(uint8_t *slot_select_array,

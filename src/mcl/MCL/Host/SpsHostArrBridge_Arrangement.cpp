@@ -504,7 +504,6 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
         sendErr(tag, ERR_UNSUPPORTED, mode);
         return;
     }
-
     if ((flags & ARR_LOAD_GROUP_SELECT) != 0) {
         GridRow row = b[8];
         if (row >= GRID_LENGTH || !trackMask) {
@@ -539,8 +538,11 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
 
         uint8_t queueMode = hostLoadQueueMode(mode, flags);
         if (any) {
+            if (!grid_task.load_queue.put(queueMode, rowSelect, loadOffset)) {
+                sendErr(tag, ERR_BUSY, row);
+                return;
+            }
             releaseHostLoadedArrangementTracks(mode, rowSelect, loadOffset);
-            grid_task.load_queue.put(queueMode, rowSelect, loadOffset);
         }
 
         uint8_t ack[2] = {CMD_LOAD_SLOTS, any ? (uint8_t)1 : (uint8_t)0};
@@ -583,6 +585,10 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
 
     if (!any) {
         sendErr(tag, ERR_RANGE, 1);
+        return;
+    }
+    if (grid_task.load_queue.available() == 0) {
+        sendErr(tag, ERR_BUSY, 0);
         return;
     }
 
@@ -705,17 +711,22 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
     }
 
     uint8_t queueMode = hostLoadQueueMode(mode, flags);
-    releaseHostLoadedArrangementTracks(mode, rowSelect, loadOffset);
+    bool queued = false;
 #if !defined(__AVR__)
     if (isArrangerLoad || usePrivateSources) {
-        grid_task.load_queue.put_arrangement(queueMode, rowSelect,
-                                             privateSourceIds, loadOffset);
+        queued = grid_task.load_queue.put_arrangement(
+            queueMode, rowSelect, privateSourceIds, loadOffset);
     } else {
-        grid_task.load_queue.put(queueMode, rowSelect, loadOffset);
+        queued = grid_task.load_queue.put(queueMode, rowSelect, loadOffset);
     }
 #else
-    grid_task.load_queue.put(queueMode, rowSelect, loadOffset);
+    queued = grid_task.load_queue.put(queueMode, rowSelect, loadOffset);
 #endif
+    if (!queued) {
+        sendErr(tag, ERR_BUSY, 0);
+        return;
+    }
+    releaseHostLoadedArrangementTracks(mode, rowSelect, loadOffset);
     uint8_t ack[2] = {CMD_LOAD_SLOTS, 1};
     sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
 
@@ -776,11 +787,12 @@ void SpsHostArrBridge::onSaveSlots(uint8_t tag, const uint8_t* b,
         return;
     }
 
+    bool saved = true;
 #if defined(__AVR__)
-    if (saveNeedsMdCurrentPattern())
-        MD.getCurrentPattern(kCurrentPatternTimeoutMs);
-
-    mcl_actions.save_tracks(row, trackSelect, SAVE_SEQ);
+    saved = !saveNeedsMdCurrentPattern() ||
+            MD.getCurrentPattern(kCurrentPatternTimeoutMs) != 255;
+    if (saved)
+        saved = mcl_actions.save_tracks(row, trackSelect, SAVE_SEQ);
     grid_page.row_scan = GRID_LENGTH;
     grid_page.reload_slot_models = false;
 #else
@@ -790,10 +802,11 @@ void SpsHostArrBridge::onSaveSlots(uint8_t tag, const uint8_t* b,
     }
     return;
 #endif
-    uint8_t ack[2] = {CMD_SAVE_SLOTS, 1};
+    uint8_t ack[2] = {CMD_SAVE_SLOTS, saved ? (uint8_t)1 : (uint8_t)0};
     sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
 #if defined(__AVR__)
-    notifyDirty(0xFF, DIRTY_CELLS);
+    if (saved)
+        notifyDirty(0xFF, DIRTY_CELLS);
 #endif
 }
 
@@ -1334,7 +1347,7 @@ void SpsHostArrBridge::onArrDuplicateLocalSource(uint8_t tag,
         return;
     }
 
-    uint8_t ack[18] = {CMD_ARR_MAKE_LOCAL, 1};
+    uint8_t ack[18] = {CMD_ARR_DUP_LOCAL_SOURCE, 1};
     spsArrPutU32(ack + 2, startQ12);
     spsArrPutU32(ack + 6, durationQ12);
     ack[10] = track;
@@ -1412,6 +1425,10 @@ void SpsHostArrBridge::onArrSeekLoad(uint8_t tag, const uint8_t* b,
         positionQ12, (flags & ARR_LOAD_IMMEDIATE) != 0,
         (flags & (ARR_LOAD_START_TRANSPORT | ARR_LOAD_SEEK_POSITION)) != 0,
         true, &seekResult);
+    if (seekResult.busy) {
+        sendErr(tag, ERR_BUSY, 0);
+        return;
+    }
     bool immediateSeek =
         (flags & (ARR_LOAD_IMMEDIATE | ARR_LOAD_START_TRANSPORT |
                   ARR_LOAD_SEEK_POSITION)) != 0;

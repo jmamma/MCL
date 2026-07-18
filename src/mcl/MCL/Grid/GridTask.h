@@ -23,16 +23,34 @@ class LoadQueueModes {
 
 class LoadQueue {
   public:
-  static_assert((NUM_LINKS & (NUM_LINKS - 1)) == 0,
-                "LoadQueue wrap assumes power-of-two NUM_LINKS");
-  GridRow row_selects[NUM_LINKS][NUM_SLOTS];
-#if MCL_FEATURE_GRID_PRIVATE_LOADS
-  uint32_t private_source_ids[NUM_LINKS][NUM_SLOTS];
+#if MCL_FEATURE_HOST_ARRANGER
+  // One arranger boundary can contain an active and a preloaded source for
+  // every destination, plus a clear request. Leave the original eight-entry
+  // backlog in front of it. AVR has no host arranger and retains its original,
+  // SRAM-conscious depth and power-of-two wrap.
+  static constexpr uint8_t kCapacity = NUM_SLOTS * 2 + 1 + NUM_LINKS;
+#else
+  static constexpr uint8_t kCapacity = NUM_LINKS;
+  static_assert((kCapacity & (kCapacity - 1)) == 0,
+                "LoadQueue wrap assumes a power-of-two capacity");
 #endif
-  LoadQueueModes modes[NUM_LINKS];
+  GridRow row_selects[kCapacity][NUM_SLOTS];
+#if MCL_FEATURE_GRID_PRIVATE_LOADS
+  uint32_t private_source_ids[kCapacity][NUM_SLOTS];
+#endif
+  LoadQueueModes modes[kCapacity];
   uint8_t rd;
   uint8_t wr;
   bool full;
+
+  static uint8_t next_index(uint8_t index) {
+#if MCL_FEATURE_HOST_ARRANGER
+    ++index;
+    return index == kCapacity ? 0 : index;
+#else
+    return (index + 1) & (kCapacity - 1);
+#endif
+  }
 
   void clear_private_sources(GridSlot link_idx) {
 #if MCL_FEATURE_GRID_PRIVATE_LOADS
@@ -51,7 +69,7 @@ class LoadQueue {
   void commit_write(uint8_t mode, GridSlot offset) {
     modes[wr].mode = mode;
     modes[wr].offset = offset;
-    wr = (wr + 1) & (NUM_LINKS - 1);
+    wr = next_index(wr);
     if (wr == rd) {
         full = true;
     }
@@ -64,18 +82,19 @@ class LoadQueue {
     clear_all_private_sources();
   }
 
-  void put(uint8_t mode, GridRow *row_select, GridSlot offset = 255) {
-    if (full) { return; }
+  bool put(uint8_t mode, GridRow *row_select, GridSlot offset = 255) {
+    if (full || row_select == nullptr) { return false; }
     memcpy(row_selects[wr], row_select, NUM_SLOTS);
     clear_private_sources(wr);
     commit_write(mode, offset);
+    return true;
   }
 
 #if MCL_FEATURE_GRID_PRIVATE_LOADS
-  void put_arrangement(uint8_t mode, GridRow *row_select,
+  bool put_arrangement(uint8_t mode, GridRow *row_select,
                        const uint32_t *source_ids,
                        GridSlot offset = 255) {
-    if (full) { return; }
+    if (full || row_select == nullptr) { return false; }
     memcpy(row_selects[wr], row_select, NUM_SLOTS);
     memset(private_source_ids[wr], 0, sizeof(private_source_ids[wr]));
     if (source_ids != nullptr) {
@@ -83,12 +102,13 @@ class LoadQueue {
              sizeof(private_source_ids[wr]));
     }
     commit_write(mode, offset);
+    return true;
   }
 #endif
 
-  void put(uint8_t mode, GridRow row, uint8_t *track_select_array,
+  bool put(uint8_t mode, GridRow row, uint8_t *track_select_array,
            GridSlot offset = 255) {
-    if (full) { return; }
+    if (full || track_select_array == nullptr) { return false; }
 
     memset(row_selects[wr], 255, NUM_SLOTS);
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
@@ -96,6 +116,7 @@ class LoadQueue {
     }
     clear_private_sources(wr);
     commit_write(mode, offset);
+    return true;
   }
 
   void get(uint8_t &mode, GridSlot &offset, GridRow *row_select,
@@ -107,7 +128,7 @@ class LoadQueue {
     }
     mode = modes[rd].mode;
     offset = modes[rd].offset;
-    rd = (rd + 1) & (NUM_LINKS - 1);
+    rd = next_index(rd);
     full = false;
   }
 
@@ -119,7 +140,7 @@ class LoadQueue {
     }
     mode = modes[rd].mode;
     offset = modes[rd].offset;
-    rd = (rd + 1) & (NUM_LINKS - 1);
+    rd = next_index(rd);
     full = false;
     return row_select;
   }
@@ -138,12 +159,25 @@ class LoadQueue {
     }
     mode = modes[rd].mode;
     offset = modes[rd].offset;
-    rd = (rd + 1) & (NUM_LINKS - 1);
+    rd = next_index(rd);
     full = false;
   }
 #endif
 
-  bool is_empty() {
+  uint8_t available() const {
+    if (full) {
+      return 0;
+    }
+#if MCL_FEATURE_HOST_ARRANGER
+    uint8_t used = wr >= rd ? (uint8_t)(wr - rd)
+                            : (uint8_t)(kCapacity - rd + wr);
+#else
+    uint8_t used = (uint8_t)((wr - rd) & (kCapacity - 1));
+#endif
+    return (uint8_t)(kCapacity - used);
+  }
+
+  bool is_empty() const {
     return !full && (rd == wr);
   }
 

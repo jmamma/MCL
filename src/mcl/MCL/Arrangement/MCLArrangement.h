@@ -49,6 +49,7 @@ public:
     bool queued = false;
     bool loadQueued = false;
     bool clearQueued = false;
+    bool busy = false;
     uint32_t activeMask = 0;
   };
 

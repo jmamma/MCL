@@ -510,6 +510,8 @@ public:
     memset(delta_, 0, sizeof(delta_));
     memset(mask_, 0, sizeof(mask_));
     memset(privateIds_, 0, sizeof(privateIds_));
+    memset(groupForDestination_, 0xFF, sizeof(groupForDestination_));
+    memset(sourceForDestination_, 0xFF, sizeof(sourceForDestination_));
     for (uint8_t g = 0; g < NUM_SLOTS; ++g) {
       for (uint8_t t = 0; t < NUM_SLOTS; ++t) {
         rows_[g][t] = 255;
@@ -521,24 +523,7 @@ public:
     if (dst >= NUM_SLOTS || src >= NUM_SLOTS || row >= GRID_LENGTH) {
       return false;
     }
-    int8_t d = (int8_t)((int)dst - (int)src);
-    uint8_t group = 0xFF;
-    for (uint8_t g = 0; g < count_; ++g) {
-      if (delta_[g] == d) {
-        group = g;
-        break;
-      }
-    }
-    if (group == 0xFF) {
-      if (count_ >= NUM_SLOTS) {
-        return false;
-      }
-      group = count_++;
-      delta_[group] = d;
-    }
-    mask_[group] |= (uint32_t)(1ul << src);
-    rows_[group][src] = row;
-    return true;
+    return assign(dst, src, row, 0);
   }
 
   bool addPrivate(GridSlot dst, GridSlot src, uint32_t sourceId) {
@@ -546,29 +531,12 @@ public:
         !privateSourceCell(sourceId, nullptr, nullptr)) {
       return false;
     }
-    int8_t d = (int8_t)((int)dst - (int)src);
-    uint8_t group = 0xFF;
-    for (uint8_t g = 0; g < count_; ++g) {
-      if (delta_[g] == d) {
-        group = g;
-        break;
-      }
-    }
-    if (group == 0xFF) {
-      if (count_ >= NUM_SLOTS) {
-        return false;
-      }
-      group = count_++;
-      delta_[group] = d;
-    }
-    mask_[group] |= (uint32_t)(1ul << src);
-    rows_[group][src] = LOAD_QUEUE_PRIVATE_ROW;
-    privateIds_[group][src] = sourceId;
-    return true;
+    return assign(dst, src, LOAD_QUEUE_PRIVATE_ROW, sourceId);
   }
 
   bool flush(uint8_t queueMode) {
     bool queued = false;
+    bool accepted = true;
     for (uint8_t g = 0; g < count_; ++g) {
       if (mask_[g] == 0) {
         continue;
@@ -591,18 +559,80 @@ public:
         }
         loadOffset = (GridSlot)firstDest;
       }
-      grid_task.load_queue.put_arrangement(queueMode, rows_[g],
-                                           privateIds_[g], loadOffset);
+      accepted = grid_task.load_queue.put_arrangement(
+                     queueMode, rows_[g], privateIds_[g], loadOffset) &&
+                 accepted;
       queued = true;
     }
-    return queued;
+    return queued && accepted;
+  }
+
+  uint8_t count() const {
+    uint8_t requests = 0;
+    for (uint8_t g = 0; g < count_; ++g) {
+      if (mask_[g] != 0) {
+        ++requests;
+      }
+    }
+    return requests;
   }
 
 private:
+  bool assign(GridSlot dst, GridSlot src, GridRow row, uint32_t sourceId) {
+    // Multiple overlapping/catch-up clips can address the same destination.
+    // Only the last request can be observable after the queue drains, so
+    // replace the earlier request here.  This also makes the 32-destination
+    // bound explicit instead of silently dropping a 33rd distinct delta.
+    uint8_t oldGroup = groupForDestination_[dst];
+    if (oldGroup < count_) {
+      uint8_t oldSource = sourceForDestination_[dst];
+      if (oldSource < NUM_SLOTS) {
+        mask_[oldGroup] &= ~(uint32_t)(1ul << oldSource);
+        rows_[oldGroup][oldSource] = 255;
+        privateIds_[oldGroup][oldSource] = 0;
+      }
+    }
+
+    int8_t d = (int8_t)((int)dst - (int)src);
+    uint8_t group = 0xFF;
+    uint8_t emptyGroup = 0xFF;
+    for (uint8_t g = 0; g < count_; ++g) {
+      if (delta_[g] == d) {
+        group = g;
+        break;
+      }
+      if (mask_[g] == 0 && emptyGroup == 0xFF) {
+        emptyGroup = g;
+      }
+    }
+    if (group == 0xFF) {
+      if (emptyGroup != 0xFF) {
+        group = emptyGroup;
+      } else {
+        if (count_ >= NUM_SLOTS) {
+          // There can be at most one live request per destination, so this is
+          // unreachable unless the bookkeeping invariant is broken.
+          return false;
+        }
+        group = count_++;
+      }
+      delta_[group] = d;
+    }
+
+    mask_[group] |= (uint32_t)(1ul << src);
+    rows_[group][src] = row;
+    privateIds_[group][src] = sourceId;
+    groupForDestination_[dst] = group;
+    sourceForDestination_[dst] = src;
+    return true;
+  }
+
   int8_t delta_[NUM_SLOTS];
   uint32_t mask_[NUM_SLOTS];
   GridRow rows_[NUM_SLOTS][NUM_SLOTS];
   uint32_t privateIds_[NUM_SLOTS][NUM_SLOTS];
+  uint8_t groupForDestination_[NUM_SLOTS];
+  uint8_t sourceForDestination_[NUM_SLOTS];
   uint8_t count_;
 };
 

@@ -235,21 +235,30 @@ void GridTask::save_queue_handler() {
   }
 
 #if MCL_FEATURE_HOST_ARRANGER
+  bool saved = true;
   if (save_needs_md_current_pattern()) {
-    MD.getCurrentPattern(500);
+    saved = MD.getCurrentPattern(500) != 255;
   }
-  mcl_arrangement.flushRuntimePrivateSourceEdits();
+  if (saved) {
+    saved = mcl_arrangement.flushRuntimePrivateSourceEdits();
+  }
+#else
+  bool saved = true;
 #endif
 
-  mcl_actions.save_tracks(row, track_select, merge);
+  if (saved) {
+    saved = mcl_actions.save_tracks(row, track_select, merge);
+  }
 
 #if MCL_FEATURE_HOST_ARRANGER
   if (ack_valid) {
-    sps_host_arr_bridge.ackSaveSlots(ack_tag, true);
+    sps_host_arr_bridge.ackSaveSlots(ack_tag, saved);
   }
   grid_page.row_scan = GRID_LENGTH;
   grid_page.reload_slot_models = false;
-  sps_host_arr_bridge.notifyDirty(0xFF, (uint8_t)spsarr::DIRTY_CELLS);
+  if (saved) {
+    sps_host_arr_bridge.notifyDirty(0xFF, (uint8_t)spsarr::DIRTY_CELLS);
+  }
 #endif
 }
 #endif

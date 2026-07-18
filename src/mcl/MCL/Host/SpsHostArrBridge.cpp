@@ -160,7 +160,15 @@ void SpsHostArrBridge::ackSaveSlots(uint8_t tag, bool ok) {
 void SpsHostArrBridge::onHello(uint8_t tag, const uint8_t* b, uint16_t n) {
     if (n < 1 || b[0] == 0)
         return;
+    const bool newHostSession = !ready_;
     ready_ = true;
+    // Connecting the SPS arranger protocol advertises capability; it does not
+    // arm arrangement playback. Keep MCL's arrangement runtime detached from
+    // the shared transport until SPS explicitly sends a seek/load command.
+    // Limit this to the first HELLO in a session so a duplicate retry cannot
+    // interrupt playback that SPS has already armed.
+    if (newHostSession)
+        mcl_arrangement.setHostPlaybackSuspended(true);
     uint8_t body[6];
     body[0] = kProtoVersion;
     spsArrPutU16(body + 1, (uint16_t)(CAP_AUTO | CAP_FADE | CAP_BATCH |

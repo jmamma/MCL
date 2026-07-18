@@ -458,8 +458,8 @@ void md_import() {
   mcl.setPage(GRID_PAGE);
 }
 
-void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t merge,
-                             uint8_t readpattern) {
+bool MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array,
+                             uint8_t merge, uint8_t readpattern) {
   // DEBUG_PRINT_FN();
 
   EmptyTrack empty_track;
@@ -470,6 +470,7 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
 
   uint8_t save_dev_mask = 0;
   uint8_t saved_grid_mask = 0;
+  bool ok = true;
   MidiDevice *devs[NUM_DEVS];
   device_manager.get_devices(devs);
   ElektronDevice *elektron_devs[NUM_DEVS] = {
@@ -503,15 +504,19 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
           if (!elektron_devs[i]->getBlockingPattern(readpattern)) {
             // DEBUG_PRINTLN(F("could not receive pattern"));
             save_dev_mask &= (uint8_t)~device_bit;
+            ok = false;
             continue;
           }
           ElektronPattern *p = (ElektronPattern*) elektron_devs[i]->getPattern();
           if (p->isEmpty()) {
             save_dev_mask &= (uint8_t)~device_bit;
+            ok = false;
             continue;
           }
           if (!elektron_devs[i]->getBlockingKit(p->getKit())) {
             // DEBUG_PRINTLN(F("could not receive kit"));
+            save_dev_mask &= (uint8_t)~device_bit;
+            ok = false;
             continue;
           }
         } else {
@@ -519,6 +524,7 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
             if (!elektron_devs[i]->getWorkSpaceKit()) {
               // DEBUG_PRINTLN(F("could not receive kit"));
               save_dev_mask &= (uint8_t)~device_bit;
+              ok = false;
               continue;
             }
           } else if (elektron_devs[i]->canReadKit()) {
@@ -527,6 +533,7 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
             if (!elektron_devs[i]->getBlockingKit(kit)) {
               // DEBUG_PRINTLN(F("could not receive kit"));
               save_dev_mask &= (uint8_t)~device_bit;
+              ok = false;
               continue;
             }
           }
@@ -542,7 +549,9 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
 
   GridRowHeader row_headers[NUM_GRIDS];
   for (uint8_t n = 0; n < NUM_GRIDS; n++) {
-    proj.read_grid_row_header(&row_headers[n], row, n);
+    if (!proj.read_grid_row_header(&row_headers[n], row, n)) {
+      return false;
+    }
   }
 
   for (i = 0; i < NUM_SLOTS; i++) {
@@ -550,6 +559,7 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
 
       GridDeviceTrack *gdt = get_grid_dev_track(i);
       if (gdt == nullptr || gdt->device_idx >= NUM_DEVS) {
+        ok = false;
         continue;
       }
       GridIndex grid_idx = i >> 4;
@@ -560,6 +570,7 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
       // has failed, so we just skip this device.
 
       if (!(save_dev_mask & device_mask_bit(device_idx))) {
+        ok = false;
         continue;
       }
 
@@ -570,6 +581,7 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
       if (row_headers[grid_idx].track_type[track_idx] != EMPTY_TRACK_TYPE) {
         auto *loaded_existing = empty_track.load_from_grid_512(i, row);
         if (loaded_existing == nullptr) {
+          ok = false;
           continue;
         }
         saved_link = loaded_existing->link;
@@ -598,6 +610,8 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
         row_headers[grid_idx].update_model(
             track_idx, pdevice_track->get_model(), gdt->track_type);
         saved_grid_mask |= (uint8_t)(1 << grid_idx);
+      } else {
+        ok = false;
       }
     }
   }
@@ -615,10 +629,15 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
     if (saved_grid_mask & grid_bit) {
       row_headers[n].active = true;
     }
-    proj.write_grid_row_header(&row_headers[n], row, n);
-    proj.sync_grid(n);
+    if (!proj.write_grid_row_header(&row_headers[n], row, n)) {
+      ok = false;
+    }
+    if (!proj.sync_grid(n)) {
+      ok = false;
+    }
   }
   grid_page.reload_slot_models = false;
+  return ok;
 }
 
 void MCLActions::row_update(GridSlot last_slot) {

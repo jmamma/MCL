@@ -495,7 +495,7 @@ bool clearGridRect(GridSlot col, GridRow row, GridSpan w, GridSpan h) {
     }
 
     for (uint8_t grid = 0; grid < NUM_GRIDS; grid++)
-        proj.sync_grid(grid);
+        ok = proj.sync_grid(grid) && ok;
     grid_page.slot_undo = 1;
     grid_page.slot_undo_x = (GridColumn)(col & 0x0F);
     grid_page.slot_undo_y = row;

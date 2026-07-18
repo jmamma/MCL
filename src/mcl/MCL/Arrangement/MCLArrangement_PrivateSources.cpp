@@ -966,13 +966,14 @@ bool MCLArrangement::exportPrivateSourceToGrid(uint32_t sourceId,
 
   GridIndex targetGrid = targetSlot / GRID_WIDTH;
   GridRowHeader header;
-  if (proj.read_grid_row_header(&header, targetRow, targetGrid)) {
-    header.active = true;
-    header.name[0] = '\0';
-    proj.write_grid_row_header(&header, targetRow, targetGrid);
+  if (!proj.read_grid_row_header(&header, targetRow, targetGrid)) {
+    proj.sync_grid(targetGrid);
+    return false;
   }
-  proj.sync_grid(targetGrid);
-  return true;
+  header.active = true;
+  header.name[0] = '\0';
+  bool ok = proj.write_grid_row_header(&header, targetRow, targetGrid);
+  return proj.sync_grid(targetGrid) && ok;
 }
 
 void MCLArrangement::beginQueuedPrivateLoads(

@@ -61,7 +61,10 @@ void SpsHostArrBridge::onGridPaste(uint8_t tag, const uint8_t* b,
         return;
     }
     grid_page.slot_undo = 0;
-    proj.sync_grid();
+    if (!proj.sync_grid()) {
+        sendErr(tag, ERR_BUSY, 1);
+        return;
+    }
     grid_page.load_slot_models();
     uint8_t ack[2] = {CMD_GRID_PASTE, 1};
     sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
@@ -131,6 +134,7 @@ void SpsHostArrBridge::onGridApplySlotEdit(uint8_t tag, const uint8_t* b,
     bool changedLength = (fields & GRID_SLOT_APPLY_LENGTH) != 0;
     bool changedLoadSound = (fields & GRID_SLOT_APPLY_LOAD_SOUND) != 0;
     bool anyStored = false;
+    bool ok = true;
 
     for (GridSpan y = 0; y < height && (uint16_t)targetRow + y < GRID_LENGTH;
          y++) {
@@ -199,11 +203,14 @@ void SpsHostArrBridge::onGridApplySlotEdit(uint8_t tag, const uint8_t* b,
                     track->link = link;
             }
 
-            if (storeSlot &&
-                track->write_grid(track->_this(), track->get_track_size(),
-                                  col, row)) {
-                rowStored = true;
-                anyStored = true;
+            if (storeSlot) {
+                if (track->write_grid(track->_this(), track->get_track_size(),
+                                      col, row)) {
+                    rowStored = true;
+                    anyStored = true;
+                } else {
+                    ok = false;
+                }
             }
         }
 
@@ -213,17 +220,23 @@ void SpsHostArrBridge::onGridApplySlotEdit(uint8_t tag, const uint8_t* b,
             if (proj.read_grid_row_header(&header, row, grid)) {
                 header.active = true;
                 header.name[0] = '\0';
-                proj.write_grid_row_header(&header, row, grid);
+                if (!proj.write_grid_row_header(&header, row, grid))
+                    ok = false;
+            } else {
+                ok = false;
             }
         }
     }
 
-    if (!anyStored) {
+    bool synced = proj.sync_grid((GridIndex)(targetCol / GRID_WIDTH));
+    if (!anyStored || !ok) {
         sendErr(tag, ERR_BUSY, 1);
         return;
     }
-
-    proj.sync_grid((GridIndex)(targetCol / GRID_WIDTH));
+    if (!synced) {
+        sendErr(tag, ERR_BUSY, 2);
+        return;
+    }
     grid_page.load_slot_models();
     uint8_t ack[2] = {CMD_GRID_APPLY_SLOT, 1};
     sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);

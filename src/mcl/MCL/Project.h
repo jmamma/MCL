@@ -106,7 +106,10 @@ public:
   }
 
   bool sync_grid(GridIndex grid) { return grids[grid].sync(); }
-  bool sync_grid() { sync_grid(0); return sync_grid(1); }
+  bool sync_grid() {
+    bool ok = sync_grid(0);
+    return sync_grid(1) && ok;
+  }
   bool close_project() {
     bool ret = true;
     // Close main file

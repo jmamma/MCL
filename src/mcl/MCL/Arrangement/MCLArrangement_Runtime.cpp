@@ -18,6 +18,7 @@ using namespace mcl_arrangement_internal;
 namespace {
 
 static const uint32_t kArrangerBoundaryLookaheadQ12 = 4;
+static const uint8_t kMaxBoundaryLoadRequests = NUM_SLOTS * 2 + 1;
 
 uint8_t automation_curve_phase(uint8_t phase, int8_t curve) {
   uint16_t lin = phase > 127 ? 127 : phase;
@@ -440,7 +441,7 @@ uint16_t MCLArrangement::automationEvaluate(uint16_t laneIndex,
   }
   uint32_t span = rt.next.q12 - rt.prev.q12;
   uint32_t elapsed = positionQ12 - rt.prev.q12;
-  uint8_t phase = (uint8_t)((elapsed * 127u) / span);
+  uint8_t phase = (uint8_t)(((uint64_t)elapsed * 127u) / span);
   uint16_t endValue = clamp_automation_value(rt.next.value, lane.valueType);
   phase = automation_curve_phase(
       phase, automation_effective_curve(rt.prev.curve, startValue, endValue));
@@ -865,6 +866,16 @@ bool MCLArrangement::seekLoad(uint32_t positionQ12, bool immediate,
   if (result != nullptr) {
     *result = {};
   }
+  // A seek resets several pieces of playback state before discovering its
+  // clips.  Reject it before those mutations if a complete boundary cannot be
+  // queued atomically.
+  if (grid_task.load_queue.available() < kMaxBoundaryLoadRequests) {
+    if (result != nullptr) {
+      result->busy = true;
+      result->activeMask = playback_active_mask_;
+    }
+    return false;
+  }
   host_playback_suspended_ = false;
   playback_arrangement_idx_ = mcl_cfg.active_arrangement_idx;
   playback_active_ = true;
@@ -908,6 +919,18 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
   if (result != nullptr) {
     *result = {};
   }
+  static_assert(LoadQueue::kCapacity >= kMaxBoundaryLoadRequests,
+                "host load queue cannot hold one arranger boundary");
+  // Reserve the worst case before changing playback/preload/fade state. No
+  // other producer can run concurrently, so the later exact preflight and
+  // enqueues are atomic with respect to this boundary.
+  if (grid_task.load_queue.available() < kMaxBoundaryLoadRequests) {
+    if (result != nullptr) {
+      result->busy = true;
+      result->activeMask = playback_active_mask_;
+    }
+    return false;
+  }
   GridRow clearRows[NUM_SLOTS];
   memset(clearRows, 255, sizeof(clearRows));
   auto queueClearAllTracks = [&]() -> bool {
@@ -923,8 +946,13 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
     for (uint8_t track = 0; track < NUM_SLOTS; ++track) {
       clearRows[track] = LOAD_QUEUE_CLEAR_ROW;
     }
-    grid_task.load_queue.put((uint8_t)(LOAD_ARRANG | loadQueueFlags),
-                             clearRows);
+    if (!grid_task.load_queue.put(
+            (uint8_t)(LOAD_ARRANG | loadQueueFlags), clearRows)) {
+      if (result != nullptr) {
+        result->busy = true;
+      }
+      return false;
+    }
     if (result != nullptr) {
       result->queued = true;
       result->clearQueued = true;
@@ -1100,15 +1128,11 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
     clearRows[track] = LOAD_QUEUE_CLEAR_ROW;
     any = true;
   }
-  playback_active_mask_ = (currentActiveMask | futureStartMask) & ~preclearMask;
+  uint32_t nextActiveMask =
+      (currentActiveMask | futureStartMask) & ~preclearMask;
 
   if (any) {
     uint8_t queueMode = LOAD_ARRANG | loadQueueFlags;
-    bool loadQueued = loadGroups.flush(queueMode);
-    if (preloadGroups.flush(
-            (uint8_t)(queueMode | LOAD_QUEUE_FLAG_ARRANGER_PRELOAD))) {
-      loadQueued = true;
-    }
     bool hasClear = false;
     for (uint8_t track = 0; track < NUM_SLOTS; ++track) {
       if (clearRows[track] == LOAD_QUEUE_CLEAR_ROW) {
@@ -1116,17 +1140,35 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
         break;
       }
     }
-    if (hasClear) {
-      grid_task.load_queue.put(queueMode, clearRows);
+    uint8_t required = (uint8_t)(loadGroups.count() + preloadGroups.count() +
+                                 (hasClear ? 1 : 0));
+    if (grid_task.load_queue.available() < required) {
+      if (result != nullptr) {
+        result->busy = true;
+        result->activeMask = playback_active_mask_;
+      }
+      return false;
     }
+    bool loadQueued = loadGroups.flush(queueMode);
+    if (preloadGroups.flush(
+            (uint8_t)(queueMode | LOAD_QUEUE_FLAG_ARRANGER_PRELOAD))) {
+      loadQueued = true;
+    }
+    if (hasClear) {
+      hasClear = grid_task.load_queue.put(queueMode, clearRows);
+    }
+    playback_active_mask_ = nextActiveMask;
     if (result != nullptr) {
       result->loadQueued = loadQueued;
       result->clearQueued = hasClear;
       result->queued = loadQueued || hasClear;
       result->activeMask = playback_active_mask_;
     }
-  } else if (result != nullptr) {
-    result->activeMask = playback_active_mask_;
+  } else {
+    playback_active_mask_ = nextActiveMask;
+    if (result != nullptr) {
+      result->activeMask = playback_active_mask_;
+    }
   }
   return any;
 }
@@ -1145,6 +1187,12 @@ void MCLArrangement::tick() {
   if (host_playback_suspended_) {
     return;
   }
+  // Leave every playback and automation field untouched until this boundary
+  // can be accepted. In particular, do not make a failed first tick look like
+  // a continuing arrangement on the retry.
+  if (grid_task.load_queue.available() < kMaxBoundaryLoadRequests) {
+    return;
+  }
 
   const uint8_t activeIdx = mcl_cfg.active_arrangement_idx;
   const uint32_t nowQ12 = currentClockQ12();
@@ -1157,15 +1205,17 @@ void MCLArrangement::tick() {
   if (allowLoopTransportSeek) {
     // Stored arrangement loops remain active under the temporary UI loop.
     // Check them first so persistent loop wraps are not masked.
-    mclarrfile::LoopRegion regions[4];
+    static mclarrfile::LoopRegion regions[mclarrfile::kMaxLoopRegions];
     uint32_t queryStart = sameArrangement && nowQ12 >= last_tick_q12_
                               ? last_tick_q12_
                               : nowQ12;
     uint32_t queryEnd = nowQ12 + 1u;
-    uint16_t regionCount =
-        readLoopRegions(queryStart, queryEnd, 0, 4, regions, nullptr, nullptr);
-    int activeRegion = -1;
+    bool haveActiveRegion = false;
+    mclarrfile::LoopRegion activeRegion = {};
     uint32_t activeWidth = 0xFFFFFFFFu;
+    uint16_t regionCount = readLoopRegions(
+        queryStart, queryEnd, 0, (uint8_t)mclarrfile::kMaxLoopRegions, regions,
+        nullptr, nullptr);
     for (uint16_t i = 0; i < regionCount; ++i) {
       const mclarrfile::LoopRegion &region = regions[i];
       if ((region.flags & mclarrfile::LOOP_REGION_ENABLED) == 0 ||
@@ -1182,14 +1232,15 @@ void MCLArrangement::tick() {
         continue;
       }
       uint32_t width = region.endQ12 - region.startQ12;
-      if (activeRegion < 0 || width < activeWidth) {
-        activeRegion = i;
+      if (!haveActiveRegion || width < activeWidth) {
+        activeRegion = region;
+        haveActiveRegion = true;
         activeWidth = width;
       }
     }
 
-    if (activeRegion >= 0) {
-      const mclarrfile::LoopRegion &region = regions[activeRegion];
+    if (haveActiveRegion) {
+      const mclarrfile::LoopRegion &region = activeRegion;
       uint16_t regionId = region.id != 0 ? region.id : (uint16_t)1;
       if (stored_loop_active_id_ != regionId) {
         stored_loop_active_id_ = regionId;
@@ -1313,13 +1364,16 @@ void MCLArrangement::tick() {
     playback_active_mask_ = 0;
   }
 
-  playback_active_ = true;
-  playback_arrangement_idx_ = activeIdx;
-  last_tick_q12_ = nowQ12;
+  SeekLoadResult loadResult;
   queueClipStarts(startQ12, endQ12, false, false,
                   LOAD_QUEUE_FLAG_IMMEDIATE, true,
-                  kArrangerBoundaryLookaheadQ12);
-  tickAutomation(nowQ12);
+                  kArrangerBoundaryLookaheadQ12, &loadResult);
+  if (!loadResult.busy) {
+    playback_active_ = true;
+    playback_arrangement_idx_ = activeIdx;
+    last_tick_q12_ = nowQ12;
+    tickAutomation(nowQ12);
+  }
 }
 
 #endif  // MCL_FEATURE_HOST_ARRANGER
