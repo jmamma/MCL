@@ -1,7 +1,7 @@
 #pragma once
 #include "Arduino.h"
 
-enum MCLGIFDir {
+enum MCLGIFDir : uint8_t {
   DIR_FWD,
   DIR_FWDBACK,
 };
@@ -47,4 +47,12 @@ public:
   uint8_t *get_next_frame();
 };
 
-
+static_assert(sizeof(MCLGIFDir) == sizeof(uint8_t),
+              "MCL GIF direction must remain an 8-bit resource field");
+#if defined(__AVR__)
+static_assert(sizeof(MCLGIF) == 13,
+              "AVR MCL GIF resource record layout changed");
+#else
+static_assert(sizeof(void *) != 4 || sizeof(MCLGIF) == 16,
+              "32-bit MCL GIF resource record layout changed");
+#endif
