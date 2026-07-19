@@ -171,16 +171,16 @@ public:
 
   /** ElektronPattern implementation */
 
-  virtual uint8_t getPosition() { return origPosition; }
-  virtual void setPosition(uint8_t _pos) { origPosition = _pos; }
+  uint8_t getPosition() override { return origPosition; }
+  void setPosition(uint8_t _pos) override { origPosition = _pos; }
 
-  virtual uint8_t getLength() { return patternLength; }
-  virtual void setLength(uint8_t _len) { patternLength = _len; }
+  uint8_t getLength() override { return patternLength; }
+  void setLength(uint8_t _len) override { patternLength = _len; }
 
-  virtual uint8_t getKit() { return kit; }
-  virtual void setKit(uint8_t _kit) { kit = _kit; }
+  uint8_t getKit() override { return kit; }
+  void setKit(uint8_t _kit) override { kit = _kit; }
 
-  virtual bool isEmpty() {
+  bool isEmpty() override {
     for (uint8_t track = 0; track < 16; ++track) {
       if (trigPatterns[track]) {
         return false;
@@ -188,13 +188,13 @@ public:
     }
     return true;
   }
-  virtual bool isTrackEmpty(uint8_t track);
-  virtual bool isTrigSet(uint8_t track, uint8_t trig) {
+  bool isTrackEmpty(uint8_t track) override;
+  bool isTrigSet(uint8_t track, uint8_t trig) override {
     if (track >= 16 || trig >= 64) return false;
     return IS_BIT_SET64(trigPatterns[track], trig);
   }
 
-  virtual void clearPattern();
+  void clearPattern() override;
 #if !defined(__AVR__)
   ep_lock_idx_t getLockIdx(uint8_t track, uint8_t param) override {
     return (track < 16 && param < SPS_PARAMS_PER_TRACK)
@@ -213,15 +213,6 @@ public:
   uint8_t getLock(uint8_t track, uint8_t step, uint8_t param) override;
   ep_lock_idx_t getNextEmptyLock() override;
   void cleanupLocks() override;
-#else
-  ep_lock_idx_t getLockIdx(uint8_t track, uint8_t param) override {
-    return (track < 16 && param < 24) ? paramLocks[track][param] : -1;
-  }
-  void setLockIdx(uint8_t track, uint8_t param,
-                  ep_lock_idx_t value) override {
-    if (track < 16 && param < 24)
-      paramLocks[track][param] = value;
-  }
 #endif
   /*
   virtual void clearTrack(uint8_t track);
@@ -235,10 +226,10 @@ public:
   virtual int8_t getLockIdx(uint8_t track, uint8_t param);
   virtual void setLockIdx(uint8_t track, uint8_t param, int8_t value);
   */
-  virtual void recalculateLockPatterns();
+  void recalculateLockPatterns() override;
   /** ElektronSysexObject implementation */
-  virtual bool fromSysex(MidiClass *midi);
-  virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
+  bool fromSysex(MidiClass *midi) override;
+  uint16_t toSysex(ElektronDataToSysexEncoder *encoder) override;
 
   MDPattern(bool _init = true) : ElektronPattern(_init) {
     maxSteps = 64;
