@@ -53,5 +53,7 @@ public:
         : EncoderParent(_handler) {}
     int update_rotations(encoder_t *enc);
     int update(encoder_t *enc) override;
+#if !defined(__AVR__)
     virtual int applyLogicalSteps(int steps, bool fast);
+#endif
 };

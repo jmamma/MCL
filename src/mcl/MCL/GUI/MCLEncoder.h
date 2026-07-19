@@ -78,7 +78,9 @@ class MCLRelativeEncoder : public MCLEncoder {
                                uint8_t res = 1)
       : MCLEncoder(_max, _min, res) {}
   int update(encoder_t *enc) override;
+#if !defined(__AVR__)
   int applyLogicalSteps(int steps, bool fast) override;
+#endif
 };
 
 int8_t consume_centered_encoder_delta(EncoderParent *enc);

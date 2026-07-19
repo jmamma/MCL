@@ -65,6 +65,7 @@ int Encoder::update(encoder_t *enc) {
     return cur;
 }
 
+#if !defined(__AVR__)
 int Encoder::applyLogicalSteps(int steps, bool fast) {
     if (steps == 0) {
         return cur;
@@ -90,3 +91,4 @@ int Encoder::applyLogicalSteps(int steps, bool fast) {
     }
     return cur;
 }
+#endif

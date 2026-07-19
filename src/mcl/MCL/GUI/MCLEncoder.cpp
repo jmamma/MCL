@@ -52,6 +52,7 @@ int MCLRelativeEncoder::update(encoder_t *enc) {
   return cur;
 }
 
+#if !defined(__AVR__)
 int MCLRelativeEncoder::applyLogicalSteps(int steps, bool fast) {
   const int speed = fast ? fast_speed : 1;
   const int delta = steps * speed;
@@ -63,3 +64,4 @@ int MCLRelativeEncoder::applyLogicalSteps(int steps, bool fast) {
   cur = combined > 127 ? 127 : (combined < -127 ? -127 : combined);
   return cur;
 }
+#endif

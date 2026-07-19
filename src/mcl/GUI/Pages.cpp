@@ -289,7 +289,19 @@ void LightPage::applyMouseEncoderDelta(uint8_t i, int16_t ticks, bool fast) {
   }
 
   Encoder *encoder = encoders[i];
+#if defined(__AVR__)
+  const int8_t step = ticks > 0 ? 1 : -1;
+  while (ticks != 0) {
+    encoder_t mouse_encoder = {};
+    mouse_encoder.normal =
+        step * (encoder->rot_res * ENCODER_RES_MULTIPLIER + 1);
+    mouse_encoder.button = fast;
+    encoder->update(&mouse_encoder);
+    ticks -= step;
+  }
+#else
   encoder->applyLogicalSteps(ticks, fast);
+#endif
 
   encoder_focus = i;
   GUI.wake_screen_saver();
