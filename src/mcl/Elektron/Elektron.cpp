@@ -28,16 +28,24 @@ bool read_system_response(ElektronDevice *device, uint8_t command,
                           SysexView &sysex, uint8_t &begin) {
   send_system_command(device, command);
   uint8_t msgType = device->waitBlocking();
+#if !defined(__AVR__)
   if (msgType != 0x72) {
     return false;
   }
+#endif
   begin = device->sysex_protocol.header_size + 1;
   auto listener = device->getSysexListener();
+#if !defined(__AVR__)
   if (listener->msg_rd >= NUM_SYSEX_MSGS) {
     return false;
   }
+#endif
   sysex.init(listener->sysex, listener->msg_rd);
+#if defined(__AVR__)
+  return msgType == 0x72 && sysex.getByte(begin) == command;
+#else
   return sysex.get_recordLen() > begin && sysex.getByte(begin) == command;
+#endif
 }
 
 uint16_t read_packed_u16_7bit(const SysexView &sysex, uint8_t offset) {
@@ -154,8 +162,12 @@ bool ElektronDevice::get_tempo(uint16_t &tempo) {
   uint8_t begin;
   SysexView sysex;
   tempo = 0;
+#if defined(__AVR__)
+  if (read_system_response(this, 0x3F, sysex, begin)) {
+#else
   if (read_system_response(this, 0x3F, sysex, begin) &&
       sysex.get_recordLen() >= (uint16_t)(begin + 3)) {
+#endif
       tempo = sysex.getByte(begin+1) << 7;
       tempo |= (sysex.getByte(begin+2));
       return true;
@@ -215,7 +227,7 @@ bool ElektronDevice::get_fw_caps() {
   SysexView sysex(listener->sysex, msg_rd);
   uint8_t b = 0;
   if (msgType == 0x72 && sysex.getByte(begin) == 0x30) {
-    if (record_len < begin + 5) {
+    if (record_len < static_cast<uint16_t>(begin) + 5u) {
       return false;
     }
     begin++;

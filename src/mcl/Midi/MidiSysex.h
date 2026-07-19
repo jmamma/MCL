@@ -162,11 +162,15 @@ public:
     // Since we want to read/write at offset n from current ptr
     uint16_t readPos = (uint16_t)((uint8_t *)ledger[rd_cur].ptr - rb->buf);
     // Adding n to readPos might exceed len, so wrap it
+#if defined(__AVR__)
+    uint16_t targetPos = readPos + n;
+#else
     uint32_t targetPos = (uint32_t)readPos + n;
+#endif
     if (targetPos >= rb->len) {
       targetPos -= rb->len;
     }
-    volatile uint8_t *dst = rb->buf + (uint16_t)targetPos;
+    volatile uint8_t *dst = rb->buf + targetPos;
     put_bank1(dst, c);
   }
 
@@ -176,11 +180,15 @@ public:
 
   uint8_t getByte(uint16_t n) {
     uint16_t readPos = (uint16_t)((uint8_t *)ledger[rd_cur].ptr - rb->buf);
+#if defined(__AVR__)
+    uint16_t targetPos = readPos + n;
+#else
     uint32_t targetPos = (uint32_t)readPos + n;
+#endif
     if (targetPos >= rb->len) {
       targetPos -= rb->len;
     }
-    volatile uint8_t *src = rb->buf + (uint16_t)targetPos;
+    volatile uint8_t *src = rb->buf + targetPos;
     return get_bank1(src);
   }
 
@@ -288,11 +296,15 @@ public:
   uint16_t get_recordLen() const { return recordLen; }
 
   uint8_t getByte(uint16_t n) const {
+#if defined(__AVR__)
+    uint16_t targetPos = base + n;
+#else
     uint32_t targetPos = (uint32_t)base + n;
+#endif
     if (targetPos >= rb->len) {
       targetPos -= rb->len;
     }
-    volatile uint8_t *src = rb->buf + (uint16_t)targetPos;
+    volatile uint8_t *src = rb->buf + targetPos;
     return get_bank1(src);
   }
 

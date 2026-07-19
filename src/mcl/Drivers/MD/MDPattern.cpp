@@ -162,11 +162,15 @@ bool MDPattern::fromSysex(MidiClass *midi) {
 
   init();
   SysexView sysex(midi->midiSysex);
+#if defined(__AVR__)
+  uint16_t len = sysex.get_recordLen() - 5;
+#else
   const uint16_t record_len = sysex.get_recordLen();
   if (record_len < 9) {
     return false;
   }
   uint16_t len = record_len - 5;
+#endif
   uint16_t offset = 5;
 
 #if !defined(__AVR__)

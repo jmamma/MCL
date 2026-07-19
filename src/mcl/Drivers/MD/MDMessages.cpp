@@ -64,6 +64,20 @@ float MDMachine::normalize_level() {
 
 bool MDGlobal::fromSysex(MidiClass *midi) {
   SysexView sysex(midi->midiSysex);
+#if defined(__AVR__)
+  uint16_t len = sysex.get_recordLen() - 5;
+  uint16_t offset = 5;
+
+  if (len < 4) {
+    return false;
+  }
+
+  if (!ElektronHelper::checkSysexChecksum(sysex, offset, len)) {
+    return false;
+  }
+
+  uint8_t version = sysex.getByte(offset + 1);
+#else
   uint16_t record_len = sysex.get_recordLen();
   if (record_len < 9) {
     return false;
@@ -84,6 +98,7 @@ bool MDGlobal::fromSysex(MidiClass *midi) {
   if (!ElektronHelper::checkSysexChecksum(sysex, offset, len)) {
     return false;
   }
+#endif
 
   origPosition = sysex.getByte(offset + 3);
   ElektronSysexDecoder decoder(sysex, offset + 4);
@@ -330,12 +345,29 @@ uint8_t *MDKit::fx_params(uint8_t fx) {
 
 bool MDKit::fromSysex(MidiClass *midi) {
   SysexView sysex(midi->midiSysex);
+#if defined(__AVR__)
+  uint16_t len = sysex.get_recordLen() - 5;
+  uint16_t offset = 5;
+
+  // Preserve the established AVR decoder contract. SPS-X v65/v66 payloads
+  // are hosted-only and are rejected by the version check below.
+  if (len < 420) {
+    DEBUG_PRINTLN(F("kit too short"));
+    return false;
+  }
+
+  if (!ElektronHelper::checkSysexChecksum(sysex, offset, len)) {
+    DEBUG_PRINTLN("wrong checksum");
+    return false;
+  }
+#else
   uint16_t record_len = sysex.get_recordLen();
   if (record_len < 9) {
     return false;
   }
   uint16_t len = record_len - 5;
   uint16_t offset = 5;
+#endif
 
   uint8_t version = sysex.getByte(1 + offset);
 
@@ -358,6 +390,7 @@ bool MDKit::fromSysex(MidiClass *midi) {
     return false;
   }
 
+#if !defined(__AVR__)
   const uint16_t expected_len = mdKitChecksumLengthForVersion(version);
   if (len != expected_len) {
     DEBUG_PRINTLN(F("kit too short"));
@@ -368,6 +401,7 @@ bool MDKit::fromSysex(MidiClass *midi) {
     DEBUG_PRINTLN("wrong checksum");
     return false;
   }
+#endif
 
   origPosition = sysex.getByte(3 + offset);
   ElektronSysexDecoder decoder(sysex, offset + 4);
