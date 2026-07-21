@@ -117,14 +117,26 @@ void MDSysexListenerClass::end() {
 
     {
       uint8_t *p = &MD.kit.lfos[track].destinationTrack;
+#if MCL_FEATURE_HOST_ARRANGER
+      bool kit_edited = p[param] != value;
+#endif
       p[param] = value;
 
       //LFOS, LFOD, LFOM
       if (4 < param && param < 8) {
+#if MCL_FEATURE_HOST_ARRANGER
+        kit_edited = kit_edited ||
+                     MD.kit.params[track][param + 16] != value;
+#endif
         MD.kit.params[track][param + 16] = value;
         perf_page.learn_param(track, param + 16, value);
         lfo_page.learn_perf_dest(track + 1, param + 16, value);
       }
+#if MCL_FEATURE_HOST_ARRANGER
+      if (kit_edited) {
+        mcl_arrangement.markRuntimePrivateSourceEdited(track);
+      }
+#endif
     }
 
     break;

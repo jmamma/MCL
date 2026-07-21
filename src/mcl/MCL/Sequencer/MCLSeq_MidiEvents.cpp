@@ -9,8 +9,10 @@
 #include "Sequencer/SeqTrackUtil.h"
 #include "../../Drivers/Generic/GenericMidiDevice.h"
 #include "../../Drivers/MD/MD.h"
-#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+#if MCL_FEATURE_HOST_ARRANGER
 #include "Arrangement/MCLArrangement.h"
+#endif
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
 #include "Host/SpsHostArrBridge.h"
 #endif
 
@@ -87,6 +89,14 @@ bool handle_mixer_cc(DeviceIdx device_idx, MidiDevice *device, uint8_t channel,
   *param_out = track_param;
 
   bool mute_param = mixer->is_mute_param(track_param);
+#if MCL_FEATURE_HOST_ARRANGER
+  if (!mute_param) {
+    GridSlot slot = device_idx == DeviceIdx::Secondary
+                        ? (GridSlot)(GRID_WIDTH + track)
+                        : (GridSlot)track;
+    mcl_arrangement.markRuntimePrivateSourceEdited(slot);
+  }
+#endif
 #if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
   record_arranger_param_cc(device_idx, track, track_param, value, mute_param);
 #endif

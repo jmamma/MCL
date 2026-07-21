@@ -4,8 +4,12 @@
 
 #include "Devices/DeviceManager.h"
 #include "GUI/Pages/Performance/MixerPerf.h"
+#include "MCLPlatformFeatures.h"
 #include "NoteInterface.h"
 #include "Sequencer/SeqTrackUtil.h"
+#if MCL_FEATURE_HOST_ARRANGER
+#include "Arrangement/MCLArrangement.h"
+#endif
 #include "../../../../Drivers/MD/MD.h"
 #include "../../../../Drivers/MidiDevice.h"
 
@@ -159,8 +163,21 @@ MidiDeviceMixerValue MixerTarget::clamp_param_value(
 
 bool MixerTarget::set_param(uint8_t track, uint8_t param_idx,
                             MidiDeviceMixerValue value, bool send) const {
-  return mixer_ != nullptr &&
-         mixer_->set_param(ctx_, track, param_idx, value, send);
+  bool changed = mixer_ != nullptr &&
+                 mixer_->set_param(ctx_, track, param_idx, value, send);
+#if MCL_FEATURE_HOST_ARRANGER
+  if (changed && track < GRID_WIDTH) {
+    DeviceIdx device_idx = ctx_.device_idx();
+    if (device_idx == DeviceIdx::Primary ||
+        device_idx == DeviceIdx::Secondary) {
+      GridSlot slot = device_idx == DeviceIdx::Secondary
+                          ? (GridSlot)(GRID_WIDTH + track)
+                          : (GridSlot)track;
+      mcl_arrangement.markRuntimePrivateSourceEdited(slot);
+    }
+  }
+#endif
+  return changed;
 }
 
 bool MixerTarget::set_seq_mute_state(uint8_t track, bool mute) const {
