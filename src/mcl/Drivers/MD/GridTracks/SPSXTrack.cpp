@@ -327,9 +327,9 @@ void SPSXTrack::load_seq_data(SeqTrack *seq_track) {
 }
 
 void SPSXTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
-  // Immediate clip/grid loads follow MCL normalize semantics: LEV remains
-  // mixer-owned unless it is explicitly driven by automation or fades.
-  MD.insertMachineInKit(tracknumber, &machine, false);
+  // Full sound loads restore the stored LEV. Timed transitions preserve the
+  // live mixer level through the cache path instead.
+  MD.insertMachineInKit(tracknumber, &machine, true);
   load_seq_data(seq_track);
   if (tracknumber == 0)
     mcl_seq.set_spsx_accent_amount((uint8_t)(reserved & 0x0F));

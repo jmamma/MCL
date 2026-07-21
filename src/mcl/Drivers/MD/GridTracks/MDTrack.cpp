@@ -160,9 +160,9 @@ void MDTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
 
 void MDTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   DEBUG_PRINTLN("load immediate");
-  // Immediate clip/grid loads follow MCL normalize semantics: LEV remains
-  // mixer-owned unless it is explicitly driven by automation or fades.
-  MD.insertMachineInKit(tracknumber, &(machine), false);
+  // Full sound loads restore the stored LEV. Timed transitions preserve the
+  // live mixer level through the cache path instead.
+  MD.insertMachineInKit(tracknumber, &(machine), true);
   load_seq_data(seq_track);
 }
 
