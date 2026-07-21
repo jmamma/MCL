@@ -466,7 +466,14 @@ void MCLSeq::seq() {
     }
 #endif
 
-    run_md_tick(*this, uart, uart2, legacy_tick);
+    // Manual-step mode: MD tracks (and whatever run_md_tick() bundles with
+    // them — arp/mdfx/aux/LFO tracks tied to the MD grid) are advanced only
+    // by manual_step_advance(), not by the clock. Everything else below
+    // (TBD/MIDI/ext tracks, slide recalc, MidiClock's own ticking/forwarding
+    // to other gear) keeps running as normal.
+    if (!mcl_cfg.manual_step_enabled) {
+      run_md_tick(*this, uart, uart2, legacy_tick);
+    }
 #if defined(PLATFORM_TBD)
     run_tbd_tick(*this, uart, uart2, legacy_tick);
 #endif
@@ -487,6 +494,34 @@ void MCLSeq::seq() {
 #if !MCL_FEATURE_HOST_LOAD_FADE_SEEK
   TrackLoadFadeRunner::tick(uart, uart2);
 #endif
+}
+
+// One normal-speed (1x) step's worth of ticks — see SeqTrack::get_ticks_per_step
+// (SEQ_SPEED_1X == 12). Every MD track's own ticks_per_step (which varies with
+// per-track speed) divides evenly into multiples/fractions of this, so tracks
+// running at a different speed than 1x still advance at their correct rate
+// relative to one another across successive manual triggers, exactly as they
+// would under continuous clock ticking — mod12_counter simply carries any
+// remainder over to the next manual trigger, same as it carries over between
+// real ticks.
+static constexpr uint8_t MANUAL_STEP_TICKS = 12;
+
+void MCLSeq::manual_step_advance() {
+  if (!state || !seq_grid_x_runs_md_tracks()) {
+    return;
+  }
+
+  // Reuse the exact production tick path (swing timing, trig conditions,
+  // note lengths, slides, arp/mdfx/aux/LFO tracks bundled with MD) instead of
+  // reimplementing any of it — just drive it synchronously instead of on the
+  // clock. uart/uart2 mirror the realtime fast path in seq().
+  MidiUartClass *uart = primary_output;
+  MidiUartClass *uart2 = secondary_output;
+
+  for (uint8_t i = 0; i < MANUAL_STEP_TICKS; i++) {
+    run_md_tick(*this, uart, uart2, /*legacy_tick=*/true);
+  }
+  recalc_all_slides(*this, /*legacy_tick=*/true);
 }
 
 MCLSeq mcl_seq;

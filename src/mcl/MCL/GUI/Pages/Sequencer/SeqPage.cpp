@@ -22,9 +22,9 @@
 #include "Sequencer/SeqExtStepTrackRef.h"
 #include "Sequencer/SeqStepTrackRef.h"
 #include "Sequencer/SeqTrackUtil.h"
-#ifdef PLATFORM_TBD
 #include "Devices/MidiSetup.h"
-#endif
+#include "MCLSysConfig.h"
+#include "Project.h"
 
 namespace {
 
@@ -748,7 +748,9 @@ void SeqPage::init() {
       menu_entry_mask(SEQ_MENU_COPY) | menu_entry_mask(SEQ_MENU_CLEAR_TRACK) |
       menu_entry_mask(SEQ_MENU_PASTE) | menu_entry_mask(SEQ_MENU_SHIFT) |
       menu_entry_mask(SEQ_MENU_REVERSE) |
-      menu_entry_mask(SEQ_MENU_TRANSPOSE) | menu_entry_mask(SEQ_MENU_QUANT);
+      menu_entry_mask(SEQ_MENU_TRANSPOSE) | menu_entry_mask(SEQ_MENU_QUANT) |
+      menu_entry_mask(SEQ_MENU_STEP_MODE) |
+      menu_entry_mask(SEQ_MENU_STEP_CC) | menu_entry_mask(SEQ_MENU_STEP_PORT);
   seq_menu_page.menu.set_enabled_entry_mask(base_seq_menu_entries);
 #if !defined(__AVR__)
   seq_menu_page.menu.set_option_name_override(seq_page_channel_menu_label);
@@ -1874,6 +1876,55 @@ void SeqPage::config_as_lockedit() {
       ~clear_locks_mask;
 }
 
+namespace {
+
+// STEP MODE/CC/PORT are edited live by the menu encoder (direct write to
+// mcl_cfg, no discrete "commit" step — see MenuPageBase::loop()), so there's
+// no natural event to hook a save to. Persist them into the currently loaded
+// project once the value has stopped changing for a moment, instead of on
+// every single encoder tick while the user is still turning the dial.
+constexpr uint16_t MANUAL_STEP_SAVE_DEBOUNCE_MS = 500;
+
+void save_manual_step_to_project_if_settled() {
+  if (!proj.project_loaded) {
+    return;
+  }
+  static uint8_t last_seen_enabled = 0;
+  static uint8_t last_seen_cc = 0;
+  static uint8_t last_seen_port = 0;
+  static uint16_t last_change_ms = 0;
+  static bool pending = false;
+
+  if (mcl_cfg.manual_step_enabled != last_seen_enabled ||
+      mcl_cfg.manual_step_cc != last_seen_cc ||
+      mcl_cfg.manual_step_port != last_seen_port) {
+    last_seen_enabled = mcl_cfg.manual_step_enabled;
+    last_seen_cc = mcl_cfg.manual_step_cc;
+    last_seen_port = mcl_cfg.manual_step_port;
+    last_change_ms = read_clock_ms();
+    pending = true;
+  }
+
+  if (!pending ||
+      clock_diff(last_change_ms, read_clock_ms()) < MANUAL_STEP_SAVE_DEBOUNCE_MS) {
+    return;
+  }
+  pending = false;
+
+  if (proj.cfg.manual_step_enabled == mcl_cfg.manual_step_enabled &&
+      proj.cfg.manual_step_cc == mcl_cfg.manual_step_cc &&
+      proj.cfg.manual_step_port == mcl_cfg.manual_step_port) {
+    return;
+  }
+  proj.cfg.manual_step_enabled = mcl_cfg.manual_step_enabled;
+  proj.cfg.manual_step_cc = mcl_cfg.manual_step_cc;
+  proj.cfg.manual_step_port = mcl_cfg.manual_step_port;
+  proj.write_header();
+  midi_setup.cfg_ports();
+}
+
+} // namespace
+
 bool SeqPage::md_track_change_check() {
   if (last_primary_track != MD.currentTrack ||
       last_md_model != MD.kit.models[MD.currentTrack]) {
@@ -1899,6 +1950,7 @@ void SeqPage::loop() {
   if (show_seq_menu) {
     suspend_enhanced_mask_window();
     seq_menu_page.loop();
+    save_manual_step_to_project_if_settled();
     if (!seq_page_uses_non_md_primary_step_tracks() &&
         !opt_capture_is_md_device() && opt_trackid > NUM_EXT_TRACKS) {
       // lock trackid to [1..4]

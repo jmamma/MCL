@@ -281,6 +281,9 @@ bool MCLSysConfig::cfg_init() {
   md_sample_bank = 0;
   md_sample_bank_capture = 0;
   active_arrangement_idx = 0;
+  //manual_step_enabled = 0;
+  manual_step_cc = 110;
+  //manual_step_port = MANUAL_STEP_PORT_MIDI2;
   mclsys_normalize_midi_config();
   cfgfile.close();
   ret = write_cfg();

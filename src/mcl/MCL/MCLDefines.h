@@ -2,7 +2,12 @@
 
 #include "platform.h"
 
+// WAV Designer is a substantial RAM/flash consumer that AVR (MegaCommand)
+// has essentially no spare margin for — disabled there specifically rather
+// than globally, so RP2040/TBD/desktop builds keep it untouched.
+#ifndef __AVR__
 #define WAV_DESIGNER
+#endif
 #define SOUND_PAGE
 
 /*
