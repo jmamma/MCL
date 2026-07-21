@@ -25,7 +25,7 @@ public:
 
 static_assert(offsetof(ProjectHeader, cfg) == 24,
               "persisted project config offset changed");
-static_assert(sizeof(ProjectHeader) == 209,
+static_assert(sizeof(ProjectHeader) == 212,
               "persisted project header layout changed");
 
 class Project : public ProjectHeader {

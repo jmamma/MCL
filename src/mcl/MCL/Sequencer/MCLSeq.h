@@ -48,6 +48,7 @@ public:
   void onNoteOffCallback_Midi(uint8_t *msg);
   void onControlChangeCallback_Midi(uint8_t *msg);
   void onControlChangeCallback_Midi2(uint8_t *msg);
+  void onManualStepCC_Midi(uint8_t *msg);
 };
 
 class MCLSeq : public ClockCallback {
@@ -198,6 +199,16 @@ public:
 #endif
   bool legacy_tick_due();
   void seq();
+
+  // Manual-step mode: fires one normal-speed step's worth of MD-track ticks
+  // (swing, trigs, note lengths, slides — everything MDSeqTrack::seq()
+  // already does on a real clock tick) in one synchronous burst, driven by
+  // an incoming CC instead of the clock. Only called while manual_step
+  // playback is engaged, and only advances the MD tracks (and whatever
+  // run_md_tick() bundles with them — arp/mdfx/aux/LFO tracks tied to the MD
+  // grid); MidiClock itself, and any other device on a different port, are
+  // untouched.
+  void manual_step_advance();
 };
 
 extern MCLSeq mcl_seq;

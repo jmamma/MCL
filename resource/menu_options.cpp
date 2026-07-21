@@ -109,4 +109,6 @@ menu_option_t MENU_OPTIONS[] = {
   {25, "MD9"}, {26, "MD10"}, {27, "MD11"}, {28, "MD12"},
   {29, "MD13"}, {30, "MD14"}, {31, "MD15"}, {32, "MD16"},
 #endif
+  // MANUAL_STEP_PORT_OPTIONS_OFFSET: manual-step trigger source port
+  {0, "MIDI 2"}, {1, "USB"},
 };

@@ -118,9 +118,11 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
 #if defined(__AVR__)
   #define SEQ_CHANNEL_OPTIONS_COUNT 16
   #define SEQ_CHANNEL_OPTIONS_OFFSET (SAMPLE_BANK_OPTIONS_OFFSET + 1)
+  #define MANUAL_STEP_PORT_OPTIONS_OFFSET (SEQ_CHANNEL_OPTIONS_OFFSET + SEQ_CHANNEL_OPTIONS_COUNT)
 #else
   #define SEQ_CHANNEL_OPTIONS_COUNT 0
   #define SEQ_CHANNEL_OPTIONS_OFFSET 0
+  #define MANUAL_STEP_PORT_OPTIONS_OFFSET (SAMPLE_BANK_OPTIONS_OFFSET + 1)
 #endif
 
 menu_t<mididevice_menu_page_N> mididevice_menu_layout = {
@@ -368,6 +370,9 @@ menu_t<seq_menu_page_N> seq_menu_layout = {
         {"CC REC:",     0, 2,                   2,                   30, NULL_PAGE,  0,  25},
         {"SOUND",       0, 0,                   0,                   0,  SOUND_BROWSER, 0,  0},
         {"LFO MULT:",   0, 8,                   8,                   70, NULL_PAGE,  0,  LFO_MULT_OPTIONS_OFFSET},
+        {"STEP MODE:",  0, 2,                   2,                   75, NULL_PAGE,  0, 25},
+        {"STEP CC:",    0, 128,                 0,                   76, NULL_PAGE,  0, 0},
+        {"STEP PORT:",  0, 2,                   2,                   77, NULL_PAGE,  0, MANUAL_STEP_PORT_OPTIONS_OFFSET},
     },
     14
 };

@@ -396,6 +396,12 @@ constexpr size_t PROJECT_CONFIG_SIZE_LEGACY =
     offsetof(MCLSysConfigData, md_sample_bank_capture);
 constexpr size_t PROJECT_HEADER_SIZE_LEGACY_CONFIG =
     offsetof(ProjectHeader, cfg) + PROJECT_CONFIG_SIZE_LEGACY;
+// Size of files saved before manual-step-mode fields existed (i.e. through
+// active_arrangement_idx, the previous tail field).
+constexpr size_t PROJECT_CONFIG_SIZE_PRE_MANUAL_STEP =
+    offsetof(MCLSysConfigData, manual_step_enabled);
+constexpr size_t PROJECT_HEADER_SIZE_PRE_MANUAL_STEP =
+    offsetof(ProjectHeader, cfg) + PROJECT_CONFIG_SIZE_PRE_MANUAL_STEP;
 
 #ifdef MCL_HAS_PROJECT_CONVERSION
 #define PROJECT_VERSION_CAN_OPEN(v)                                           \
@@ -417,6 +423,9 @@ size_t project_header_read_size(File &file) {
   uint32_t file_size = file.fileSize();
   if (file_size >= sizeof(ProjectHeader)) {
     return sizeof(ProjectHeader);
+  }
+  if (file_size >= PROJECT_HEADER_SIZE_PRE_MANUAL_STEP) {
+    return PROJECT_HEADER_SIZE_PRE_MANUAL_STEP;
   }
   if (file_size >= PROJECT_HEADER_SIZE_LEGACY_CONFIG) {
     return PROJECT_HEADER_SIZE_LEGACY_CONFIG;
@@ -464,6 +473,22 @@ void clear_project_sample_bank(MCLSysConfigData *data) {
   }
   data->md_sample_bank = MD_SAMPLE_BANK_OFF;
   data->md_sample_bank_capture = 0;
+}
+
+bool project_config_has_manual_step(const MCLSysConfigData &source) {
+  return source.version == CONFIG_VERSION;
+}
+
+// Always defaults manual-step mode OFF rather than trusting/inheriting it,
+// since silently resurrecting it on an untrusted/older config could start
+// stepping the MD sequencer off a stale CC binding.
+void clear_project_manual_step(MCLSysConfigData *data) {
+  if (data == nullptr) {
+    return;
+  }
+  data->manual_step_enabled = 0;
+  data->manual_step_cc = 0;
+  data->manual_step_port = MANUAL_STEP_PORT_MIDI2;
 }
 
 #ifdef MCL_HAS_PROJECT_CONVERSION
@@ -827,6 +852,7 @@ void copy_project_config(MCLSysConfigData *dst,
   dst->md_sample_bank = normalized_sample_bank_setting(source.md_sample_bank);
   dst->md_sample_bank_capture = 0;
   dst->active_arrangement_idx = source.active_arrangement_idx;
+  clear_project_manual_step(dst);
 }
 
 #ifdef MCL_HAS_PROJECT_CONVERSION
@@ -839,6 +865,7 @@ void normalize_project_config(MCLSysConfigData *data) {
   data->md_sample_bank = sample_bank;
   data->md_sample_bank_capture = 0;
   data->active_arrangement_idx = 0;
+  clear_project_manual_step(data);
 }
 #endif
 
@@ -1309,6 +1336,23 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     mcl_cfg.md_sample_bank_capture = 0;
   }
 
+  // Manual-step mode always follows the loaded project, regardless of the
+  // PROJ CFG toggle above — it's sequencer playback behavior specific to
+  // each project, not a general system setting like MIDI routing/tempo.
+  bool manual_step_changed =
+      mcl_cfg.manual_step_enabled != cfg.manual_step_enabled ||
+      mcl_cfg.manual_step_cc != cfg.manual_step_cc ||
+      mcl_cfg.manual_step_port != cfg.manual_step_port;
+  if (project_config_valid(cfg)) {
+    mcl_cfg.manual_step_enabled = cfg.manual_step_enabled;
+    mcl_cfg.manual_step_cc = cfg.manual_step_cc;
+    mcl_cfg.manual_step_port = cfg.manual_step_port;
+  } else {
+    mcl_cfg.manual_step_enabled = 0;
+    mcl_cfg.manual_step_cc = 0;
+    mcl_cfg.manual_step_port = MANUAL_STEP_PORT_MIDI2;
+  }
+
 #if MCL_FEATURE_HOST_ARRANGER
   uint8_t active_arrangement_idx = cfg.active_arrangement_idx;
   if (!ensure_arrangements_current_project(&active_arrangement_idx)) {
@@ -1373,7 +1417,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     DEBUG_PRINTLN(F("could not write cfg"));
     return false;
   }
-  if (applied_project_config) {
+  if (applied_project_config || manual_step_changed) {
     midi_setup.cfg_ports();
   }
   load_project_sample_bank(project_sample_bank);
@@ -1427,6 +1471,7 @@ bool Project::read_header() {
     } else {
       copy_project_config(&cfg, mcl_cfg);
       clear_project_sample_bank(&cfg);
+      clear_project_manual_step(&cfg);
     }
     return true;
   }
@@ -1440,6 +1485,7 @@ bool Project::read_header() {
   if (!project_config_valid(cfg)) {
     copy_project_config(&cfg, mcl_cfg);
     clear_project_sample_bank(&cfg);
+    clear_project_manual_step(&cfg);
   }
   return true;
 }
@@ -2070,6 +2116,7 @@ bool Project::new_project_master_file(const char *projectname) {
   ret = file.open(projectname, O_RDWR | O_CREAT);
   if (!ret) {
     DEBUG_PRINTLN(F("Could not open file"));
+    gfx.alert_error("OPEN ERR");
     return false;
   }
 
@@ -2077,10 +2124,12 @@ bool Project::new_project_master_file(const char *projectname) {
   if (!ret) {
     file.close();
     DEBUG_PRINTLN(F("Could not extend file"));
+    gfx.alert_error("PREALLOC ERR");
     return false;
   }
 
   if (!write_header()) {
+    gfx.alert_error("HEADER ERR");
     return false;
   }
 

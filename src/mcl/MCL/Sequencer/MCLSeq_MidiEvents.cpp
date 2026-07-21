@@ -9,6 +9,7 @@
 #include "Sequencer/SeqTrackUtil.h"
 #include "../../Drivers/Generic/GenericMidiDevice.h"
 #include "../../Drivers/MD/MD.h"
+#include "global.h"
 #if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
 #include "Arrangement/MCLArrangement.h"
 #include "Host/SpsHostArrBridge.h"
@@ -143,6 +144,29 @@ MidiClass *mcl_seq_secondary_midi() {
 }
 #endif
 
+// Manual-step trigger CC always listens on Midi2 or MidiUSB only — never on
+// Midi (MIDI1/UART1), which is where MD's own parameter-lock/mixer CC
+// traffic lives (handled above). Keeps the two streams permanently separate
+// regardless of which device happens to be routed to which port.
+void setup_mcl_seq_manual_step(MCLSeqMidiEvents *events) {
+  if (!mcl_cfg.manual_step_enabled) return;
+  MidiClass *port =
+      (mcl_cfg.manual_step_port == MANUAL_STEP_PORT_USB) ? &MidiUSB : &Midi2;
+  port->addOnControlChangeCallback(
+      events, (midi_callback_ptr_t)&MCLSeqMidiEvents::onManualStepCC_Midi);
+}
+
+// Removes from both possible ports unconditionally — CallbackVector::remove
+// is a safe no-op if the callback isn't registered there, so this can't
+// leave a stale registration behind even if manual_step_port changed between
+// the last setup_callbacks() and this remove_callbacks().
+void cleanup_mcl_seq_manual_step(MCLSeqMidiEvents *events) {
+  Midi2.removeOnControlChangeCallback(
+      events, (midi_callback_ptr_t)&MCLSeqMidiEvents::onManualStepCC_Midi);
+  MidiUSB.removeOnControlChangeCallback(
+      events, (midi_callback_ptr_t)&MCLSeqMidiEvents::onManualStepCC_Midi);
+}
+
 void cleanup_mcl_seq_midi(MCLSeqMidiEvents *events, MidiClass *midi) {
   if (midi == nullptr) return;
   midi->removeOnNoteOnCallback(
@@ -217,6 +241,15 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   }
 }
 
+// Every message on the configured CC — any value, no debounce, no on/off
+// gating — advances the MD sequencer exactly one step.
+void MCLSeqMidiEvents::onManualStepCC_Midi(uint8_t *msg) {
+  if (!mcl_cfg.manual_step_enabled || msg[1] != mcl_cfg.manual_step_cc) {
+    return;
+  }
+  mcl_seq.manual_step_advance();
+}
+
 void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
@@ -258,6 +291,7 @@ void MCLSeqMidiEvents::setup_callbacks() {
   setup_mcl_seq_secondary_midi(this, secondary_midi);
 #endif
 #endif
+  setup_mcl_seq_manual_step(this);
   state = true;
 }
 
@@ -267,5 +301,6 @@ void MCLSeqMidiEvents::remove_callbacks() {
   }
 
   cleanup_mcl_seq_all_midi(this);
+  cleanup_mcl_seq_manual_step(this);
   state = false;
 }

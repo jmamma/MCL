@@ -204,7 +204,13 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     // 73
     &opt_swing,
     // 74
-    &mcl_cfg.md_sample_bank
+    &mcl_cfg.md_sample_bank,
+    // 75
+    &mcl_cfg.manual_step_enabled,
+    // 76
+    &mcl_cfg.manual_step_cc,
+    // 77
+    &mcl_cfg.manual_step_port
 };
 
 const menu_function_t menu_target_functions[] PROGMEM = {
@@ -241,9 +247,15 @@ const menu_function_t menu_target_functions[] PROGMEM = {
     // 16 - apply_slot_changes_cb
     apply_slot_changes_cb,
     // 17 - wav_render
+#ifdef WAV_DESIGNER
     wav_render,
     // 18 - wavdesign_menu_handler
     wavdesign_menu_handler,
+#else
+    nullptr,
+    // 18 - wavdesign_menu_handler
+    nullptr,
+#endif
     // 19 - mclsys_apply_config_midi
     mclsys_apply_config_midi,
     // 20 - md_import
