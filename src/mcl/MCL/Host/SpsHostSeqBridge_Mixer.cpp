@@ -4,6 +4,7 @@
 #include "SpsHostSeqBridge_Internal.h"
 #include "MCLPlatformFeatures.h"
 #if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+#include "Arrangement/MCLArrangement.h"
 #include "Host/SpsHostArrBridge.h"
 #endif
 

@@ -129,7 +129,17 @@ public:
   virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {}
 
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {}
-  virtual void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) { load_immediate(tracknumber, seq_track); }
+#if !defined(__AVR__)
+  // Hosted immediate loads may need the sound without replacing a live mixer
+  // level owned by arranger automation.
+  virtual void load_immediate_preserve_level(uint8_t tracknumber,
+                                             SeqTrack *seq_track) {
+    load_immediate(tracknumber, seq_track);
+  }
+#endif
+  virtual void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) {
+    load_immediate(tracknumber, seq_track);
+  }
 
   virtual bool transition_cache(uint8_t tracknumber, GridSlot slotnumber) { return false; }
   virtual void transition_send(uint8_t tracknumber, GridSlot slotnumber) {}

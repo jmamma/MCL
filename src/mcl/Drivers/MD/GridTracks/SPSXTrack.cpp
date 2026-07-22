@@ -327,13 +327,21 @@ void SPSXTrack::load_seq_data(SeqTrack *seq_track) {
 }
 
 void SPSXTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
-  // Full sound loads restore the stored LEV. Timed transitions preserve the
-  // live mixer level through the cache path instead.
   MD.insertMachineInKit(tracknumber, &machine, true);
   load_seq_data(seq_track);
   if (tracknumber == 0)
     mcl_seq.set_spsx_accent_amount((uint8_t)(reserved & 0x0F));
 }
+
+#if !defined(__AVR__)
+void SPSXTrack::load_immediate_preserve_level(uint8_t tracknumber,
+                                              SeqTrack *seq_track) {
+  MD.insertMachineInKit(tracknumber, &machine, false);
+  load_seq_data(seq_track);
+  if (tracknumber == 0)
+    mcl_seq.set_spsx_accent_amount((uint8_t)(reserved & 0x0F));
+}
+#endif
 
 void SPSXTrack::load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) {
   load_seq_data(seq_track);

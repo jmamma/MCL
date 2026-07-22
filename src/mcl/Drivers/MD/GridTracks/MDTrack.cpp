@@ -160,11 +160,18 @@ void MDTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
 
 void MDTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   DEBUG_PRINTLN("load immediate");
-  // Full sound loads restore the stored LEV. Timed transitions preserve the
-  // live mixer level through the cache path instead.
   MD.insertMachineInKit(tracknumber, &(machine), true);
   load_seq_data(seq_track);
 }
+
+#if !defined(__AVR__)
+void MDTrack::load_immediate_preserve_level(uint8_t tracknumber,
+                                            SeqTrack *seq_track) {
+  DEBUG_PRINTLN("load immediate");
+  MD.insertMachineInKit(tracknumber, &(machine), false);
+  load_seq_data(seq_track);
+}
+#endif
 
 void MDTrack::load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) {
   DEBUG_PRINTLN("load immediate");

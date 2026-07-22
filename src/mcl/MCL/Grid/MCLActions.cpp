@@ -1018,7 +1018,20 @@ bool MCLActions::load_track_immediate(GridRow row, GridSlot i, GridSlot dst,
     if (i != dst) {
       ptrack->on_copy(i & 0xF, track_idx_dst, false);
     }
+#if MCL_FEATURE_HOST_ARRANGER
+    // Stopped user recalls retain the 4.70 normalized-level behavior. Arranger
+    // and running immediate loads leave the live mixer level in control.
+    const bool restore_stored_level =
+        MidiClock.state != 2 && chains[i].mode != LOAD_ARRANG;
+    if (restore_stored_level) {
+      ptrack->load_immediate(track_idx_dst, gdt_dst->seq_track);
+    } else {
+      ptrack->load_immediate_preserve_level(track_idx_dst,
+                                            gdt_dst->seq_track);
+    }
+#else
     ptrack->load_immediate(track_idx_dst, gdt_dst->seq_track);
+#endif
   }
 
   uint16_t fade_elapsed = clear_runtime_fade_elapsed(ptrack);
