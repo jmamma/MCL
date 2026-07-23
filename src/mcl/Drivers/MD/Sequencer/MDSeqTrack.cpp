@@ -178,6 +178,10 @@ bool MDSeqTrackDataV1::set_track_locks_i(uint8_t step, uint8_t lockidx,
                                          uint8_t value) {
   auto lock_slot = get_lockidx(step, lockidx);
   if (lock_slot == NUM_MD_LOCK_SLOTS) {
+    if (get_lockidx(NUM_MD_STEPS) >= NUM_MD_LOCK_SLOTS) {
+      return false; // memory full
+    }
+
     auto idx = get_lockidx(step);
     auto nlock = popcount(steps[step].locks & ((1 << lockidx) - 1));
     lock_slot = idx + nlock;
@@ -1439,7 +1443,9 @@ void MDSeqTrack::paste_step(uint8_t n, MDSeqStep *step) {
       set_track_locks(n, locks_params[a] - 1, step->locks[a] - 1);
     }
   }
+  uint8_t pasted_locks = steps[n].locks;
   memcpy(&(steps[n]), &step->data, sizeof(MDSeqStepDescriptor));
+  steps[n].locks = pasted_locks;
   set_step(n, MASK_SWING, step->swing);
   set_step(n, MASK_SLIDE, step->slide);
   set_step(n, MASK_MUTE, step->mute);
