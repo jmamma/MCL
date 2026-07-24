@@ -1051,12 +1051,14 @@ bool MCLActions::load_track_immediate(GridRow row, GridSlot i, GridSlot dst,
   return true;
 }
 
-void MCLActions::restore_mute_states(uint8_t *mute_states) {
+void MCLActions::swap_mute_states(uint8_t *mute_states) {
   for (uint8_t i = 0; i < NUM_SLOTS; ++i) {
     if (mute_states[i] == 255) { continue; }
     GridDeviceTrack *gdt_dst = get_grid_dev_track(i);
     if (gdt_dst != nullptr) {
+      uint8_t mute_state = gdt_dst->seq_track->mute_state;
       gdt_dst->seq_track->mute_state = mute_states[i];
+      mute_states[i] = mute_state;
     }
   }
 }
@@ -1149,8 +1151,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
         record_dirty = true;
       }
 #endif
-      mute_states[dst] = gdt_dst->seq_track->mute_state;
-      gdt_dst->seq_track->mute_state = SEQ_MUTE_ON;
+      mute_states[dst] = SEQ_MUTE_ON;
     }
   }
 
@@ -1162,6 +1163,10 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     sps_host_arr_bridge.notifyDirty(0xFF, (uint8_t)spsarr::DIRTY_ARRANGEMENT);
   }
 #endif
+
+  // Performance slots load after device tracks and may change their mutes.
+  // Snapshot only after every selected slot has finished loading.
+  swap_mute_states(mute_states);
 
   /*Send the encoded kit to the devices via sysex*/
   uint16_t myclock = read_clock_ms();
@@ -1230,7 +1235,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   }
 #endif
 
-  restore_mute_states(mute_states);
+  swap_mute_states(mute_states);
   /*All the tracks have been sent so clear the write queue*/
   write_original = 0;
 

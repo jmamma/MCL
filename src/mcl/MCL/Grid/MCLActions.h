@@ -209,7 +209,7 @@ private:
                             bool allow_prestart_fade = false
 #endif
                             );
-  void restore_mute_states(uint8_t *mute_states);
+  void swap_mute_states(uint8_t *mute_states);
 };
 
 extern void md_import();
