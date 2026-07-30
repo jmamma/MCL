@@ -3,6 +3,7 @@
 #include "GUI.h"
 #include "MD.h"
 #include "MDMessages.h"
+#include "MDCompactPatternCodec.h"
 #include "MDParams.h"
 #include "MDPattern.h"
 #include "helpers.h"
@@ -52,6 +53,10 @@ void MDPattern::clearPattern() {
   memset(ext_track_speeds, 0xFF, sizeof(ext_track_speeds));
   patternTempo = 0;
   chain_change = 0;
+  ext_scale_mode = 1;
+  ext_tempo_multiplier = 0;
+  ext_chain_row = 0xff;
+  ext_chain_loops = 0;
   memset(ext_locks, -1, sizeof(ext_locks));
   memset(ext_lockTracks, -1, sizeof(ext_lockTracks));
   memset(ext_lockParams, -1, sizeof(ext_lockParams));
@@ -160,8 +165,14 @@ void MDPattern::clear_step_locks(uint8_t track, uint8_t step) {
 */
 bool MDPattern::fromSysex(MidiClass *midi) {
 
-  init();
   SysexView sysex(midi->midiSysex);
+#if !defined(__AVR__)
+  if (sysex.get_recordLen() >= 7 &&
+      sysex.getByte(6) == MD_PATTERN_VERSION_SPSX) {
+    return md_decode_compact_pattern_41(*this, sysex);
+  }
+#endif
+  init();
 #if defined(__AVR__)
   uint16_t len = sysex.get_recordLen() - 5;
 #else
@@ -176,8 +187,7 @@ bool MDPattern::fromSysex(MidiClass *midi) {
 #if !defined(__AVR__)
   version = sysex.getByte(6);
   bool is_spsx_pat =
-      version == MD_PATTERN_VERSION_SPSX_V1 ||
-      version == MD_PATTERN_VERSION_SPSX;
+      version == MD_PATTERN_VERSION_SPSX_V1;
 
   if (!is_spsx_pat) {
 #endif
@@ -397,9 +407,10 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
 #if !defined(__AVR__)
   bool use_spsx = MD.is_spsx;
   const bool use_spsx_v2 = use_spsx && MD.supportsSpsx37Params();
+  if (use_spsx_v2)
+    return md_encode_compact_pattern_41(*this, encoder);
   uint8_t ver = use_spsx
-                    ? (use_spsx_v2 ? MD_PATTERN_VERSION_SPSX
-                                   : MD_PATTERN_VERSION_SPSX_V1)
+                    ? MD_PATTERN_VERSION_SPSX_V1
                     : 0x03;
   uint8_t paramLimit = use_spsx ? MD.spsxWireParamCount() : 24;
   const uint64_t wire_param_mask =

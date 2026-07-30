@@ -84,9 +84,11 @@ bool checkPatternWireCapability(uint32_t caps, uint8_t expectedVersion,
         for (uint8_t param : params) {
             MD.pattern.ext_locks_params[track][param] = param + 1;
             if (!MD.pattern.addLock(track, 5, param,
-                                    (uint8_t)(20 + track + param)) ||
+                                    (uint8_t)((20 + track + param) &
+                                              0x7f)) ||
                 !MD.pattern.addLock(track, 45, param,
-                                    (uint8_t)(80 + track + param))) {
+                                    (uint8_t)((80 + track + param) &
+                                              0x7f))) {
                 return false;
             }
         }
@@ -98,13 +100,22 @@ bool checkPatternWireCapability(uint32_t caps, uint8_t expectedVersion,
     if (length == 0 || length > message.size() ||
         message[7] != expectedVersion ||
         !publishToMidiSysex(fixture->sysex, message.data(), length)) {
+        std::fprintf(stderr,
+                     "pattern capability envelope: len=%u ver=%02x "
+                     "expected=%02x\n",
+                     length, message[7], expectedVersion);
         return false;
     }
 
     MDPattern decoded;
     if (!decoded.fromSysex(&fixture->midi) ||
-        decoded.version != expectedVersion)
+        decoded.version != expectedVersion) {
+        std::fprintf(stderr,
+                     "pattern capability decode: len=%u decoded-ver=%02x "
+                     "expected=%02x\n",
+                     length, decoded.version, expectedVersion);
         return false;
+    }
     const int16_t legacyRow = decoded.paramLocks[0][MODEL_RENV];
     const bool hasLegacyLock =
         legacyRow >= 0 && decoded.lock_row((uint16_t)legacyRow)[0] == 55;
@@ -112,19 +123,40 @@ bool checkPatternWireCapability(uint32_t caps, uint8_t expectedVersion,
         mdPatternLockSlotCountForVersion(decoded.version) !=
             (expectBusLock ? MD_PATTERN_LOCK_SLOTS
                            : MD_PATTERN_LOCK_SLOTS_V1)) {
+        std::fprintf(stderr,
+                     "pattern capability base lock: row=%d value=%d "
+                     "expect-bus=%d\n",
+                     legacyRow,
+                     legacyRow >= 0
+                         ? decoded.lock_row((uint16_t)legacyRow)[0]
+                         : -2,
+                     expectBusLock);
         return false;
     }
     for (uint8_t track : tracks) {
         for (uint8_t param : params) {
             const int16_t row = decoded.paramLocks[track][param];
             const bool present = row >= 0;
-            if (present != expectBusLock)
+            if (present != expectBusLock) {
+                std::fprintf(stderr,
+                             "pattern capability bus lock: track=%u "
+                             "param=%u row=%d expected=%d\n",
+                             track, param, row, expectBusLock);
                 return false;
+            }
             if (present &&
                 (decoded.lock_row((uint16_t)row)[5] !=
-                     (int8_t)(20 + track + param) ||
+                     (int8_t)((20 + track + param) & 0x7f) ||
                  decoded.lock_row((uint16_t)row)[45] !=
-                     (int8_t)(80 + track + param))) {
+                     (int8_t)((80 + track + param) & 0x7f))) {
+                std::fprintf(stderr,
+                             "pattern capability value: track=%u param=%u "
+                             "row=%d got=%d/%d expected=%u/%u\n",
+                             track, param, row,
+                             decoded.lock_row((uint16_t)row)[5],
+                             decoded.lock_row((uint16_t)row)[45],
+                             (uint8_t)((20 + track + param) & 0x7f),
+                             (uint8_t)((80 + track + param) & 0x7f));
                 return false;
             }
         }
@@ -135,6 +167,65 @@ bool checkPatternWireCapability(uint32_t caps, uint8_t expectedVersion,
 uint8_t stressLockValue(uint8_t track, uint8_t param, uint8_t step) {
     return (uint8_t)((track * 53u + param * 29u + step * 17u +
                       step * step + (param ^ step) * 7u) & 0x7Fu);
+}
+
+uint64_t fnv1a64(const uint8_t* bytes, uint16_t length) {
+    uint64_t hash = UINT64_C(14695981039346656037);
+    for (uint16_t index = 0; index < length; ++index) {
+        hash ^= bytes[index];
+        hash *= UINT64_C(1099511628211);
+    }
+    return hash;
+}
+
+bool checkCanonicalPatternGolden(uint16_t& encodedLength,
+                                 uint64_t& encodedHash) {
+    std::array<uint8_t, 8192> message{};
+    MD.is_spsx = true;
+    MD.fw_caps = FW_CAP_SPSX | FW_CAP_SPSX_PARAMS_37;
+    MD.pattern.clearPattern();
+    MD.pattern.origPosition = 37;
+    MD.pattern.patternLength = 64;
+    MD.pattern.scale = 2;
+    MD.pattern.doubleTempo = 1;
+    MD.pattern.kit = 9;
+    MD.pattern.patternTempo = 0x1234;
+    MD.pattern.accentAmount = (13u >> 1) | (13u << 3);
+    MD.pattern.swingAmount = 7u * 16384u / 30u;
+    MD.pattern.accentPattern = UINT64_C(0x0000000000000004);
+    MD.pattern.slidePattern = UINT64_C(0x0000000000000008);
+    MD.pattern.swingPattern = UINT64_C(0x00000000aaaaaaaa);
+    MD.pattern.accentEditAll = 1;
+    MD.pattern.slideEditAll = 1;
+    MD.pattern.swingEditAll = 1;
+    MD.pattern.ext_scale_mode = 1;
+    MD.pattern.ext_tempo_multiplier = 0;
+    MD.pattern.ext_chain_row = 52;
+    MD.pattern.ext_chain_loops = 3;
+    MD.pattern.chain_change = 7;
+    MD.pattern.trigPatterns[1] =
+        (UINT64_C(1) << 3) | (UINT64_C(1) << 40);
+    MD.pattern.ext_track_lengths[1] = 48;
+    MD.pattern.ext_track_speeds[1] = 2;
+    if (!MD.pattern.addLock(1, 3, 2, 11) ||
+        !MD.pattern.addLock(1, 40, 33, 99)) {
+        return false;
+    }
+    MD.pattern.ext_microtiming[1][40] = -7;
+    MD.pattern.ext_step_flags[1][3] = 1;
+    MD.pattern.ext_step_flags[1][40] = (5u << 2) | 2u;
+
+    ElektronDataToSysexEncoder encoder(message.data());
+    encodedLength = MD.pattern.toSysex(&encoder);
+    if (encodedLength == 0 ||
+        message[7] != MD_PATTERN_VERSION_SPSX) {
+        return false;
+    }
+    encodedHash = fnv1a64(message.data(), encodedLength);
+    // Shared with SPS-X test_compact_pattern.cpp. This proves the independent
+    // MCL and SPS-X encoders produce the same complete 0x67/0x41 message.
+    return encodedLength == 825 &&
+           encodedHash == UINT64_C(0x3615c057fd4b3b55);
 }
 
 bool checkMaximumPatternRoundTrip(uint16_t& encodedLength) {
@@ -179,9 +270,39 @@ bool checkMaximumPatternRoundTrip(uint16_t& encodedLength) {
         }
     }
 
+    // A complete 592-lane desktop pattern is a valid live record, but it
+    // cannot fit the Machinedrum envelope's 14-bit length field. The encoder
+    // must reject it rather than wrap that field.
+    ElektronDataToSysexEncoder oversizedEncoder(message.data());
+    if (MD.pattern.toSysex(&oversizedEncoder) != 0)
+        return false;
+
+    // Five fully populated 37-lane tracks are close to the envelope ceiling
+    // and exercise the same dense canonical lane representation.
+    MD.pattern.clearPattern();
+    MD.pattern.patternLength = 64;
+    constexpr uint8_t kWireTracks = 5;
+    for (uint8_t track = 0; track < kWireTracks; ++track) {
+        MD.pattern.trigPatterns[track] = UINT64_MAX;
+        for (uint8_t step = 0; step < 64; ++step)
+            MD.pattern.ext_step_flags[track][step] = 1;
+        for (uint8_t param = 0;
+             param < SPS_PARAMS_PER_TRACK; ++param) {
+            MD.pattern.ext_locks_params[track][param] = param + 1;
+            for (uint8_t step = 0; step < 64; ++step) {
+                if (!editingApi->addLock(
+                        track, step, param,
+                        stressLockValue(track, param, step))) {
+                    return false;
+                }
+            }
+        }
+    }
+
     ElektronDataToSysexEncoder encoder(message.data());
     encodedLength = MD.pattern.toSysex(&encoder);
-    if (encodedLength <= 16383 || encodedLength >= message.size() ||
+    if (encodedLength == 0 || encodedLength > 16393 ||
+        encodedLength >= message.size() ||
         message[7] != MD_PATTERN_VERSION_SPSX) {
         return false;
     }
@@ -189,16 +310,25 @@ bool checkMaximumPatternRoundTrip(uint16_t& encodedLength) {
     auto fixture = std::make_unique<SysexFixture>();
     if (!publishToMidiSysex(fixture->sysex, message.data(), encodedLength) ||
         fixture->sysex.get_recordLen() != encodedLength - 2) {
+        std::fprintf(stderr,
+                     "maximum pattern publish: len=%u record=%u\n",
+                     encodedLength, fixture->sysex.get_recordLen());
         return false;
     }
 
     auto decoded = std::make_unique<MDPattern>();
     if (!decoded->fromSysex(&fixture->midi) ||
         decoded->version != MD_PATTERN_VERSION_SPSX ||
-        decoded->numRows != MAX_LOCK_ROWS) {
+        decoded->numRows !=
+            kWireTracks * SPS_PARAMS_PER_TRACK) {
+        std::fprintf(stderr,
+                     "maximum pattern decode: version=%02x rows=%u "
+                     "expected=%u\n",
+                     decoded->version, decoded->numRows,
+                     kWireTracks * SPS_PARAMS_PER_TRACK);
         return false;
     }
-    for (uint8_t track = 0; track < 16; ++track) {
+    for (uint8_t track = 0; track < kWireTracks; ++track) {
         for (uint8_t param = 0; param < SPS_PARAMS_PER_TRACK; ++param) {
             const int16_t row = decoded->paramLocks[track][param];
             if (row < 0 || row >= MAX_LOCK_ROWS)
@@ -671,27 +801,36 @@ int main() {
     uint16_t maximumPatternBytes = 0;
     const bool maximumPattern =
         checkMaximumPatternRoundTrip(maximumPatternBytes);
+    uint16_t goldenPatternBytes = 0;
+    uint64_t goldenPatternHash = 0;
+    const bool goldenPattern =
+        checkCanonicalPatternGolden(
+            goldenPatternBytes, goldenPatternHash);
     const bool trackRows = checkTrackRowMigrations();
     const bool extendedCc = checkNegotiatedExtendedCcMapping();
     const bool encoderPackets = checkEncoderInterfacePacketWidths();
     const bool seqNegotiation =
         checkSequencerNegotiationRejectsV1BusLocks();
     if (!kitV1 || !kitV2 || !patternV1 || !patternV2 || !maximumPattern ||
-        !trackRows ||
+        !goldenPattern || !trackRows ||
         !extendedCc || !encoderPackets || !seqNegotiation) {
         std::fprintf(stderr,
                      "MCL wire smoke failed: kit65=%d kit66=%d pat40=%d "
-                     "pat41=%d max592=%d rows=%d cc=%d encoder=%d seq=%d "
-                     "bytes=%u\n",
+                     "pat41=%d max592=%d golden=%d rows=%d cc=%d "
+                     "encoder=%d seq=%d bytes=%u golden=%u/%016llx\n",
                      kitV1, kitV2, patternV1, patternV2, maximumPattern,
-                     trackRows, extendedCc, encoderPackets, seqNegotiation,
-                     maximumPatternBytes);
+                     goldenPattern, trackRows, extendedCc, encoderPackets,
+                     seqNegotiation, maximumPatternBytes,
+                     goldenPatternBytes,
+                     (unsigned long long)goldenPatternHash);
         return 1;
     }
     std::fprintf(stderr,
                  "MCL wire compatibility passed: kit/pattern, 24/34/37 "
                  "packets, row migrations, v1/v2 negotiation, BUS3 bridge "
-                 "round-trip, and 592 rows (%u-byte worst-case fixture)\n",
-                 maximumPatternBytes);
+                 "round-trip, and 592 rows (%u-byte worst-case fixture; "
+                 "golden=%u/%016llx)\n",
+                 maximumPatternBytes, goldenPatternBytes,
+                 (unsigned long long)goldenPatternHash);
     return 0;
 }

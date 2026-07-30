@@ -128,6 +128,12 @@ public:
   uint8_t ext_track_speeds[16];
   uint16_t patternTempo;
   uint8_t chain_change;
+  // Canonical 0x41 settings not present in the established 0x40 extension.
+  // Keeping them on MDPattern makes an MCL receive/send round-trip lossless.
+  uint8_t ext_scale_mode;
+  uint8_t ext_tempo_multiplier;
+  uint8_t ext_chain_row;
+  uint8_t ext_chain_loops;
 
   /** Extended lock rows (64..MAX_LOCK_ROWS-1). Base class locks[64][64]
    *  covers the first 64 rows; this array extends storage for current SPS-X
@@ -145,6 +151,10 @@ public:
    *  live in MDPattern::ext_locks. */
   inline int8_t *lock_row(uint16_t row) {
     return (row < 64) ? (int8_t*)locks[row] : ext_locks[row - 64];
+  }
+  inline const int8_t *lock_row(uint16_t row) const {
+    return (row < 64) ? (const int8_t*)locks[row]
+                      : ext_locks[row - 64];
   }
 #else
   // AVR has no ext_locks; only rows 0..63 exist. Provided so the encoder
