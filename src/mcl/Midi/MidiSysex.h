@@ -58,9 +58,9 @@ public:
   uint8_t state : 2;
   uint16_t recordLen : 14; // 16383 max record length
 #else
-  // Hosted/RP2040 SPS-X v0x41 patterns can legitimately exceed 16 KiB when
-  // all 592 lock rows contain incompressible data. Keep the compact ledger on
-  // AVR, which only supports the stock 24-parameter wire format.
+  // Hosted/RP2040 use a full-width ledger for host-side transactions. Compact
+  // pattern 0x40 itself remains bounded by the Elektron 14-bit length field.
+  // AVR keeps the smaller ledger and supports stock patterns only.
   uint8_t state;
   uint16_t recordLen;
 #endif

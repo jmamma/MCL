@@ -640,7 +640,9 @@ void SPSXSeqTrack::merge_from_md(uint8_t trk, MDPattern *pattern) {
     // Import lock values from pattern rows. Row indices are int16_t now and
     // can exceed 64; use lock_row() to handle the extended-rows extension array.
     const uint8_t pattern_param_count =
-        mdPatternLockSlotCountForVersion(pattern->version);
+        pattern->version == MD_PATTERN_VERSION_SPSX
+            ? MD_PATTERN_LOCK_SLOTS
+            : 24;
     for (uint8_t p = 0; p < pattern_param_count; p++) {
         int16_t row = pattern->paramLocks[trk][p];
         if (row < 0) continue;
@@ -655,7 +657,7 @@ void SPSXSeqTrack::merge_from_md(uint8_t trk, MDPattern *pattern) {
     }
 
     // SPSX extension data (overrides V3 defaults above)
-    if (pattern->version >= 0x40) {
+    if (pattern->version == MD_PATTERN_VERSION_SPSX) {
         // Direct copy: microtiming (both are signed int8_t).
         // Native swing is kept separate and only applies to neutral steps.
         memcpy(microtiming, pattern->ext_microtiming[trk], 64);
@@ -671,8 +673,7 @@ void SPSXSeqTrack::merge_from_md(uint8_t trk, MDPattern *pattern) {
         // host NUM_LOCKS (== SPSX_NUM_LOCKS), so this is a 1:1 copy.
         static_assert(MD_PATTERN_LOCK_SLOTS == SPSX_NUM_LOCKS,
                       "ext_locks_params width must match SPSX track lock slots");
-        const uint8_t lock_slot_count =
-            mdPatternLockSlotCountForVersion(pattern->version);
+        constexpr uint8_t lock_slot_count = MD_PATTERN_LOCK_SLOTS;
         for (uint8_t i = 0; i < lock_slot_count; i++) {
             locks_params[i] = pattern->ext_locks_params[trk][i];
         }

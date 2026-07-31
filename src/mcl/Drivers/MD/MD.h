@@ -102,7 +102,7 @@ public:
     return supportsSpsx37Params() ? SPS_PARAMS_PER_TRACK
                                  : SPS_PARAMS_V1_PER_TRACK;
   }
-  bool supportsCompactPattern41() const {
+  bool supportsCompactPattern40() const {
     static constexpr uint32_t required =
         (uint32_t)FW_CAP_SPSX | (uint32_t)FW_CAP_SPSX_PARAMS_37;
     return (fw_caps & required) == required;

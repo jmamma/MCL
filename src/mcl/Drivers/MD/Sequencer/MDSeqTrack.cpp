@@ -1275,7 +1275,9 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
 
 #if !defined(__AVR__)
   const uint8_t num_params =
-      mdPatternLockSlotCountForVersion(pattern->version);
+      pattern->version == MD_PATTERN_VERSION_SPSX
+          ? MD_PATTERN_LOCK_SLOTS
+          : 24;
 #else
   uint8_t num_params = 24;
 #endif

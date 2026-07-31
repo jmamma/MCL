@@ -26,7 +26,7 @@
 #include "global.h"
 
 // Hosted port 0 is the manifest-declared SPS link and can carry a worst-case
-// v0x41 pattern dump. Other UARTs retain the compact internal TX ring.
+// compact v0x40 pattern dump. Other UARTs retain the compact internal TX ring.
 namespace {
 uint8_t sps_tx_buf[SPS_TX_BUF_SIZE];
 }

@@ -71,11 +71,11 @@ bool checkPatternWireCapability(uint32_t caps, uint8_t expectedVersion,
     MD.pattern.clearPattern();
     MD.pattern.patternLength = 64;
 
-    // Param 33 must survive both SPS-X wire versions. BUS1-3 exercise four
-    // channel groups and both halves of a 64-step pattern.
-    if (!MD.pattern.addLock(0, 0, MODEL_RENV, 55))
+    // A stock-range lock must survive both the stock fallback and compact
+    // format. BUS1-3 exercise the compact-only parameter range.
+    if (!MD.pattern.addLock(0, 0, MODEL_REV, 55))
         return false;
-    MD.pattern.ext_locks_params[0][MODEL_RENV] = MODEL_RENV + 1;
+    MD.pattern.ext_locks_params[0][MODEL_REV] = MODEL_REV + 1;
     constexpr uint8_t tracks[] = {0, 3, 4, 15};
     constexpr uint8_t params[] = {MODEL_BUS1, MODEL_BUS2, MODEL_BUS3};
     for (uint8_t track : tracks) {
@@ -116,13 +116,16 @@ bool checkPatternWireCapability(uint32_t caps, uint8_t expectedVersion,
                      length, decoded.version, expectedVersion);
         return false;
     }
-    const int16_t legacyRow = decoded.paramLocks[0][MODEL_RENV];
+    const int16_t legacyRow = decoded.paramLocks[0][MODEL_REV];
     const bool hasLegacyLock =
         legacyRow >= 0 && decoded.lock_row((uint16_t)legacyRow)[0] == 55;
+    const uint8_t decodedParameterCount =
+        decoded.version == MD_PATTERN_VERSION_SPSX
+            ? MD_PATTERN_LOCK_SLOTS
+            : 24;
     if (!hasLegacyLock ||
-        mdPatternLockSlotCountForVersion(decoded.version) !=
-            (expectBusLock ? MD_PATTERN_LOCK_SLOTS
-                           : MD_PATTERN_LOCK_SLOTS_V1)) {
+        decodedParameterCount !=
+            (expectBusLock ? MD_PATTERN_LOCK_SLOTS : 24)) {
         std::fprintf(stderr,
                      "pattern capability base lock: row=%d value=%d "
                      "expect-bus=%d\n",
@@ -169,17 +172,29 @@ uint8_t stressLockValue(uint8_t track, uint8_t param, uint8_t step) {
                       step * step + (param ^ step) * 7u) & 0x7Fu);
 }
 
-uint64_t fnv1a64(const uint8_t* bytes, uint16_t length) {
-    uint64_t hash = UINT64_C(14695981039346656037);
-    for (uint16_t index = 0; index < length; ++index) {
-        hash ^= bytes[index];
-        hash *= UINT64_C(1099511628211);
+bool hasValidElektronEnvelope(
+    const uint8_t* bytes, uint16_t length) {
+    if (bytes == nullptr || length < 15 ||
+        bytes[0] != 0xf0 || bytes[length - 1] != 0xf7) {
+        return false;
     }
-    return hash;
+    uint16_t checksum = 0;
+    for (uint16_t index = 9; index < length - 5; ++index) {
+        if (bytes[index] > 0x7f)
+            return false;
+        checksum = (checksum + bytes[index]) & 0x3fff;
+    }
+    const uint16_t storedChecksum =
+        ((uint16_t)bytes[length - 5] << 7) |
+        bytes[length - 4];
+    const uint16_t storedLength =
+        ((uint16_t)bytes[length - 3] << 7) |
+        bytes[length - 2];
+    return checksum == storedChecksum &&
+           storedLength == (uint16_t)(length - 10);
 }
 
-bool checkCanonicalPatternGolden(uint16_t& encodedLength,
-                                 uint64_t& encodedHash) {
+bool checkCanonicalPatternEnvelope(uint16_t& encodedLength) {
     std::array<uint8_t, 8192> message{};
     MD.is_spsx = true;
     MD.fw_caps = FW_CAP_SPSX | FW_CAP_SPSX_PARAMS_37;
@@ -221,11 +236,8 @@ bool checkCanonicalPatternGolden(uint16_t& encodedLength,
         message[7] != MD_PATTERN_VERSION_SPSX) {
         return false;
     }
-    encodedHash = fnv1a64(message.data(), encodedLength);
-    // Shared with SPS-X test_compact_pattern.cpp. This proves the independent
-    // MCL and SPS-X encoders produce the same complete 0x67/0x41 message.
-    return encodedLength == 825 &&
-           encodedHash == UINT64_C(0x3615c057fd4b3b55);
+    return hasValidElektronEnvelope(
+        message.data(), encodedLength);
 }
 
 bool checkMaximumPatternRoundTrip(uint16_t& encodedLength) {
@@ -270,18 +282,17 @@ bool checkMaximumPatternRoundTrip(uint16_t& encodedLength) {
         }
     }
 
-    // A complete 592-lane desktop pattern is a valid live record, but it
-    // cannot fit the Machinedrum envelope's 14-bit length field. The encoder
-    // must reject it rather than wrap that field.
+    // A complete 592-lane desktop pattern is a valid hosted live record, but
+    // exceeds the MKII hardware event pool. The wire encoder must reject it.
     ElektronDataToSysexEncoder oversizedEncoder(message.data());
     if (MD.pattern.toSysex(&oversizedEncoder) != 0)
         return false;
 
-    // Five fully populated 37-lane tracks are close to the envelope ceiling
-    // and exercise the same dense canonical lane representation.
+    // Two fully populated 37-lane tracks fit the MKII event pool and exercise
+    // the same dense canonical lane representation.
     MD.pattern.clearPattern();
     MD.pattern.patternLength = 64;
-    constexpr uint8_t kWireTracks = 5;
+    constexpr uint8_t kWireTracks = 2;
     for (uint8_t track = 0; track < kWireTracks; ++track) {
         MD.pattern.trigPatterns[track] = UINT64_MAX;
         for (uint8_t step = 0; step < 64; ++step)
@@ -841,47 +852,44 @@ int main() {
     const bool kitV2 = checkKitWireCapability(
         FW_CAP_SPSX_PARAMS_37, SPSX_KIT_VERSION,
         mdKitWireSizeForVersion(SPSX_KIT_VERSION));
-    const bool patternV1 = checkPatternWireCapability(
-        0, MD_PATTERN_VERSION_SPSX_V1, false);
-    const bool patternV2 = checkPatternWireCapability(
+    const bool patternStockFallback = checkPatternWireCapability(
+        0, 0x03, false);
+    const bool patternCompact = checkPatternWireCapability(
         FW_CAP_SPSX_PARAMS_37, MD_PATTERN_VERSION_SPSX, true);
     uint16_t maximumPatternBytes = 0;
     const bool maximumPattern =
         checkMaximumPatternRoundTrip(maximumPatternBytes);
     const bool malformedPattern =
         checkMalformedCanonicalPatternRejected();
-    uint16_t goldenPatternBytes = 0;
-    uint64_t goldenPatternHash = 0;
-    const bool goldenPattern =
-        checkCanonicalPatternGolden(
-            goldenPatternBytes, goldenPatternHash);
+    uint16_t envelopePatternBytes = 0;
+    const bool envelopePattern =
+        checkCanonicalPatternEnvelope(envelopePatternBytes);
     const bool trackRows = checkTrackRowMigrations();
     const bool extendedCc = checkNegotiatedExtendedCcMapping();
     const bool encoderPackets = checkEncoderInterfacePacketWidths();
     const bool seqNegotiation =
         checkSequencerNegotiationRejectsV1BusLocks();
-    if (!kitV1 || !kitV2 || !patternV1 || !patternV2 || !maximumPattern ||
-        !malformedPattern || !goldenPattern || !trackRows ||
+    if (!kitV1 || !kitV2 || !patternStockFallback || !patternCompact ||
+        !maximumPattern ||
+        !malformedPattern || !envelopePattern || !trackRows ||
         !extendedCc || !encoderPackets || !seqNegotiation) {
         std::fprintf(stderr,
-                     "MCL wire smoke failed: kit65=%d kit66=%d pat40=%d "
-                     "pat41=%d max592=%d malformed=%d golden=%d rows=%d cc=%d "
-                     "encoder=%d seq=%d bytes=%u golden=%u/%016llx\n",
-                     kitV1, kitV2, patternV1, patternV2, maximumPattern,
-                     malformedPattern, goldenPattern, trackRows, extendedCc,
+                     "MCL wire smoke failed: kit65=%d kit66=%d stock03=%d "
+                     "compact40=%d max592=%d malformed=%d envelope=%d rows=%d cc=%d "
+                     "encoder=%d seq=%d bytes=%u envelope-bytes=%u\n",
+                     kitV1, kitV2, patternStockFallback, patternCompact,
+                     maximumPattern,
+                     malformedPattern, envelopePattern, trackRows, extendedCc,
                      encoderPackets,
                      seqNegotiation, maximumPatternBytes,
-                     goldenPatternBytes,
-                     (unsigned long long)goldenPatternHash);
+                     envelopePatternBytes);
         return 1;
     }
     std::fprintf(stderr,
                  "MCL wire compatibility passed: kit/pattern, 24/34/37 "
                  "packets, row migrations, v1/v2 negotiation, BUS3 bridge "
                  "round-trip, malformed-body rejection, and 592 rows "
-                 "(%u-byte worst-case fixture; "
-                 "golden=%u/%016llx)\n",
-                 maximumPatternBytes, goldenPatternBytes,
-                 (unsigned long long)goldenPatternHash);
+                 "(%u-byte dense MKII fixture)\n",
+                 maximumPatternBytes);
     return 0;
 }

@@ -27,9 +27,9 @@ enum {
   MD_COMPACT_FIXED_BYTES =
       MD_COMPACT_HEADER_BYTES + MD_COMPACT_SETTINGS_BYTES +
       MD_COMPACT_TRACKS * MD_COMPACT_TRACK_BYTES,
-  // 16 tracks * (37 lock lanes * (descriptor + 32 dense words) +
-  // 64 microtiming words + 64 condition words).
-  MD_COMPACT_MAX_WORDS = 21584
+  // Match the largest live hardware record (MKII). Hosted MCL may edit a
+  // larger record, but must not emit a dump the target cannot store.
+  MD_COMPACT_MAX_WORDS = 3048
 };
 
 const uint8_t md_compact_magic[7] = {
@@ -208,7 +208,7 @@ bool md_compact_build_shape(const MDPattern &pattern, uint8_t steps,
     }
   }
   shape.words = words;
-  return true;
+  return words <= MD_COMPACT_MAX_WORDS;
 }
 
 void md_compact_pack8(ElektronDataToSysexEncoder *encoder,
@@ -472,7 +472,7 @@ void MDPattern::clear_step_locks(uint8_t track, uint8_t step) {
 }
 */
 #if !defined(__AVR__)
-bool MDPattern::fromSysex41(const SysexView &sysex) {
+bool MDPattern::fromSysex40(const SysexView &sysex) {
   uint8_t steps = 0;
   uint16_t used_words = 0;
   if (!md_compact_header(sysex, steps, used_words)) {
@@ -692,7 +692,7 @@ decode_failed:
   return false;
 }
 
-uint16_t MDPattern::toSysex41(
+uint16_t MDPattern::toSysex40(
     ElektronDataToSysexEncoder *encoder) {
   uint8_t steps = patternLength > 32 ? 64 : 32;
   MDCompactShape shape;
@@ -741,7 +741,7 @@ bool MDPattern::fromSysex(MidiClass *midi) {
 #if !defined(__AVR__)
   if (sysex.get_recordLen() >= 7 &&
       sysex.getByte(6) == MD_PATTERN_VERSION_SPSX) {
-    return fromSysex41(sysex);
+    return fromSysex40(sysex);
   }
 #endif
   init();
@@ -752,25 +752,19 @@ bool MDPattern::fromSysex(MidiClass *midi) {
   if (record_len < 9) {
     return false;
   }
+  version = sysex.getByte(6);
+  if (version != 0x02 && version != 0x03) {
+    return false;
+  }
   uint16_t len = record_len - 5;
 #endif
   uint16_t offset = 5;
 
-#if !defined(__AVR__)
-  version = sysex.getByte(6);
-  bool is_spsx_pat =
-      version == MD_PATTERN_VERSION_SPSX_V1;
-
-  if (!is_spsx_pat) {
-#endif
-    if ((len != (0xACA - 6)) && (len != (0x1521 - 6))) {
-      DEBUG_PRINTLN(F("WRONG LENGTH"));
-      return false;
-    }
-    isExtraPattern = (len == (0x1521 - 6));
-#if !defined(__AVR__)
+  if ((len != (0xACA - 6)) && (len != (0x1521 - 6))) {
+    DEBUG_PRINTLN(F("WRONG LENGTH"));
+    return false;
   }
-#endif
+  isExtraPattern = (len == (0x1521 - 6));
 
   if (!ElektronHelper::checkSysexChecksum(sysex, offset, len)) {
 
@@ -805,12 +799,6 @@ bool MDPattern::fromSysex(MidiClass *midi) {
     return false;
   }
 
-#if !defined(__AVR__)
-  if (is_spsx_pat) {
-    isExtraPattern = (patternLength > 32);
-  }
-#endif
-
   decoder.start7Bit();
   for (uint8_t i = 0; i < 64; i++) {
     decoder.get(locks[i], 32);
@@ -824,29 +812,22 @@ bool MDPattern::fromSysex(MidiClass *midi) {
   decoder.get32(&accentEditAll, 3);
   decoder.get32(accentPatterns, 48);
 
-  // Build lock tracking for V3 (params 0-23 only)
-  // SPSX defers until extension is decoded so high bits are available
-#if !defined(__AVR__)
-  if (!is_spsx_pat) {
-#endif
-    numRows = 0;
-    for (int i = 0; i < 16; i++) {
-      for (int j = 0; j < 24; j++) {
-        if (IS_BIT_SET32(lockPatterns[i], j)) {
-          if (numRows < 64) {
-            paramLocks[i][j] = numRows;
-            lockTracks[numRows] = i;
-            lockParams[numRows] = j;
-            numRows++;
-          } else {
-            paramLocks[i][j] = -1;
-          }
+  // Stock formats expose parameters 0-23 and at most 64 lock rows.
+  numRows = 0;
+  for (int i = 0; i < 16; i++) {
+    for (int j = 0; j < 24; j++) {
+      if (IS_BIT_SET32(lockPatterns[i], j)) {
+        if (numRows < 64) {
+          paramLocks[i][j] = numRows;
+          lockTracks[numRows] = i;
+          lockParams[numRows] = j;
+          numRows++;
+        } else {
+          paramLocks[i][j] = -1;
         }
       }
     }
-#if !defined(__AVR__)
   }
-#endif
 
   if (isExtraPattern) {
     decoder.start7Bit();
@@ -863,94 +844,6 @@ bool MDPattern::fromSysex(MidiClass *midi) {
     decoder.get32hi(accentPatterns, 48);
   }
 
-#if !defined(__AVR__)
-  if (is_spsx_pat) {
-    decoder.start7Bit();
-    decoder.startRLE();
-
-    const uint8_t lock_slot_count =
-        mdPatternLockSlotCountForVersion(version);
-    for (uint8_t t = 0; t < 16; t++) {
-      decoder.get((uint8_t*)ext_microtiming[t], 64);
-      decoder.get(ext_step_flags[t], 64);
-      decoder.get(ext_locks_params[t], lock_slot_count);
-      for (uint8_t slot = 0; slot < lock_slot_count; ++slot) {
-        if (ext_locks_params[t][slot] > lock_slot_count) {
-          ext_locks_params[t][slot] = 0;
-        }
-      }
-    }
-
-    decoder.get(ext_track_lengths, 16);
-    decoder.get(ext_track_speeds, 16);
-
-    // High 32 bits of lockPatterns (params 24-36)
-    decoder.get32hi(lockPatterns, 16);
-    if (version == MD_PATTERN_VERSION_SPSX_V1) {
-      const uint64_t v1_lock_mask =
-          (uint64_t(1) << MD_PATTERN_LOCK_SLOTS_V1) - 1;
-      for (uint8_t t = 0; t < 16; ++t) {
-        lockPatterns[t] &= v1_lock_mask;
-      }
-    }
-
-    // Expanded lock rows. Wire format mirrors the host (src/host/Midi/MDPattern.cpp):
-    // numRows is a little-endian u16, then for rows 64..numRows-1 the encoder
-    // emits 32 bytes of low-step locks per row, followed (for 64-step / extra
-    // patterns) by 32 bytes of high-step locks per row.
-    uint8_t lo = decoder.gget8();
-    uint8_t hi = decoder.gget8();
-    uint16_t totalRows = (uint16_t)(lo | (hi << 8));
-    const uint16_t version_max_rows =
-        16u * mdPatternLockSlotCountForVersion(version);
-    if (totalRows > version_max_rows) {
-      return false;
-    }
-
-    if (totalRows > 64) {
-      uint16_t cap = (totalRows < MAX_LOCK_ROWS) ? totalRows : MAX_LOCK_ROWS;
-      for (uint16_t i = 64; i < cap; i++) {
-        decoder.get((uint8_t*)lock_row(i), 32);
-      }
-      // Past-cap rows: drop them (MCL refuses patterns deeper than MAX_LOCK_ROWS)
-      if (totalRows > MAX_LOCK_ROWS) {
-        decoder.skip((totalRows - MAX_LOCK_ROWS) * 32);
-      }
-      if (isExtraPattern) {
-        for (uint16_t i = 64; i < cap; i++) {
-          decoder.get((uint8_t*)(lock_row(i) + 32), 32);
-        }
-        if (totalRows > MAX_LOCK_ROWS) {
-          decoder.skip((totalRows - MAX_LOCK_ROWS) * 32);
-        }
-      }
-    }
-
-    lo = decoder.gget8();
-    hi = decoder.gget8();
-    patternTempo = (uint16_t)(lo | (hi << 8));
-    chain_change = decoder.gget8();
-
-    decoder.stopRLE();
-
-    // Rebuild lock tracking with the negotiated wire format's full range.
-    // MAX_LOCK_ROWS rows: rows 0..63 in the base lockTracks/lockParams arrays,
-    // rows 64..MAX_LOCK_ROWS-1 in ext_lockTracks/ext_lockParams.
-    numRows = 0;
-    for (uint8_t i = 0; i < 16; i++) {
-      for (uint8_t j = 0; j < maxParams; j++) {
-        if (IS_BIT_SET64(lockPatterns[i], j)) {
-          if (numRows < MAX_LOCK_ROWS) {
-            paramLocks[i][j] = (int16_t)numRows;
-            set_lock_track_param(numRows, (int16_t)i, (int16_t)j);
-          }
-          numRows++;
-        }
-      }
-    }
-  }
-#endif
-
   return true;
 }
 
@@ -962,10 +855,10 @@ uint16_t MDPattern::toSysex() {
 
 uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
 #if !defined(__AVR__)
-  if (MD.supportsCompactPattern41()) {
+  if (MD.supportsCompactPattern40()) {
     cleanupLocks();
     recalculateLockPatterns();
-    return toSysex41(encoder);
+    return toSysex40(encoder);
   }
 #endif
 #if defined(MDPATTERN_TOSYSEX_ENABLE) || !defined(__AVR__)
@@ -984,11 +877,8 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
   uint16_t sysexLength = isExtraPattern ? 0x151d : 0xac6;
 
 #if !defined(__AVR__)
-  bool use_spsx = MD.is_spsx;
-  uint8_t ver = use_spsx
-                    ? MD_PATTERN_VERSION_SPSX_V1
-                    : 0x03;
-  uint8_t paramLimit = use_spsx ? MD.spsxWireParamCount() : 24;
+  constexpr uint8_t ver = 0x03;
+  constexpr uint8_t paramLimit = 24;
   const uint64_t wire_param_mask =
       (uint64_t(1) << static_cast<unsigned>(paramLimit)) - 1;
   uint64_t wire_lock_patterns[16];
@@ -996,6 +886,8 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
     wire_lock_patterns[track] = lockPatterns[track] & wire_param_mask;
   }
 #else
+  // Keep the established AVR stock encoder shape: making these compile-time
+  // constants causes avr-g++ 7.3 to expand the surrounding loops.
   uint8_t ver = 0x03;
   uint8_t paramLimit = 24;
 #endif
@@ -1041,10 +933,9 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
   uint8_t lockIdx = 0;
   for (uint8_t track = 0; track < 16; track++) {
     for (uint8_t param = 0; param < paramLimit; param++) {
-      // paramLocks values can exceed 63 on SPSX patterns loaded from sysex
-      // (rows 64..MAX_LOCK_ROWS-1 live in ext_locks). Use lock_row() so the
-      // access stays bounded; ext rows are also re-emitted in the SPSX block
-      // below for the host decoder.
+      // Hosted compact patterns can use rows beyond the stock 64-row wire
+      // limit. lock_row() keeps access bounded while this fallback exporter
+      // intentionally emits only the first 64 stock rows.
       int16_t lock = paramLocks[track][param];
       if ((lock != -1) && (lockIdx < 64)) {
         encoder->pack((const uint8_t*)lock_row((uint16_t)lock), 32);
@@ -1093,92 +984,7 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
     encoder->finish();
   }
 
-#if !defined(__AVR__)
-  if (use_spsx) {
-    encoder->start7Bit();
-    encoder->startRLE();
-
-    for (uint8_t t = 0; t < 16; t++) {
-      encoder->pack((const uint8_t*)ext_microtiming[t], 64);
-      encoder->pack(ext_step_flags[t], 64);
-      const uint8_t wire_slot_count = MD_PATTERN_LOCK_SLOTS_V1;
-      uint8_t wire_lock_params[MD_PATTERN_LOCK_SLOTS];
-      memset(wire_lock_params, 0, sizeof(wire_lock_params));
-      for (uint8_t slot = 0; slot < wire_slot_count; ++slot) {
-        const uint8_t param = ext_locks_params[t][slot];
-        wire_lock_params[slot] = param <= wire_slot_count ? param : 0;
-      }
-      encoder->pack(wire_lock_params, wire_slot_count);
-    }
-
-    encoder->pack(ext_track_lengths, 16);
-    encoder->pack(ext_track_speeds, 16);
-
-#if !defined(__AVR__)
-    encoder->pack32hi(wire_lock_patterns, 16);
-#else
-    encoder->pack32hi(lockPatterns, 16);
-#endif
-
-    uint16_t out_numRows =
-        (wire_num_rows < MAX_LOCK_ROWS) ? wire_num_rows : MAX_LOCK_ROWS;
-    // numRows (little-endian u16)
-    encoder->pack8(out_numRows & 0xFF);
-    encoder->pack8((out_numRows >> 8) & 0xFF);
-
-    // Extra lock rows (64..numRows-1). Symmetric with fromSysex above:
-    // first 32 bytes per row (low steps), then if isExtraPattern another
-    // 32 bytes per row (high steps).
-    if (out_numRows > 64) {
-      uint16_t wire_row = 0;
-      for (uint8_t track = 0; track < 16; ++track) {
-        for (uint8_t param = 0; param < paramLimit; ++param) {
-          const int16_t row = paramLocks[track][param];
-          if (row == -1) {
-            continue;
-          }
-          if (wire_row >= 64 && wire_row < out_numRows) {
-            encoder->pack((const uint8_t*)lock_row((uint16_t)row), 32);
-          }
-          ++wire_row;
-        }
-      }
-      if (isExtraPattern) {
-        wire_row = 0;
-        for (uint8_t track = 0; track < 16; ++track) {
-          for (uint8_t param = 0; param < paramLimit; ++param) {
-            const int16_t row = paramLocks[track][param];
-            if (row == -1) {
-              continue;
-            }
-            if (wire_row >= 64 && wire_row < out_numRows) {
-              encoder->pack(
-                  (const uint8_t*)(lock_row((uint16_t)row) + 32), 32);
-            }
-            ++wire_row;
-          }
-        }
-      }
-    }
-
-    // Per-pattern tempo (little-endian u16)
-    encoder->pack8((uint8_t)(patternTempo & 0xFF));
-    encoder->pack8((uint8_t)((patternTempo >> 8) & 0xFF));
-    encoder->pack8(chain_change);
-
-    encoder->stopRLE();
-    encoder->finish();
-  }
-#endif
-
   encoder->finishChecksum();
-
-#if !defined(__AVR__)
-  if (use_spsx) {
-    // SPSX length is variable due to RLE; use actual encoded length
-    return encoder->finish() + 1; // +1 for F7
-  }
-#endif
   return sysexLength + 5;
 #else
   return 0;

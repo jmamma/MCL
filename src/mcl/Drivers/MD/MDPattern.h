@@ -13,30 +13,17 @@
 //#define MDPATTERN_TOSYSEX_ENABLE
 
 #if !defined(__AVR__)
-#define MD_PATTERN_VERSION_SPSX_V1 0x40
-#define MD_PATTERN_VERSION_SPSX    0x41
-#define MD_PATTERN_LOCK_SLOTS_V1   34
+#define MD_PATTERN_VERSION_SPSX    0x40
 #define MD_PATTERN_LOCK_SLOTS      SPS_PARAMS_PER_TRACK
 // Maximum number of distinct param-lock rows the host can transmit in an SPS-X
 // pattern. The base ElektronPattern::locks[64][64] array covers rows 0-63;
 // Non-AVR MDPattern adds extension storage for rows 64..MAX_LOCK_ROWS-1.
 #define MAX_LOCK_ROWS SPS_MAX_LOCK_ROWS
 
-constexpr uint8_t mdPatternLockSlotCountForVersion(uint8_t version) {
-  return version == MD_PATTERN_VERSION_SPSX
-             ? MD_PATTERN_LOCK_SLOTS
-         : version == MD_PATTERN_VERSION_SPSX_V1
-             ? MD_PATTERN_LOCK_SLOTS_V1
-             : MD_PARAMS_PER_TRACK;
-}
-
 static_assert(MD_PATTERN_LOCK_SLOTS == SPSX_NUM_LOCKS,
               "pattern and SPS-X sequencer lock mappings must match");
-static_assert(mdPatternLockSlotCountForVersion(MD_PATTERN_VERSION_SPSX_V1) ==
-                  34,
-              "v0x40 pattern width changed");
-static_assert(mdPatternLockSlotCountForVersion(MD_PATTERN_VERSION_SPSX) == 37,
-              "v0x41 pattern width changed");
+static_assert(MD_PATTERN_LOCK_SLOTS == 37,
+              "compact v0x40 pattern width changed");
 #endif
 
 /**
@@ -128,8 +115,8 @@ public:
   uint8_t ext_track_speeds[16];
   uint16_t patternTempo;
   uint8_t chain_change;
-  // Canonical 0x41 settings not present in the established 0x40 extension.
-  // Keeping them on MDPattern makes an MCL receive/send round-trip lossless.
+  // Canonical compact settings retained by hosted/RP2040 MCL so a receive/send
+  // round-trip remains lossless.
   uint8_t ext_scale_mode;
   uint8_t ext_tempo_multiplier;
   uint8_t ext_chain_row;
@@ -242,8 +229,8 @@ public:
   uint16_t toSysex(ElektronDataToSysexEncoder *encoder) override;
 
 #if !defined(__AVR__)
-  bool fromSysex41(const SysexView &sysex);
-  uint16_t toSysex41(ElektronDataToSysexEncoder *encoder);
+  bool fromSysex40(const SysexView &sysex);
+  uint16_t toSysex40(ElektronDataToSysexEncoder *encoder);
 #endif
 
   MDPattern(bool _init = true) : ElektronPattern(_init) {

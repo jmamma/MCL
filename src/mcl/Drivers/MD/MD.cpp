@@ -1254,7 +1254,9 @@ void MDClass::requestPattern(uint8_t pattern) {
   }
   const uint8_t ver = SYSEX_VERSION_LEGACY;
 #else
-  uint8_t ver = is_spsx ? SYSEX_VERSION_SPSX : SYSEX_VERSION_LEGACY;
+  const uint8_t ver =
+      supportsCompactPattern40() ? SYSEX_VERSION_SPSX
+                                 : SYSEX_VERSION_LEGACY;
 #endif
   uint8_t data[] = {sysex_protocol.patternrequest_id, pattern, ver};
   sendRequest(data, sizeof(data));

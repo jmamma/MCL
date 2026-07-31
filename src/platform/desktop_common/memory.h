@@ -34,9 +34,9 @@
 #define UARTUSB_TX_BUFFER_LEN TX_BUF_SIZE
 #define UARTUSB_RT_BUFFER_LEN RT_BUF_SIZE
 
-// Hosted port 0 is the manifest-declared SPS link. A maximally populated,
-// deliberately incompressible v0x41 pattern is about 45 KiB on the wire.
-// Keep the other ports at their legacy sizes; they do not carry SPS dumps.
+// Hosted port 0 is the manifest-declared SPS link and retains its established
+// large transaction buffer. Compact pattern 0x40 is independently bounded by
+// the Elektron 14-bit envelope. Other ports retain their legacy sizes.
 #define SYSEX1_DATA_LEN     60000UL
 #define SYSEX2_DATA_LEN     0x1800UL
 #define SYSEXUSB_DATA_LEN   0x1800UL
