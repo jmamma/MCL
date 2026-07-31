@@ -1240,13 +1240,27 @@ void MDClass::requestKit(uint8_t kit) {
   uint8_t data[] = {sysex_protocol.kitrequest_id, kit, ver};
   sendRequest(data, sizeof(data));
 }
+#endif
 
 void MDClass::requestPattern(uint8_t pattern) {
+#if defined(__AVR__)
+  // The AVR pattern object deliberately remains stock-format only. Preserve
+  // the standard two-byte request for MDX/stock peers, but explicitly ask an
+  // SPS-X peer for its legacy 0x03 representation instead of inheriting the
+  // device's global SysEx-format preference.
+  if ((fw_caps & FW_CAP_SPSX) == 0) {
+    ElektronDevice::requestPattern(pattern);
+    return;
+  }
+  const uint8_t ver = SYSEX_VERSION_LEGACY;
+#else
   uint8_t ver = is_spsx ? SYSEX_VERSION_SPSX : SYSEX_VERSION_LEGACY;
+#endif
   uint8_t data[] = {sysex_protocol.patternrequest_id, pattern, ver};
   sendRequest(data, sizeof(data));
 }
 
+#if !defined(__AVR__)
 void MDClass::requestGlobal(uint8_t global) {
   uint8_t ver = is_spsx ? SYSEX_VERSION_SPSX : SYSEX_VERSION_LEGACY;
   uint8_t data[] = {sysex_protocol.globalrequest_id, global, ver};

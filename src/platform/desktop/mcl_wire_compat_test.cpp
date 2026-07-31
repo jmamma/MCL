@@ -345,6 +345,53 @@ bool checkMaximumPatternRoundTrip(uint16_t& encodedLength) {
     return true;
 }
 
+bool checkMalformedCanonicalPatternRejected() {
+    std::array<uint8_t, 4096> message{};
+    std::array<uint8_t, 4096> body{};
+    MD.fw_caps = FW_CAP_SPSX | FW_CAP_SPSX_PARAMS_37;
+    MD.pattern.clearPattern();
+    MD.pattern.patternLength = 32;
+    if (!MD.pattern.addLock(0, 3, 2, 77))
+        return false;
+
+    ElektronDataToSysexEncoder encoder(message.data());
+    const uint16_t length = MD.pattern.toSysex(&encoder);
+    if (length < 15 || message[7] != MD_PATTERN_VERSION_SPSX)
+        return false;
+
+    const uint16_t wireBytes = length - 15;
+    const uint16_t bodyBytes = ElektronHelper::ElektronSysexToData(
+        message.data() + 10, body.data(), wireBytes);
+    constexpr uint16_t kFirstEvent =
+        16 + 40 + 16 * 40;
+    if (bodyBytes <= kFirstEvent + 1)
+        return false;
+
+    // Set a reserved descriptor bit, then rebuild a checksum-valid message.
+    // The failure therefore exercises the body parser, not the envelope.
+    body[kFirstEvent] |= 0x10;
+    if (ElektronHelper::ElektronDataToSysex(
+            body.data(), message.data() + 10, bodyBytes) != wireBytes) {
+        return false;
+    }
+    ElektronHelper::calculateSysexChecksum(
+        message.data(), (uint16_t)(length - 5));
+
+    auto fixture = std::make_unique<SysexFixture>();
+    if (!publishToMidiSysex(fixture->sysex, message.data(), length))
+        return false;
+
+    MDPattern decoded;
+    decoded.clearPattern();
+    decoded.patternLength = 64;
+    if (!decoded.addLock(1, 5, 3, 99) ||
+        decoded.fromSysex(&fixture->midi)) {
+        return false;
+    }
+    return decoded.patternLength == 16 && decoded.numRows == 0 &&
+           decoded.paramLocks[1][3] == -1;
+}
+
 #pragma pack(push, 1)
 struct LegacySpsMachine34 {
     uint8_t params[SPS_PARAMS_V1_PER_TRACK];
@@ -801,6 +848,8 @@ int main() {
     uint16_t maximumPatternBytes = 0;
     const bool maximumPattern =
         checkMaximumPatternRoundTrip(maximumPatternBytes);
+    const bool malformedPattern =
+        checkMalformedCanonicalPatternRejected();
     uint16_t goldenPatternBytes = 0;
     uint64_t goldenPatternHash = 0;
     const bool goldenPattern =
@@ -812,14 +861,15 @@ int main() {
     const bool seqNegotiation =
         checkSequencerNegotiationRejectsV1BusLocks();
     if (!kitV1 || !kitV2 || !patternV1 || !patternV2 || !maximumPattern ||
-        !goldenPattern || !trackRows ||
+        !malformedPattern || !goldenPattern || !trackRows ||
         !extendedCc || !encoderPackets || !seqNegotiation) {
         std::fprintf(stderr,
                      "MCL wire smoke failed: kit65=%d kit66=%d pat40=%d "
-                     "pat41=%d max592=%d golden=%d rows=%d cc=%d "
+                     "pat41=%d max592=%d malformed=%d golden=%d rows=%d cc=%d "
                      "encoder=%d seq=%d bytes=%u golden=%u/%016llx\n",
                      kitV1, kitV2, patternV1, patternV2, maximumPattern,
-                     goldenPattern, trackRows, extendedCc, encoderPackets,
+                     malformedPattern, goldenPattern, trackRows, extendedCc,
+                     encoderPackets,
                      seqNegotiation, maximumPatternBytes,
                      goldenPatternBytes,
                      (unsigned long long)goldenPatternHash);
@@ -828,7 +878,8 @@ int main() {
     std::fprintf(stderr,
                  "MCL wire compatibility passed: kit/pattern, 24/34/37 "
                  "packets, row migrations, v1/v2 negotiation, BUS3 bridge "
-                 "round-trip, and 592 rows (%u-byte worst-case fixture; "
+                 "round-trip, malformed-body rejection, and 592 rows "
+                 "(%u-byte worst-case fixture; "
                  "golden=%u/%016llx)\n",
                  maximumPatternBytes, goldenPatternBytes,
                  (unsigned long long)goldenPatternHash);

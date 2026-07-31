@@ -241,6 +241,11 @@ public:
   bool fromSysex(MidiClass *midi) override;
   uint16_t toSysex(ElektronDataToSysexEncoder *encoder) override;
 
+#if !defined(__AVR__)
+  bool fromSysex41(const SysexView &sysex);
+  uint16_t toSysex41(ElektronDataToSysexEncoder *encoder);
+#endif
+
   MDPattern(bool _init = true) : ElektronPattern(_init) {
     maxSteps = 64;
 #if !defined(__AVR__)

@@ -102,6 +102,11 @@ public:
     return supportsSpsx37Params() ? SPS_PARAMS_PER_TRACK
                                  : SPS_PARAMS_V1_PER_TRACK;
   }
+  bool supportsCompactPattern41() const {
+    static constexpr uint32_t required =
+        (uint32_t)FW_CAP_SPSX | (uint32_t)FW_CAP_SPSX_PARAMS_37;
+    return (fw_caps & required) == required;
+  }
 #endif
 
   virtual void setup_listeners() override;
@@ -119,9 +124,9 @@ public:
   PageIndex mixer_fx_page() const;
 #if !defined(__AVR__)
   virtual void requestKit(uint8_t kit) override;
-  virtual void requestPattern(uint8_t pattern) override;
   virtual void requestGlobal(uint8_t global) override;
 #endif
+  virtual void requestPattern(uint8_t pattern) override;
   virtual void init_grid_devices(DeviceIdx device_idx) override;
 #ifdef PLATFORM_TBD
   virtual bool supports_capability(MidiDeviceCapability capability) const override;
