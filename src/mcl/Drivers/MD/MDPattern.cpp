@@ -24,6 +24,8 @@ enum {
   MD_COMPACT_HEADER_BYTES = 16,
   MD_COMPACT_SETTINGS_BYTES = 40,
   MD_COMPACT_TRACK_BYTES = 40,
+  MD_COMPACT_LOCK_PAGE_STEPS = 32,
+  MD_COMPACT_DENSE_WORDS = MD_COMPACT_LOCK_PAGE_STEPS / 2,
   MD_COMPACT_FIXED_BYTES =
       MD_COMPACT_HEADER_BYTES + MD_COMPACT_SETTINGS_BYTES +
       MD_COMPACT_TRACKS * MD_COMPACT_TRACK_BYTES,
@@ -36,7 +38,8 @@ const uint8_t md_compact_magic[7] = {
     'S', 'P', 'S', 'X', 'P', 'T', 'N'};
 
 struct MDCompactShape {
-  uint8_t lanes[MD_COMPACT_TRACKS];
+  uint8_t low_lanes[MD_COMPACT_TRACKS];
+  uint8_t high_lanes[MD_COMPACT_TRACKS];
   uint8_t microtiming[MD_COMPACT_TRACKS];
   uint8_t conditions[MD_COMPACT_TRACKS];
   uint16_t words;
@@ -77,14 +80,16 @@ int16_t md_compact_lock_index(const MDPattern &pattern, uint8_t track,
 }
 
 uint8_t md_compact_lock_count(const MDPattern &pattern, uint8_t track,
-                              uint8_t param, uint8_t steps) {
+                              uint8_t param, uint8_t first_step) {
   int16_t row = md_compact_lock_index(pattern, track, param);
   if (row < 0 || (uint16_t)row >= MAX_LOCK_ROWS) {
     return 0;
   }
   const int8_t *values = md_compact_lock_row(pattern, (uint16_t)row);
   uint8_t count = 0;
-  for (uint8_t step = 0; step < steps; step++) {
+  for (uint8_t offset = 0; offset < MD_COMPACT_LOCK_PAGE_STEPS;
+       offset++) {
+    uint8_t step = first_step + offset;
     if (values[step] >= 0) {
       count++;
     }
@@ -185,13 +190,24 @@ bool md_compact_build_shape(const MDPattern &pattern, uint8_t steps,
       return false;
     }
     for (uint8_t param = 0; param < MD_PATTERN_LOCK_SLOTS; param++) {
-      uint8_t points =
-          md_compact_lock_count(pattern, track, param, steps);
-      if (points == 0) {
-        continue;
+      uint8_t low_points =
+          md_compact_lock_count(pattern, track, param, 0);
+      uint8_t high_points = steps == 64
+                                ? md_compact_lock_count(
+                                      pattern, track, param, 32)
+                                : 0;
+      if (low_points != 0) {
+        shape.low_lanes[track]++;
+        words += 1 + (low_points > MD_COMPACT_DENSE_WORDS
+                           ? MD_COMPACT_DENSE_WORDS
+                           : low_points);
       }
-      shape.lanes[track]++;
-      words += 1 + (points > steps / 2 ? steps / 2 : points);
+      if (high_points != 0) {
+        shape.high_lanes[track]++;
+        words += 1 + (high_points > MD_COMPACT_DENSE_WORDS
+                           ? MD_COMPACT_DENSE_WORDS
+                           : high_points);
+      }
     }
     for (uint8_t step = 0; step < steps; step++) {
       if (pattern.ext_microtiming[track][step] != 0) {
@@ -258,43 +274,53 @@ void md_compact_pack_track(ElektronDataToSysexEncoder *encoder,
   md_compact_pack8(encoder, pattern.ext_track_speeds[track] != 0xff
                                 ? pattern.ext_track_speeds[track]
                                 : pattern.doubleTempo);
-  md_compact_pack8(encoder, shape.lanes[track]);
+  md_compact_pack8(encoder, shape.low_lanes[track]);
   md_compact_pack8(encoder, shape.microtiming[track]);
   md_compact_pack8(encoder, shape.conditions[track]);
-  encoder->fill8(0, 3);
+  md_compact_pack8(encoder, shape.high_lanes[track]);
+  encoder->fill8(0, 2);
 }
 
 void md_compact_pack_words(ElektronDataToSysexEncoder *encoder,
                            const MDPattern &pattern,
                            const MDCompactShape &shape, uint8_t steps) {
   for (uint8_t track = 0; track < MD_COMPACT_TRACKS; track++) {
-    for (uint8_t param = 0; param < MD_PATTERN_LOCK_SLOTS; param++) {
-      uint8_t points =
-          md_compact_lock_count(pattern, track, param, steps);
-      if (points == 0) {
-        continue;
-      }
-      bool dense = points > steps / 2;
-      uint16_t descriptor =
-          param | ((uint16_t)(points - 1) << 6) |
-          (dense ? 0x8000 : 0);
-      encoder->pack16(descriptor);
-      int16_t row = md_compact_lock_index(pattern, track, param);
-      const int8_t *values =
-          md_compact_lock_row(pattern, (uint16_t)row);
-      if (dense) {
-        for (uint8_t step = 0; step < steps; step += 2) {
-          uint8_t high =
-              values[step] >= 0 ? (uint8_t)values[step] : 0xff;
-          uint8_t low =
-              values[step + 1] >= 0 ? (uint8_t)values[step + 1] : 0xff;
-          encoder->pack16(((uint16_t)high << 8) | low);
+    uint8_t pages = steps / MD_COMPACT_LOCK_PAGE_STEPS;
+    for (uint8_t page = 0; page < pages; page++) {
+      uint8_t first_step = page * MD_COMPACT_LOCK_PAGE_STEPS;
+      for (uint8_t param = 0; param < MD_PATTERN_LOCK_SLOTS; param++) {
+        uint8_t points =
+            md_compact_lock_count(pattern, track, param, first_step);
+        if (points == 0) {
+          continue;
         }
-      } else {
-        for (uint8_t step = 0; step < steps; step++) {
-          if (values[step] >= 0) {
-            encoder->pack16(
-                step | ((uint16_t)(uint8_t)values[step] << 6));
+        bool dense = points > MD_COMPACT_DENSE_WORDS;
+        uint16_t descriptor =
+            param | ((uint16_t)(points - 1) << 6) |
+            (dense ? 0x8000 : 0);
+        encoder->pack16(descriptor);
+        int16_t row = md_compact_lock_index(pattern, track, param);
+        const int8_t *values =
+            md_compact_lock_row(pattern, (uint16_t)row);
+        if (dense) {
+          for (uint8_t offset = 0; offset < MD_COMPACT_LOCK_PAGE_STEPS;
+               offset += 2) {
+            uint8_t step = first_step + offset;
+            uint8_t high =
+                values[step] >= 0 ? (uint8_t)values[step] : 0xff;
+            uint8_t low = values[step + 1] >= 0
+                              ? (uint8_t)values[step + 1]
+                              : 0xff;
+            encoder->pack16(((uint16_t)high << 8) | low);
+          }
+        } else {
+          for (uint8_t offset = 0; offset < MD_COMPACT_LOCK_PAGE_STEPS;
+               offset++) {
+            uint8_t step = first_step + offset;
+            if (values[step] >= 0) {
+              encoder->pack16(
+                  offset | ((uint16_t)(uint8_t)values[step] << 6));
+            }
           }
         }
       }
@@ -320,6 +346,188 @@ void md_compact_pack_words(ElektronDataToSysexEncoder *encoder,
     }
   }
   (void)shape;
+}
+
+bool md_compact_unpack_words(ElektronSysexDecoder &decoder,
+                             uint8_t steps, uint16_t used_words,
+                             const MDCompactShape &shape,
+                             MDPattern *pattern) {
+  uint16_t cursor = 0;
+  uint16_t row_count = 0;
+  uint16_t validated_rows = 0;
+  const uint8_t pages = steps / MD_COMPACT_LOCK_PAGE_STEPS;
+
+  for (uint8_t track = 0; track < MD_COMPACT_TRACKS; track++) {
+    uint64_t track_params = 0;
+    for (uint8_t page = 0; page < pages; page++) {
+      const uint8_t first_step = page * MD_COMPACT_LOCK_PAGE_STEPS;
+      const uint8_t lane_count =
+          page == 0 ? shape.low_lanes[track]
+                    : shape.high_lanes[track];
+      uint8_t previous_param = 0;
+      bool have_param = false;
+      for (uint8_t lane = 0; lane < lane_count; lane++) {
+        if (cursor >= used_words)
+          return false;
+        const uint16_t descriptor = decoder.gget16();
+        cursor++;
+        const uint8_t param = descriptor & 0x3f;
+        const uint8_t points = ((descriptor >> 6) & 0x3f) + 1;
+        const bool dense = (descriptor & 0x8000) != 0;
+        const uint8_t payload = dense ? MD_COMPACT_DENSE_WORDS : points;
+        if ((descriptor & 0x7000) != 0 ||
+            param >= MD_PATTERN_LOCK_SLOTS ||
+            points > MD_COMPACT_LOCK_PAGE_STEPS ||
+            dense != (points > MD_COMPACT_DENSE_WORDS) ||
+            (have_param && param <= previous_param) ||
+            payload > used_words - cursor) {
+          return false;
+        }
+        previous_param = param;
+        have_param = true;
+        track_params |= UINT64_C(1) << param;
+
+        int8_t *values = nullptr;
+        if (pattern != nullptr) {
+          int16_t row = pattern->paramLocks[track][param];
+          if (row < 0) {
+            if (row_count >= MAX_LOCK_ROWS)
+              return false;
+            row = row_count++;
+            pattern->paramLocks[track][param] = row;
+            pattern->set_lock_track_param(row, track, param);
+            SET_BIT64(pattern->lockPatterns[track], param);
+            values = md_compact_lock_row(*pattern, row);
+            memset(values, -1, 64);
+          } else {
+            values = md_compact_lock_row(*pattern, row);
+          }
+        }
+
+        if (dense) {
+          uint8_t populated = 0;
+          for (uint8_t offset = 0;
+               offset < MD_COMPACT_LOCK_PAGE_STEPS; offset += 2) {
+            const uint16_t word = decoder.gget16();
+            const uint8_t high = word >> 8;
+            const uint8_t low = word;
+            if (high != 0xff) {
+              if (high > 0x7f)
+                return false;
+              if (values != nullptr)
+                values[first_step + offset] = high;
+              populated++;
+            }
+            if (low != 0xff) {
+              if (low > 0x7f)
+                return false;
+              if (values != nullptr)
+                values[first_step + offset + 1] = low;
+              populated++;
+            }
+          }
+          if (populated != points)
+            return false;
+          cursor += payload;
+        } else {
+          uint8_t previous_step = 0;
+          bool have_step = false;
+          for (uint8_t point = 0; point < points; point++) {
+            const uint16_t word = decoder.gget16();
+            const uint8_t step = word & 0x3f;
+            if ((word & 0xe000) != 0 ||
+                step >= MD_COMPACT_LOCK_PAGE_STEPS ||
+                (have_step && step <= previous_step)) {
+              return false;
+            }
+            previous_step = step;
+            have_step = true;
+            if (values != nullptr) {
+              values[first_step + step] =
+                  (word >> 6) & 0x7f;
+            }
+            cursor++;
+          }
+        }
+      }
+    }
+
+    if (pattern == nullptr) {
+      uint64_t params = track_params;
+      while (params != 0) {
+        params &= params - 1;
+        validated_rows++;
+      }
+      if (validated_rows > MAX_LOCK_ROWS)
+        return false;
+    } else {
+      uint8_t mapping = 0;
+      for (uint8_t param = 0; param < MD_PATTERN_LOCK_SLOTS; param++) {
+        if (pattern->paramLocks[track][param] >= 0) {
+          pattern->ext_locks_params[track][mapping++] = param + 1;
+        }
+      }
+      for (uint8_t step = 0; step < steps; step++) {
+        if (md_compact_step_has_lock(*pattern, track, step))
+          pattern->ext_step_flags[track][step] = 1;
+      }
+    }
+
+    if ((uint16_t)(shape.microtiming[track] +
+                   shape.conditions[track]) >
+        used_words - cursor) {
+      return false;
+    }
+    uint8_t previous_step = 0;
+    bool have_step = false;
+    for (uint8_t event = 0; event < shape.microtiming[track]; event++) {
+      const uint16_t word = decoder.gget16();
+      const uint8_t step = word & 0x3f;
+      const int8_t value = (int8_t)((word >> 6) & 0xff);
+      if ((word & 0xc000) != 0 || value == 0 || step >= steps ||
+          (have_step && step <= previous_step)) {
+        return false;
+      }
+      previous_step = step;
+      have_step = true;
+      if (pattern != nullptr)
+        pattern->ext_microtiming[track][step] = value;
+      cursor++;
+    }
+    previous_step = 0;
+    have_step = false;
+    for (uint8_t event = 0; event < shape.conditions[track]; event++) {
+      const uint16_t word = decoder.gget16();
+      const uint8_t step = word & 0x3f;
+      const uint8_t condition = (word >> 6) & 0x3f;
+      if ((word & 0xc000) != 0 ||
+          (condition == 0 && (word & 0x3000) == 0) ||
+          step >= steps || (have_step && step <= previous_step)) {
+        return false;
+      }
+      previous_step = step;
+      have_step = true;
+      if (pattern != nullptr) {
+        uint8_t flags = condition << 2;
+        if (word & 0x1000)
+          flags |= 2;
+        if ((word & 0x2000) == 0 &&
+            md_compact_step_has_lock(*pattern, track, step)) {
+          flags |= 1;
+        }
+        pattern->ext_step_flags[track][step] = flags;
+      }
+      cursor++;
+    }
+  }
+
+  if (cursor != used_words)
+    return false;
+  if (pattern != nullptr) {
+    pattern->numRows = row_count;
+    pattern->numLockedRows = row_count > 255 ? 255 : row_count;
+  }
+  return true;
 }
 
 } // namespace
@@ -475,76 +683,85 @@ void MDPattern::clear_step_locks(uint8_t track, uint8_t step) {
 bool MDPattern::fromSysex40(const SysexView &sysex) {
   uint8_t steps = 0;
   uint16_t used_words = 0;
-  if (!md_compact_header(sysex, steps, used_words)) {
+  if (!md_compact_header(sysex, steps, used_words))
     return false;
-  }
 
   ElektronSysexDecoder decoder(sysex, 9);
   decoder.skip(MD_COMPACT_HEADER_BYTES);
-  uint8_t data[MD_COMPACT_SETTINGS_BYTES];
-  decoder.get(data, sizeof(data));
-  if (!md_compact_settings_valid(data, steps)) {
+  uint8_t settings[MD_COMPACT_SETTINGS_BYTES];
+  decoder.get(settings, sizeof(settings));
+  if (!md_compact_settings_valid(settings, steps))
     return false;
-  }
-
-  init();
-  version = MD_PATTERN_VERSION_SPSX;
-  origPosition = sysex.getByte(8);
-  accentPattern = md_compact_read64(data);
-  swingPattern = md_compact_read64(data + 8);
-  slidePattern = md_compact_read64(data + 16);
-  patternTempo = md_compact_read16(data + 24);
-  uint8_t accent = data[26] > 15 ? 15 : data[26];
-  accentAmount = (accent >> 1) | (accent << 3);
-  int8_t swing = (int8_t)data[27];
-  if (swing < 0) {
-    swing = 0;
-  } else if (swing > 30) {
-    swing = 30;
-  }
-  swingAmount = (uint32_t)swing * 16384u / 30u;
-  accentEditAll = data[28];
-  slideEditAll = data[29];
-  swingEditAll = data[30];
-  ext_scale_mode = data[31];
-  patternLength = data[32];
-  scale = data[33];
-  doubleTempo = data[34];
-  ext_tempo_multiplier = data[35];
-  kit = data[36];
-  ext_chain_row = data[37];
-  ext_chain_loops = data[38];
-  chain_change = data[39];
-  isExtraPattern = steps == 64;
 
   MDCompactShape shape;
   memset(&shape, 0, sizeof(shape));
-  uint16_t lane_total = 0;
-  uint16_t row_count = 0;
-  uint16_t cursor = 0;
+  uint8_t data[MD_COMPACT_TRACK_BYTES];
   for (uint8_t track = 0; track < MD_COMPACT_TRACKS; track++) {
     decoder.get(data, sizeof(data));
     uint8_t length = data[32];
     uint8_t speed = data[33];
-    uint8_t lanes = data[34];
+    uint8_t low_lanes = data[34];
     uint8_t microtiming = data[35];
     uint8_t conditions = data[36];
+    uint8_t high_lanes = data[37];
     if (!md_compact_wire_mask_fits(data, steps) ||
         !md_compact_wire_mask_fits(data + 8, steps) ||
         !md_compact_wire_mask_fits(data + 16, steps) ||
         !md_compact_wire_mask_fits(data + 24, steps) ||
         length > steps || (speed != 0xff && speed > 7) ||
-        lanes > MD_PATTERN_LOCK_SLOTS ||
-        data[37] != 0 || data[38] != 0 || data[39] != 0) {
-      goto decode_failed;
+        low_lanes > MD_PATTERN_LOCK_SLOTS ||
+        high_lanes > MD_PATTERN_LOCK_SLOTS ||
+        (steps == 32 && high_lanes != 0) ||
+        data[38] != 0 || data[39] != 0) {
+      return false;
     }
-    lane_total += lanes;
-    if (lane_total > MAX_LOCK_ROWS) {
-      goto decode_failed;
-    }
-    shape.lanes[track] = lanes;
+    shape.low_lanes[track] = low_lanes;
+    shape.high_lanes[track] = high_lanes;
     shape.microtiming[track] = microtiming;
     shape.conditions[track] = conditions;
+  }
+  if (!md_compact_unpack_words(
+          decoder, steps, used_words, shape, nullptr)) {
+    return false;
+  }
+
+  // Nothing above mutates the live pattern. The second pass applies the body
+  // only after the complete message and its capacity have been validated.
+  init();
+  version = MD_PATTERN_VERSION_SPSX;
+  origPosition = sysex.getByte(8);
+  accentPattern = md_compact_read64(settings);
+  swingPattern = md_compact_read64(settings + 8);
+  slidePattern = md_compact_read64(settings + 16);
+  patternTempo = md_compact_read16(settings + 24);
+  uint8_t accent = settings[26] > 15 ? 15 : settings[26];
+  accentAmount = (accent >> 1) | (accent << 3);
+  int8_t swing = (int8_t)settings[27];
+  if (swing < 0)
+    swing = 0;
+  else if (swing > 30)
+    swing = 30;
+  swingAmount = (uint32_t)swing * 16384u / 30u;
+  accentEditAll = settings[28];
+  slideEditAll = settings[29];
+  swingEditAll = settings[30];
+  ext_scale_mode = settings[31];
+  patternLength = settings[32];
+  scale = settings[33];
+  doubleTempo = settings[34];
+  ext_tempo_multiplier = settings[35];
+  kit = settings[36];
+  ext_chain_row = settings[37];
+  ext_chain_loops = settings[38];
+  chain_change = settings[39];
+  isExtraPattern = steps == 64;
+
+  ElektronSysexDecoder apply(sysex, 9);
+  apply.skip(MD_COMPACT_HEADER_BYTES + MD_COMPACT_SETTINGS_BYTES);
+  for (uint8_t track = 0; track < MD_COMPACT_TRACKS; track++) {
+    apply.get(data, sizeof(data));
+    const uint8_t length = data[32];
+    const uint8_t speed = data[33];
     trigPatterns[track] = md_compact_read64(data);
     slidePatterns[track] = md_compact_read64(data + 8);
     accentPatterns[track] = md_compact_read64(data + 16);
@@ -554,147 +771,19 @@ bool MDPattern::fromSysex40(const SysexView &sysex) {
     ext_track_speeds[track] =
         speed == 0xff || speed == doubleTempo ? 0xff : speed;
   }
-
-  for (uint8_t track = 0; track < MD_COMPACT_TRACKS; track++) {
-    uint8_t previous_param = 0;
-    bool have_param = false;
-    uint8_t mapping = 0;
-    for (uint8_t lane = 0; lane < shape.lanes[track]; lane++) {
-      if (cursor >= used_words) {
-        goto decode_failed;
-      }
-      uint16_t descriptor = decoder.gget16();
-      cursor++;
-      uint8_t param = descriptor & 0x3f;
-      uint8_t points = ((descriptor >> 6) & 0x3f) + 1;
-      bool dense = (descriptor & 0x8000) != 0;
-      uint8_t payload = dense ? steps / 2 : points;
-      if ((descriptor & 0x7000) != 0 ||
-          param >= MD_PATTERN_LOCK_SLOTS ||
-          dense != (points > steps / 2) ||
-          (have_param && param <= previous_param) ||
-          payload > used_words - cursor) {
-        goto decode_failed;
-      }
-      previous_param = param;
-      have_param = true;
-      uint16_t row = row_count++;
-      paramLocks[track][param] = row;
-      set_lock_track_param(row, track, param);
-      SET_BIT64(lockPatterns[track], param);
-      if (mapping < MD_PATTERN_LOCK_SLOTS) {
-        ext_locks_params[track][mapping++] = param + 1;
-      }
-      int8_t *values = md_compact_lock_row(*this, row);
-      memset(values, -1, 64);
-      if (dense) {
-        uint8_t populated = 0;
-        for (uint8_t step = 0; step < steps; step += 2) {
-          uint16_t word = decoder.gget16();
-          uint8_t high = word >> 8;
-          uint8_t low = word;
-          if (high != 0xff) {
-            if (high > 0x7f) {
-              goto decode_failed;
-            }
-            values[step] = high;
-            populated++;
-          }
-          if (low != 0xff) {
-            if (low > 0x7f) {
-              goto decode_failed;
-            }
-            values[step + 1] = low;
-            populated++;
-          }
-        }
-        if (populated != points) {
-          goto decode_failed;
-        }
-        cursor += payload;
-      } else {
-        uint8_t previous_step = 0;
-        bool have_step = false;
-        for (uint8_t n = 0; n < points; n++) {
-          uint16_t word = decoder.gget16();
-          uint8_t step = word & 0x3f;
-          if ((word & 0xe000) != 0 || step >= steps ||
-              (have_step && step <= previous_step)) {
-            goto decode_failed;
-          }
-          previous_step = step;
-          have_step = true;
-          values[step] = (word >> 6) & 0x7f;
-          cursor++;
-        }
-      }
-    }
-
-    for (uint8_t step = 0; step < steps; step++) {
-      if (md_compact_step_has_lock(*this, track, step)) {
-        ext_step_flags[track][step] = 1;
-      }
-    }
-    if ((uint16_t)(shape.microtiming[track] +
-                   shape.conditions[track]) >
-        used_words - cursor) {
-      goto decode_failed;
-    }
-    uint8_t previous_step = 0;
-    bool have_step = false;
-    for (uint8_t n = 0; n < shape.microtiming[track]; n++) {
-      uint16_t word = decoder.gget16();
-      uint8_t step = word & 0x3f;
-      int8_t value = (int8_t)((word >> 6) & 0xff);
-      if ((word & 0xc000) != 0 || value == 0 || step >= steps ||
-          (have_step && step <= previous_step)) {
-        goto decode_failed;
-      }
-      previous_step = step;
-      have_step = true;
-      ext_microtiming[track][step] = value;
-      cursor++;
-    }
-    previous_step = 0;
-    have_step = false;
-    for (uint8_t n = 0; n < shape.conditions[track]; n++) {
-      uint16_t word = decoder.gget16();
-      uint8_t step = word & 0x3f;
-      uint8_t condition = (word >> 6) & 0x3f;
-      if ((word & 0xc000) != 0 ||
-          (condition == 0 && (word & 0x3000) == 0) ||
-          step >= steps || (have_step && step <= previous_step)) {
-        goto decode_failed;
-      }
-      previous_step = step;
-      have_step = true;
-      uint8_t flags = condition << 2;
-      if (word & 0x1000) {
-        flags |= 2;
-      }
-      if ((word & 0x2000) == 0 &&
-          md_compact_step_has_lock(*this, track, step)) {
-        flags |= 1;
-      }
-      ext_step_flags[track][step] = flags;
-      cursor++;
-    }
+  if (!md_compact_unpack_words(
+          apply, steps, used_words, shape, this)) {
+    init();
+    return false;
   }
-  if (cursor != used_words) {
-    goto decode_failed;
-  }
-  numRows = row_count;
-  numLockedRows = row_count > 255 ? 255 : row_count;
   return true;
-
-decode_failed:
-  init();
-  return false;
 }
 
 uint16_t MDPattern::toSysex40(
     ElektronDataToSysexEncoder *encoder) {
-  uint8_t steps = patternLength > 32 ? 64 : 32;
+  // SPS-X exposes the same 64-step model on desktop/plugin, MKI, and MKII.
+  // The page-local lane representation keeps a 32-step region compact.
+  uint8_t steps = 64;
   MDCompactShape shape;
   if (encoder == nullptr ||
       !md_compact_build_shape(*this, steps, shape)) {

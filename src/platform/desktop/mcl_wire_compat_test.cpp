@@ -399,8 +399,9 @@ bool checkMalformedCanonicalPatternRejected() {
         decoded.fromSysex(&fixture->midi)) {
         return false;
     }
-    return decoded.patternLength == 16 && decoded.numRows == 0 &&
-           decoded.paramLocks[1][3] == -1;
+    return decoded.patternLength == 64 &&
+           decoded.paramLocks[1][3] >= 0 &&
+           decoded.getLock(1, 5, 3) == 99;
 }
 
 #pragma pack(push, 1)
