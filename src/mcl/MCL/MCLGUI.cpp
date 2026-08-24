@@ -754,13 +754,13 @@ void MCLGUI::draw_microtiming_spsx(uint8_t speed, int8_t microtiming) {
   case SPSX_SPEED_1_8X: tps = SPSX_TICKS_PER_STEP_1X * 8; break;
   }
 
-  uint16_t timing_center = tps / 4;
-  if (timing_center < 1) timing_center = 1;
-  if (timing_center > 96) timing_center = 96;
+  uint16_t timing_center = tps > 1u ? tps - 1u : 0u;
+  if (timing_center > 23u) timing_center = 23u;
   uint16_t degrees = timing_center * 2;
 
-  // Convert microtiming (-127..+127) to visual position (0..degrees)
-  int timing = timing_center + (int)microtiming * (int)timing_center / 127;
+  const int16_t timing_offset =
+      spsx_microtiming_to_ticks(microtiming, tps);
+  int timing = timing_center + timing_offset;
   if (timing < 0) timing = 0;
   if (timing > degrees) timing = degrees;
 
@@ -793,14 +793,14 @@ void MCLGUI::draw_microtiming_spsx(uint8_t speed, int8_t microtiming) {
   oled_display.drawRect(popup_x + 1, popup_y + 1, popup_w - 2, popup_h - 2, WHITE);
 
   char K[5];
-  if (microtiming == 0) {
+  if (timing_offset == 0) {
     strcpy(K, "---");
-  } else if (microtiming < 0) {
+  } else if (timing_offset < 0) {
     K[0] = '-';
-    put_value_at(-microtiming, K + 1);
+    put_value_at(-timing_offset, K + 1);
   } else {
     K[0] = '+';
-    put_value_at(microtiming, K + 1);
+    put_value_at(timing_offset, K + 1);
   }
   K[4] = '\0';
 

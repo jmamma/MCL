@@ -15,12 +15,12 @@
 #define MIDI_SEQ_NUM_EVENTS 545
 #define MIDI_SEQ_NUM_LOCKS 32
 
-// Canonical editor/storage resolution for enhanced external tracks.
-// 96 ticks per 16th note matches the high-resolution RP2040 scheduler
-// (384 PPQN). Legacy engines are downsampled from that scheduler when needed.
-#define MIDI_SEQ_TICKS_PER_STEP 96
-#define MIDI_SEQ_TIMING_CENTER MIDI_SEQ_TICKS_PER_STEP
-#define MIDI_SEQ_TIMING_RANGE (MIDI_SEQ_TICKS_PER_STEP * 2)
+// Runtime cadence is the shared 96-PPQN / 24-tick step. Version-1 event
+// storage retains its existing centered 0..191 timing byte; MidiSeqTrack's
+// conversion helpers map that representation onto the runtime step.
+#define MIDI_SEQ_TICKS_PER_STEP 24
+#define MIDI_SEQ_TIMING_CENTER 96
+#define MIDI_SEQ_TIMING_RANGE (MIDI_SEQ_TIMING_CENTER * 2)
 
 class ExtSeqTrackData;
 class GridLink;

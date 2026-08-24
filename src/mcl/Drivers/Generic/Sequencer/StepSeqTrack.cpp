@@ -72,13 +72,7 @@ uint8_t StepSeqTrack::get_quantized_step(int8_t &microtiming_out, uint8_t quant)
         return step;
     }
 
-    int16_t timing_range = (int16_t)(tps / 4);
-    if (timing_range < 1) timing_range = 1;
-
-    int16_t mt = (int16_t)((int32_t)signed_offset * 128 / timing_range);
-    if (mt < -127) mt = -127;
-    if (mt > 127) mt = 127;
-    microtiming_out = (int8_t)mt;
+    microtiming_out = stepseq_ticks_to_microtiming(signed_offset, tps);
     return step;
 }
 

@@ -12,12 +12,15 @@ extern uint8_t get_random_byte();
 // ============================================================================
 // Step Sequencer Interpolation
 // ============================================================================
-// 16x MIDI clock interpolation: 96 ticks per 16th note.
-#define STEPSEQ_SEQ_INTERPOLATION 16
+// Four subdivisions per MIDI pulse: 24 ticks per 16th note. Each tick is
+// exactly one musical 1/384-note timing unit.
+#define STEPSEQ_SEQ_INTERPOLATION 4
 #define STEPSEQ_LEGACY_SEQ_INTERPOLATION 2
 
 // Ticks per step at 1X speed (6 * interpolation).
 #define STEPSEQ_TICKS_PER_STEP_1X (6 * STEPSEQ_SEQ_INTERPOLATION)
+static_assert(STEPSEQ_TICKS_PER_STEP_1X == 24,
+              "step sequencer requires exact 1/384-note timing units");
 
 // ============================================================================
 // Lock Params
@@ -155,7 +158,25 @@ inline uint8_t stepseq_popcount(uint64_t x) {
 }
 
 inline int16_t stepseq_microtiming_to_ticks(int8_t mt, uint16_t tps) {
-    return (int16_t)((int16_t)mt * (tps / 4) / 128);
+    uint16_t range = tps > 1u ? (uint16_t)(tps - 1u) : 0u;
+    if (range > 23u) range = 23u;
+    int16_t value = (int16_t)mt;
+    int16_t magnitude = value < 0 ? (int16_t)-value : value;
+    int16_t ticks = (int16_t)(((int32_t)magnitude * range + 64) >> 7);
+    return value < 0 ? (int16_t)-ticks : ticks;
+}
+
+inline int8_t stepseq_ticks_to_microtiming(int16_t ticks, uint16_t tps) {
+    uint16_t range = tps > 1u ? (uint16_t)(tps - 1u) : 0u;
+    if (range > 23u) range = 23u;
+    if (range == 0u || ticks == 0) return 0;
+    if (ticks > (int16_t)range) ticks = (int16_t)range;
+    if (ticks < -(int16_t)range) ticks = -(int16_t)range;
+    int16_t magnitude = ticks < 0 ? (int16_t)-ticks : ticks;
+    int16_t encoded = (int16_t)(
+        ((int32_t)magnitude * 128 + range / 2u) / range);
+    if (encoded > 127) encoded = 127;
+    return (int8_t)(ticks < 0 ? -encoded : encoded);
 }
 
 inline uint8_t stepseq_cond_iter_encode(uint8_t x, uint8_t y) {

@@ -63,7 +63,7 @@ public:
 #endif
 
 #if !defined(__AVR__)
-  volatile uint8_t clock_interpolation = 2; // 2=legacy(48PPQN), 16=SPSX(384PPQN)
+  volatile uint8_t clock_interpolation = 2; // 2=legacy(48PPQN), 4=SPSX(96PPQN)
   volatile uint8_t interp_budget = 0;
 #endif
 #ifdef PLATFORM_TBD
