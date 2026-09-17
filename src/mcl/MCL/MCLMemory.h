@@ -125,10 +125,10 @@ constexpr size_t EMPTY_TRACK_LEN = GRID1_TRACK_LEN - DEVICE_TRACK_LEN;
 constexpr size_t MD_CACHE_LEN = GRID1_TRACK_LEN * NUM_MD_TRACKS;
 
 #ifdef MCL_HAS_SPSX_TRACKS
-// SPSX tracks carry SPSMachine (34 params + 2 LFOs) + SeqDataUnion + extras.
+// SPSX tracks carry SPSMachine (38 params + 2 LFOs + kit route) + SeqDataUnion + extras.
 // Sized with headroom; static_assert in SPSXTrack.h enforces fit.
 #if !defined(__AVR__)
-constexpr size_t SPSX_TRACK_LEN = MEMORY_ALIGN(1168);
+constexpr size_t SPSX_TRACK_LEN = MEMORY_ALIGN(1172);
 #else
 constexpr size_t SPSX_TRACK_LEN = MEMORY_ALIGN(1160);
 #endif

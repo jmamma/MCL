@@ -15,9 +15,9 @@ static_assert(SPSX_SEQ_INTERPOLATION == 4 &&
               "MCL SPS-X timing must match the canonical 96-PPQN engine");
 
 #define SPSX_NUM_LOCKS_V1 STEPSEQ_NUM_LOCKS
-#define SPSX_NUM_LOCKS 37
-static_assert(SPSX_NUM_LOCKS == SPSX_NUM_LOCKS_V1 + 3,
-              "SPS-X lock migration assumes three added BUS parameters");
+#define SPSX_NUM_LOCKS 38
+static_assert(SPSX_NUM_LOCKS == SPSX_NUM_LOCKS_V1 + 4,
+              "SPS-X lock migration assumes BUS and ENV DEST parameters");
 
 #define SPSX_SPEED_1X STEPSEQ_SPEED_1X
 #define SPSX_SPEED_2X STEPSEQ_SPEED_2X

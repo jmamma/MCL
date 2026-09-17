@@ -6,16 +6,17 @@
 #include "platform.h"
 #include "MDPattern.h"
 #include "MDParams.h"
+#include "MDKitRouting.h"
 
 #define MDX_KIT_VERSION     64
-#define SPSX_KIT_VERSION_V1 65
-#define SPSX_KIT_VERSION    66
+#define SPSX_KIT_VERSION    65
+#define MDX_GLOBAL_VERSION    6
+#define SPSX_GLOBAL_VERSION   7
 
 static constexpr uint8_t SPS_USER_BUS_FX_COUNT = 3;
 static constexpr uint8_t SPS_USER_FX_PARAM_COUNT = 8;
 static constexpr uint8_t SPS_USER_FX_DEFAULT_PARAM = 64;
-static constexpr uint8_t SPSX_KIT_PARAMS_V2_PER_TRACK =
-    SPS_PARAMS_V1_PER_TRACK + 3;
+static constexpr uint8_t SPSX_KIT_PARAMS_PER_TRACK = 38;
 
 constexpr uint16_t mdKit7BitEncodedSize(uint16_t rawBytes) {
   return static_cast<uint16_t>(rawBytes + (rawBytes + 6) / 7);
@@ -23,21 +24,17 @@ constexpr uint16_t mdKit7BitEncodedSize(uint16_t rawBytes) {
 
 constexpr bool mdKitWireVersionSupported(uint8_t version) {
   return (version >= 1 && version <= 4) || version == MDX_KIT_VERSION ||
-         version == SPSX_KIT_VERSION_V1 || version == SPSX_KIT_VERSION;
+         version == SPSX_KIT_VERSION;
 }
 
 constexpr uint16_t mdKitParamsPerTrackForVersion(uint8_t version) {
-  return version == SPSX_KIT_VERSION ? SPSX_KIT_PARAMS_V2_PER_TRACK
-       : version == SPSX_KIT_VERSION_V1 ? SPS_PARAMS_V1_PER_TRACK
-                                         : MD_PARAMS_PER_TRACK;
+  return version == SPSX_KIT_VERSION ? SPSX_KIT_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
 }
 
 constexpr uint16_t mdKitLfoARawSizeForVersion(uint8_t version) {
   return version == 1 ? 0x340
        : version == 2 ? 11 * 36
-       : (version == SPSX_KIT_VERSION_V1 || version == SPSX_KIT_VERSION)
-             ? 16 * 9
-             : 16 * 36;
+       : version == SPSX_KIT_VERSION ? 16 * 9 : 16 * 36;
 }
 
 constexpr uint16_t mdKitWireSizeForVersion(uint8_t version) {
@@ -49,12 +46,11 @@ constexpr uint16_t mdKitWireSizeForVersion(uint8_t version) {
              mdKit7BitEncodedSize(16 * sizeof(uint32_t)) +
              mdKit7BitEncodedSize(mdKitLfoARawSizeForVersion(version)) +
              32 + mdKit7BitEncodedSize(32) +
-             ((version == SPSX_KIT_VERSION_V1 ||
-               version == SPSX_KIT_VERSION)
+             (version == SPSX_KIT_VERSION
                   ? mdKit7BitEncodedSize(16 * 9)
                   : 0) +
              (version == SPSX_KIT_VERSION
-                  ? (SPS_USER_BUS_FX_COUNT + 1) * SPS_USER_FX_PARAM_COUNT
+                  ? (SPS_USER_BUS_FX_COUNT + 1) * SPS_USER_FX_PARAM_COUNT + 16
                   : 0) +
              5);
 }
@@ -69,10 +65,8 @@ static_assert(mdKitWireSizeForVersion(4) == 1233,
               "stock kit wire size changed");
 static_assert(mdKitWireSizeForVersion(MDX_KIT_VERSION) == 1233,
               "MDX kit wire size changed");
-static_assert(mdKitWireSizeForVersion(SPSX_KIT_VERSION_V1) == 1064,
+static_assert(mdKitWireSizeForVersion(SPSX_KIT_VERSION) == 1176,
               "SPS-X v65 kit wire size changed");
-static_assert(mdKitWireSizeForVersion(SPSX_KIT_VERSION) == 1144,
-              "SPS-X v66 kit wire size changed");
 
 extern uint8_t machinedrum_sysex_hdr[5];
 extern const int8_t md_standard_drum_mapping[16] PROGMEM;
@@ -306,6 +300,7 @@ public:
   MDLFO lfos[2];   // [0] = LFO-A, [1] = LFO-B
   uint8_t trigGroup;
   uint8_t muteGroup;
+  uint8_t outputRouting;
 
   void scale_vol(float scale);
   float normalize_level();
@@ -325,6 +320,7 @@ public:
     model = GND_MODEL;
     trigGroup = 127;
     muteGroup = 127;
+    outputRouting = MD_KIT_ROUTE_GLOBAL;
     lfos[0].init(track);
     lfos[1].init(track);
   }
@@ -341,7 +337,7 @@ public:
 static_assert(sizeof(MDMachine) == MD_PARAMS_PER_TRACK + 1 + 1 + 4 + sizeof(MDLFO) + 1 + 1,
               "MDMachine layout changed — MDTrack on-disk format will break, bump GRID_VERSION");
 #if !defined(__AVR__)
-static_assert(sizeof(SPSMachine) == SPS_PARAMS_PER_TRACK + 1 + 1 + 4 + 2 * sizeof(MDLFO) + 1 + 1,
+static_assert(sizeof(SPSMachine) == SPS_PARAMS_PER_TRACK + 1 + 1 + 4 + 2 * sizeof(MDLFO) + 1 + 1 + 1,
               "SPSMachine layout changed — SPSXTrack on-disk format will break");
 #endif
 
@@ -394,6 +390,8 @@ public:
   uint8_t userPostFx[SPS_USER_FX_PARAM_COUNT];
   uint8_t userBusFxOrig[SPS_USER_BUS_FX_COUNT][SPS_USER_FX_PARAM_COUNT];
   uint8_t userPostFxOrig[SPS_USER_FX_PARAM_COUNT];
+  uint8_t outputRouting[16]{127,127,127,127,127,127,127,127,127,127,127,127,127,127,127,127};
+  uint8_t outputRoutingOrig[16]{127,127,127,127,127,127,127,127,127,127,127,127,127,127,127,127};
 #endif
   /** Duplicate fx params not included in the origin MD structure */
   uint8_t fx_orig[4][9];

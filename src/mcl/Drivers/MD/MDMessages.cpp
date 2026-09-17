@@ -155,7 +155,7 @@ bool MDGlobal::fromSysex(MidiClass *midi) {
 }
 
 uint16_t MDGlobal::toSysex(ElektronDataToSysexEncoder *encoder) {
-  uint8_t ver = MD.is_spsx ? 0x07 : 0x05;
+  uint8_t ver = MD.is_spsx ? SPSX_GLOBAL_VERSION : MDX_GLOBAL_VERSION;
   ElektronHelper::beginSysexEncode(encoder, machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr), MD_GLOBAL_MESSAGE_ID, ver, origPosition);
 
   encoder->pack(drumRouting, 16);
@@ -349,7 +349,7 @@ bool MDKit::fromSysex(MidiClass *midi) {
   uint16_t len = sysex.get_recordLen() - 5;
   uint16_t offset = 5;
 
-  // Preserve the established AVR decoder contract. SPS-X v65/v66 payloads
+  // Preserve the established AVR decoder contract. SPS-X v65 payloads
   // are hosted-only and are rejected by the version check below.
   if (len < 420) {
     DEBUG_PRINTLN(F("kit too short"));
@@ -371,14 +371,13 @@ bool MDKit::fromSysex(MidiClass *midi) {
 
   uint8_t version = sysex.getByte(1 + offset);
 
-  // Accept stock (1-4), MDX (64), and SPS-X v65/v66.
+  // Accept stock (1-4), MDX (64), and SPS-X v65.
 #if !defined(__AVR__)
   bool is_spsx_kit = false;
 #endif
   if ((version >= 1 && version <= 4) || version == MDX_KIT_VERSION) {
     /* legacy/MDX layout: 24 params/track, full 36-byte LFO-A, no LFO-B */
-  } else if (version == SPSX_KIT_VERSION_V1 ||
-             version == SPSX_KIT_VERSION) {
+  } else if (version == SPSX_KIT_VERSION) {
 #if !defined(__AVR__)
     is_spsx_kit = true;
 #else
@@ -401,6 +400,13 @@ bool MDKit::fromSysex(MidiClass *midi) {
     DEBUG_PRINTLN("wrong checksum");
     return false;
   }
+  if (is_spsx_kit) {
+    const uint16_t routes = record_len - 4u - 16u;
+    for (uint8_t track = 0; track < 16; ++track)
+      if (!mdKitRouteValid(sysex.getByte(routes + track))) return false;
+  }
+  memset(outputRouting, MD_KIT_ROUTE_GLOBAL, sizeof(outputRouting));
+
 #endif
 
   origPosition = sysex.getByte(3 + offset);
@@ -413,9 +419,7 @@ bool MDKit::fromSysex(MidiClass *midi) {
   const uint8_t params_per_track = MD_KIT_PARAMS_PER_TRACK;
 #else
   const uint8_t params_per_track =
-      version == SPSX_KIT_VERSION ? SPS_PARAMS_PER_TRACK
-      : version == SPSX_KIT_VERSION_V1 ? SPS_PARAMS_V1_PER_TRACK
-                                        : MD_PARAMS_PER_TRACK;
+      version == SPSX_KIT_VERSION ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
 #endif
   for (uint8_t i = 0; i < 16; i++) {
     decoder.get((uint8_t *)params[i], params_per_track);
@@ -485,17 +489,9 @@ bool MDKit::fromSysex(MidiClass *midi) {
     }
     decoder.stop7Bit();
 
-    if (version == SPSX_KIT_VERSION) {
-      decoder.get(&userBusFx[0][0], sizeof(userBusFx));
-      decoder.get(userPostFx, sizeof(userPostFx));
-    } else {
-      for (uint8_t i = 0; i < 16; ++i) {
-        params[i][MODEL_BUS1] = 0;
-        params[i][MODEL_BUS2] = 0;
-        params[i][MODEL_BUS3] = 0;
-      }
-      init_user_fx();
-    }
+    decoder.get(&userBusFx[0][0], sizeof(userBusFx));
+    decoder.get(userPostFx, sizeof(userPostFx));
+    decoder.get(outputRouting, sizeof(outputRouting));
   } else {
     // Legacy/MDX kit: synthesize SPS-X side state with safe defaults so a
     // later toSysex(SPS-X) round-trips cleanly. Mirrors host MDTypes.cpp
@@ -537,15 +533,16 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
   // the same body; only the version byte differs.
 #if !defined(__AVR__)
   const bool emit_spsx = MD.is_spsx;
-  const bool emit_spsx_v2 = emit_spsx && MD.supportsSpsx37Params();
-#endif
-#if !defined(__AVR__)
   const uint8_t kit_ver =
-      emit_spsx ? (emit_spsx_v2 ? SPSX_KIT_VERSION
-                                : SPSX_KIT_VERSION_V1)
-                : MDX_KIT_VERSION;
+      emit_spsx ? SPSX_KIT_VERSION : MDX_KIT_VERSION;
 #else
   const uint8_t kit_ver = MDX_KIT_VERSION;
+#endif
+
+#if !defined(__AVR__)
+  if (emit_spsx)
+    for (uint8_t route : outputRouting)
+      if (!mdKitRouteValid(route)) return 0;
 #endif
 
   ElektronHelper::beginSysexEncode(encoder, machinedrum_sysex_hdr,
@@ -617,10 +614,9 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
     }
     encoder->stop7Bit();
 
-    if (emit_spsx_v2) {
-      encoder->pack(&userBusFx[0][0], sizeof(userBusFx));
-      encoder->pack(userPostFx, sizeof(userPostFx));
-    }
+    encoder->pack(&userBusFx[0][0], sizeof(userBusFx));
+    encoder->pack(userPostFx, sizeof(userPostFx));
+    encoder->pack(outputRouting, sizeof(outputRouting));
   }
 #endif
 
@@ -638,6 +634,12 @@ uint8_t swapNumber(uint8_t num, uint8_t a, uint8_t b) {
 }
 
 void MDKit::swapTracks(uint8_t srcTrack, uint8_t dstTrack) {
+#if !defined(__AVR__)
+  const uint8_t route = outputRouting[srcTrack];
+  outputRouting[srcTrack] = outputRouting[dstTrack];
+  outputRouting[dstTrack] = route;
+#endif
+
   uint8_t _params[MD_KIT_PARAMS_PER_TRACK];
   uint8_t _level;
   uint32_t _model;

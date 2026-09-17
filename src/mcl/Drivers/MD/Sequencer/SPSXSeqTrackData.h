@@ -10,8 +10,8 @@ using SPSXSeqStepDescriptor = StepSeqStepDescriptor;
 using SPSXSeqStep = StepSeqStep;
 using SPSXSeqTrackData = BasicStepSeqTrackData<SPSX_NUM_LOCKS>;
 
-static_assert(sizeof(SPSXSeqTrackData) == 976,
-              "37-lock SPS-X sequence storage wire size changed");
+static_assert(sizeof(SPSXSeqTrackData) == 977,
+              "38-lock SPS-X sequence storage wire size changed");
 static_assert(sizeof(SPSXSeqTrackData) ==
                   sizeof(BasicStepSeqTrackFixedData<SPSX_NUM_LOCKS>) +
                       sizeof(uint8_t) + STEPSEQ_NUM_LOCK_SLOTS,

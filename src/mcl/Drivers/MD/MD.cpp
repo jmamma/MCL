@@ -1608,6 +1608,7 @@ void MDClass::save_kit_params() {
 #if !defined(__AVR__)
   memcpy(kit.userBusFxOrig, kit.userBusFx, sizeof(kit.userBusFx));
   memcpy(kit.userPostFxOrig, kit.userPostFx, sizeof(kit.userPostFx));
+  memcpy(kit.outputRoutingOrig, kit.outputRouting, sizeof(kit.outputRouting));
 #endif
 }
 
@@ -1618,6 +1619,7 @@ void MDClass::restore_kit_params() {
 #if !defined(__AVR__)
   memcpy(kit.userBusFx, kit.userBusFxOrig, sizeof(kit.userBusFx));
   memcpy(kit.userPostFx, kit.userPostFxOrig, sizeof(kit.userPostFx));
+  memcpy(kit.outputRouting, kit.outputRoutingOrig, sizeof(kit.outputRouting));
 #endif
 }
 
@@ -1901,6 +1903,22 @@ void MDClass::assignMachine(uint8_t track, uint8_t model, uint8_t init) {
 }
 
 void MDClass::setMachine(uint8_t track, MDKit *kit) {
+#if !defined(__AVR__)
+  if (is_spsx) {
+    SPSMachine machine;
+    memcpy(machine.params, kit->params[track], sizeof(machine.params));
+    machine.track = track;
+    machine.level = kit->levels[track];
+    machine.model = kit->models[track];
+    machine.lfos[0] = kit->lfos[track];
+    machine.lfos[1] = kit->lfosB[track];
+    machine.trigGroup = kit->trigGroups[track];
+    machine.muteGroup = kit->muteGroups[track];
+    machine.outputRouting = kit->outputRouting[track];
+    setMachine(track, &machine);
+    return;
+  }
+#endif
   // 138 bytes approx
   assignMachine(track, kit->get_model(track), kit->get_tonal(track));
   setLFO(track, &(kit->lfos[track]), false);
@@ -1936,24 +1954,7 @@ void MDClass::setMachine(uint8_t track, MDMachine *machine) {
 
 #if !defined(__AVR__)
 void MDClass::setMachine(uint8_t track, SPSMachine *machine) {
-  assignMachine(track, machine->get_model(), machine->get_tonal());
-  setLFO(track, &(machine->lfos[0]), false);
-  if (machine->trigGroup == 255) {
-    setTrigGroup(track, 127);
-  } else {
-    setTrigGroup(track, machine->trigGroup);
-  }
-  if (machine->muteGroup == 255) {
-    setMuteGroup(track, 127);
-  } else {
-    setMuteGroup(track, machine->muteGroup);
-  }
-  uint8_t num_params =
-      is_spsx ? spsxWireParamCount()
-              : MD_PARAMS_PER_TRACK;
-  for (uint8_t i = 0; i < num_params; i++) {
-    setTrackParam(track, i, machine->params[i]);
-  }
+  (void)assignMachineBulk(track, machine, 255, 255, true);
 }
 #endif
 
@@ -2025,12 +2026,13 @@ end:
 #if !defined(__AVR__)
 uint8_t MDClass::assignMachineBulk(uint8_t track, SPSMachine *machine,
                                    uint8_t level, uint8_t mode, bool send) {
+  if (is_spsx && !mdKitRouteValid(machine->outputRouting)) return 0;
   static constexpr uint8_t kHeaderBytes = 6;
   static constexpr uint8_t kLfoBytes = 10;
   static constexpr uint8_t kGroupBytes = 2;
   static constexpr uint8_t kOptionalLevelBytes = 1;
   uint8_t data[kHeaderBytes + SPS_PARAMS_PER_TRACK + kLfoBytes +
-               kGroupBytes + kOptionalLevelBytes];
+               kGroupBytes + kOptionalLevelBytes + 1];
   data[0] = 0x70;
   data[1] = 0x5b;
   uint8_t i = 2;
@@ -2081,6 +2083,11 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, SPSMachine *machine,
   if (level != 255) {
     data[i++] = level;
   }
+  if (is_spsx) {
+    // Bit 2 marks a trailing per-kit route, after the optional level.
+    data[5] |= 4u;
+    data[i++] = machine->outputRouting;
+  }
 end:
   data[length_index] = i - 1;
   return sendRequest(data, i, send);
@@ -2125,6 +2132,7 @@ void MDClass::setOrigParams(uint8_t track, MDMachine *machine) {
 void MDClass::setOrigParams(uint8_t track, SPSMachine *machine) {
   MDKit *kit_ = &kit;
   memcpy(kit_->params_orig[track], machine->params, SPS_PARAMS_PER_TRACK);
+  kit_->outputRoutingOrig[track] = machine->outputRouting;
 }
 #endif
 
@@ -2139,6 +2147,7 @@ void MDClass::insertMachineInKit(uint8_t track, MDMachine *machine,
   memcpy(kit_->params[track], machine->params, MD_PARAMS_PER_TRACK);
 #if !defined(__AVR__)
   if (is_spsx) {
+    kit_->outputRouting[track] = MD_KIT_ROUTE_GLOBAL;
     // Mirror MDKit::fromSysex legacy fallback (host MDTypes.cpp): envelope
     // bypass-on, retrig off + RENV on. Keeps single-machine inserts
     // consistent with full-kit inserts.
@@ -2193,6 +2202,7 @@ void MDClass::insertMachineInKit(uint8_t track, SPSMachine *machine,
   MDKit *kit_ = &kit;
 
   memcpy(kit_->params[track], machine->params, SPS_PARAMS_PER_TRACK);
+  kit_->outputRouting[track] = machine->outputRouting;
   setOrigParams(track, machine);
 
   if (set_level) {

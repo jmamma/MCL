@@ -794,10 +794,11 @@
 #define MODEL_BUS1    34
 #define MODEL_BUS2    35
 #define MODEL_BUS3    36
-#define SPS_PARAMS_PER_TRACK    37
+#define MODEL_ENVDEST 37
+#define SPS_PARAMS_PER_TRACK    38
 #else
 // The AVR product retains its existing storage and packet dimensions. The
-// 37-parameter SPS-X contract is implemented only by the hosted/RP2040 build.
+// 38-parameter SPS-X contract is implemented only by the hosted/RP2040 build.
 #define SPS_PARAMS_PER_TRACK    SPS_PARAMS_V1_PER_TRACK
 #endif
 #define MD_PARAMS_PER_TRACK     24
@@ -895,9 +896,9 @@ static_assert(spsExtendedCcContractIsBijective(),
 #if !defined(__AVR__)
 static_assert(MODEL_BUS1 == SPS_PARAMS_V1_PER_TRACK,
               "BUS parameters must append the SPS-X v1 layout");
-static_assert(MODEL_BUS3 + 1 == SPS_PARAMS_PER_TRACK,
-              "current SPS-X parameter count must include BUS1-3");
-static_assert(MODEL_BUS3 < MODEL_MUTE,
+static_assert(MODEL_ENVDEST + 1 == SPS_PARAMS_PER_TRACK,
+              "current SPS-X parameter count must include ENV DEST");
+static_assert(MODEL_ENVDEST < MODEL_MUTE,
               "real track parameters must not overlap virtual IDs");
 #endif
 

@@ -137,7 +137,7 @@ bool md_compact_header(const SysexView &sysex, uint8_t &steps,
   }
   steps = header[8];
   used_words = md_compact_read16(header + 10);
-  if (header[7] != MD_PATTERN_VERSION_SPSX ||
+  if (header[7] != MD_PATTERN_SCHEMA_SPSX ||
       (steps != 32 && steps != 64) ||
       used_words > MD_COMPACT_MAX_WORDS ||
       header[9] != MD_COMPACT_TRACKS ||
@@ -806,7 +806,7 @@ uint16_t MDPattern::toSysex40(
       origPosition);
   encoder->start7Bit();
   encoder->pack(md_compact_magic, sizeof(md_compact_magic));
-  md_compact_pack8(encoder, MD_PATTERN_VERSION_SPSX);
+  md_compact_pack8(encoder, MD_PATTERN_SCHEMA_SPSX);
   md_compact_pack8(encoder, steps);
   md_compact_pack8(encoder, MD_COMPACT_TRACKS);
   encoder->pack16(shape.words);

@@ -91,16 +91,12 @@ public:
 #else
   bool is_spsx = false;
 
-  // The device-facing kit/pattern format is negotiated by firmware
-  // capabilities, independently of the host sequencer bridge. Old SPS-X
-  // peers advertise FW_CAP_SPSX only and therefore stay on 34 params/v65;
-  // current peers also advertise FW_CAP_SPSX_PARAMS_37.
+  // Native SPS-X kits use v65 and the complete current parameter row.
   bool supportsSpsx37Params() const {
     return is_spsx && (fw_caps & FW_CAP_SPSX_PARAMS_37) != 0;
   }
   uint8_t spsxWireParamCount() const {
-    return supportsSpsx37Params() ? SPS_PARAMS_PER_TRACK
-                                 : SPS_PARAMS_V1_PER_TRACK;
+    return is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
   }
   bool supportsCompactPattern40() const {
     static constexpr uint32_t required =

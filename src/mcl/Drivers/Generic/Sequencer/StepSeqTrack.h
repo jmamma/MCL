@@ -205,7 +205,7 @@ public:
 };
 
 // The UI/device layer stores either a generic 34-lock track or the hosted
-// SPS-X 37-lock specialization behind this non-owning runtime interface.
+// SPS-X specialization behind this non-owning runtime interface.
 // Persistent fields stay in the lock-count-specialized data base below.
 class StepSeqDataTrackBase : public StepSeqTrackCond {
 public:

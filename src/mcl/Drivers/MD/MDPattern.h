@@ -13,7 +13,8 @@
 //#define MDPATTERN_TOSYSEX_ENABLE
 
 #if !defined(__AVR__)
-#define MD_PATTERN_VERSION_SPSX    0x40
+#define MD_PATTERN_VERSION_SPSX    0x04
+#define MD_PATTERN_SCHEMA_SPSX     0x40
 #define MD_PATTERN_LOCK_SLOTS      SPS_PARAMS_PER_TRACK
 // Maximum number of distinct param-lock rows the host can transmit in an SPS-X
 // pattern. The base ElektronPattern::locks[64][64] array covers rows 0-63;
@@ -22,8 +23,8 @@
 
 static_assert(MD_PATTERN_LOCK_SLOTS == SPSX_NUM_LOCKS,
               "pattern and SPS-X sequencer lock mappings must match");
-static_assert(MD_PATTERN_LOCK_SLOTS == 37,
-              "compact v0x40 pattern width changed");
+static_assert(MD_PATTERN_LOCK_SLOTS == 38,
+              "compact SPS-X pattern width changed");
 #endif
 
 /**

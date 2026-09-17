@@ -34,7 +34,7 @@ public:
 // Transient copy/paste data is deliberately large enough for the hosted
 // SPS-X specialization. It is not part of generic/TBD grid storage and is not
 // compiled into AVR builds.
-static constexpr std::size_t STEPSEQ_TRANSFER_LOCK_CAPACITY = 37;
+static constexpr std::size_t STEPSEQ_TRANSFER_LOCK_CAPACITY = 38;
 class StepSeqStep {
 public:
     bool active;

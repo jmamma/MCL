@@ -108,90 +108,52 @@ void SPSXTrack::clear_track() {
 }
 
 void SPSXTrack::on_storage_loaded() {
-  if (version >= SPSX_TRACK_LOCK37_STORAGE_VERSION) {
-    return;
-  }
+  if (version >= SPSX_TRACK_STORAGE_VERSION) return;
 
-  constexpr size_t kParameterGrowth =
-      SPS_PARAMS_PER_TRACK - SPS_PARAMS_V1_PER_TRACK;
-  constexpr size_t kLockTableGrowth =
-      SPSX_NUM_LOCKS - SPSX_NUM_LOCKS_V1;
-  static_assert(kParameterGrowth == 3,
-                "SPSXTrack migration assumes three added machine parameters");
-  static_assert(kLockTableGrowth == 3,
-                "SPSXTrack migration assumes three added lock parameters");
-  static_assert(kParameterGrowth == kLockTableGrowth,
-                "machine and lock-table migrations must remain coordinated");
-  static_assert(sizeof(SPSXTrackSeqStorage::SeqDataUnion) ==
-                    sizeof(SPSXSeqTrackData),
-                "SPS-X sequence data must remain the storage union's largest member");
-  static_assert(sizeof(SPSXSeqTrackData) > kLockTableGrowth,
-                "invalid legacy SPS-X sequence size");
-  static_assert(sizeof(SPSMachine) > kParameterGrowth,
-                "invalid legacy SPS-X machine size");
+  // v5 stored 34 parameters/locks; v6 stored 37. Neither stored kit routing.
+  // Snapshot the old contiguous record before widening its machine/sequence.
+  const uint8_t oldParams = version >= SPSX_TRACK_LOCK37_STORAGE_VERSION
+      ? 37u : SPS_PARAMS_V1_PER_TRACK;
+  const size_t parameterGrowth = SPS_PARAMS_PER_TRACK - oldParams;
+  const size_t machineGrowth = parameterGrowth + sizeof(machine.outputRouting);
+  const size_t oldMachineBytes = sizeof(SPSMachine) - machineGrowth;
+  const size_t oldSeqBytes = sizeof(SPSXSeqTrackData) - parameterGrowth;
+  static_assert(SPS_PARAMS_PER_TRACK == SPSX_NUM_LOCKS,
+                "machine and sequencer parameter widths must match");
+  static_assert(sizeof(SPSXTrackSeqStorage::SeqDataUnion) == sizeof(SPSXSeqTrackData),
+                "SPS-X storage must remain the largest sequence variant");
+  uint8_t oldMachine[sizeof(SPSMachine)];
+  uint8_t oldSeq[sizeof(SPSXSeqTrackData)];
+  SeqTrackModStorage oldMod;
+  TrackLoadFadeData oldFade;
+  auto *machineBytes = reinterpret_cast<uint8_t *>(&machine);
+  const auto *oldStorage = reinterpret_cast<const uint8_t *>(&seq_storage) - machineGrowth;
+  memcpy(oldMachine, machineBytes, oldMachineBytes);
+  const uint8_t seqVersion = oldStorage[0];
+  memcpy(oldSeq, oldStorage + 1, oldSeqBytes);
+  memcpy(&oldMod, oldStorage + 1 + oldSeqBytes, sizeof(oldMod));
+  memcpy(&oldFade, oldStorage + 1 + oldSeqBytes + sizeof(oldMod), sizeof(oldFade));
 
-  // Version 5 stored a 34-parameter SPSMachine followed by a sequence union
-  // whose SPS-X member also had 34 lock mappings. Both members grew by three,
-  // so the old sequence storage starts three bytes before its current address,
-  // while the old mod/fade suffix starts six bytes before its current address.
-  // Snapshot the complete legacy pieces before moving either prefix.
-  constexpr size_t kLegacyMachineBytes =
-      sizeof(SPSMachine) - kParameterGrowth;
-  constexpr size_t kLegacySeqDataBytes =
-      sizeof(SPSXSeqTrackData) - kLockTableGrowth;
-  uint8_t legacy_machine[kLegacyMachineBytes];
-  uint8_t legacy_seq_data[kLegacySeqDataBytes];
-  SeqTrackModStorage legacy_mod;
-  TrackLoadFadeData legacy_fade;
-
-  auto *new_machine = reinterpret_cast<uint8_t *>(&machine);
-  auto *legacy_seq_storage =
-      reinterpret_cast<uint8_t *>(&seq_storage) - kParameterGrowth;
-  memcpy(legacy_machine, new_machine, sizeof(legacy_machine));
-  const uint8_t legacy_seq_version = legacy_seq_storage[0];
-  memcpy(legacy_seq_data, legacy_seq_storage + sizeof(uint8_t),
-         sizeof(legacy_seq_data));
-  memcpy(&legacy_mod,
-         legacy_seq_storage + sizeof(uint8_t) + sizeof(legacy_seq_data),
-         sizeof(legacy_mod));
-  memcpy(&legacy_fade,
-         legacy_seq_storage + sizeof(uint8_t) + sizeof(legacy_seq_data) +
-             sizeof(legacy_mod),
-         sizeof(legacy_fade));
-
-  // Preserve the 34 original values, initialize BUS1-3, then move every
-  // machine field following params to its new offset.
-  memcpy(new_machine, legacy_machine, SPS_PARAMS_V1_PER_TRACK);
-  memset(new_machine + SPS_PARAMS_V1_PER_TRACK, 0, kParameterGrowth);
-  memcpy(new_machine + SPS_PARAMS_PER_TRACK,
-         legacy_machine + SPS_PARAMS_V1_PER_TRACK,
-         sizeof(legacy_machine) - SPS_PARAMS_V1_PER_TRACK);
-
-  seq_storage.seq_version = legacy_seq_version;
+  memcpy(machineBytes, oldMachine, oldParams);
+  memset(machineBytes + oldParams, 0, parameterGrowth);
+  memcpy(machineBytes + SPS_PARAMS_PER_TRACK, oldMachine + oldParams,
+         oldMachineBytes - oldParams);
+  machine.outputRouting = MD_KIT_ROUTE_GLOBAL;
+  seq_storage.seq_version = seqVersion;
   memset(&seq_storage.seq_data, 0, sizeof(seq_storage.seq_data));
-  if (legacy_seq_version == SPSX_SEQ_VERSION_SPSX) {
-    memcpy(seq_storage.seq_data.spsx.data(), legacy_seq_data,
-           sizeof(legacy_seq_data));
-    auto &spsx = seq_storage.seq_data.spsx;
-    const uint8_t legacy_swing_amount =
-        spsx.locks_params[SPSX_NUM_LOCKS_V1];
-    auto *legacy_locks =
-        spsx.locks_params + SPSX_NUM_LOCKS_V1 + sizeof(uint8_t);
-    memmove(spsx.locks, legacy_locks, sizeof(spsx.locks));
-    memset(spsx.locks_params + SPSX_NUM_LOCKS_V1, 0,
-           SPSX_NUM_LOCKS - SPSX_NUM_LOCKS_V1);
-    spsx.swing_amount = legacy_swing_amount;
+  if (seqVersion == SPSX_SEQ_VERSION_SPSX) {
+    auto &seq = seq_storage.seq_data.spsx;
+    memcpy(seq.data(), oldSeq, oldSeqBytes);
+    const uint8_t oldSwing = seq.locks_params[oldParams];
+    memmove(seq.locks, seq.locks_params + oldParams + 1, sizeof(seq.locks));
+    memset(seq.locks_params + oldParams, 0, parameterGrowth);
+    seq.swing_amount = oldSwing;
   } else {
-    static_assert(sizeof(MDSeqTrackData) <= kLegacySeqDataBytes,
-                  "legacy MD sequence no longer fits the version-5 union");
-    memcpy(seq_storage.seq_data.legacy.data(), legacy_seq_data,
-           sizeof(MDSeqTrackData));
+    memcpy(seq_storage.seq_data.legacy.data(), oldSeq, sizeof(MDSeqTrackData));
   }
-
-  memcpy(static_cast<SeqTrackModStorage *>(&seq_storage), &legacy_mod,
-         sizeof(legacy_mod));
-  memcpy(&load_fade, &legacy_fade, sizeof(legacy_fade));
-  version = SPSX_TRACK_LOCK37_STORAGE_VERSION;
+  memcpy(static_cast<SeqTrackModStorage *>(&seq_storage), &oldMod, sizeof(oldMod));
+  memcpy(&load_fade, &oldFade, sizeof(oldFade));
+  version = SPSX_TRACK_STORAGE_VERSION;
 }
 
 uint16_t SPSXTrack::grid_slot_label(GridSlotLabelContext ctx) {
@@ -215,6 +177,7 @@ void SPSXTrack::get_machine_from_kit(uint8_t tracknumber) {
   }
   machine.trigGroup = MD.kit.trigGroups[tracknumber];
   machine.muteGroup = MD.kit.muteGroups[tracknumber];
+  machine.outputRouting = MD.kit.outputRouting[tracknumber];
 }
 
 

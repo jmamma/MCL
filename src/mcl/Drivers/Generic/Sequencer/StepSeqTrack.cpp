@@ -908,7 +908,7 @@ void BasicStepSeqDataTrack<LockCount>::transpose(int8_t offset) {
 }
 
 // Generic/TBD and hosted SPS-X share the algorithms but instantiate distinct
-// runtime/storage widths. No 37-slot object is reachable from AVR builds.
+// runtime/storage widths. No extended-width object is reachable from AVR builds.
 template class BasicStepSeqSlideTrack<STEPSEQ_NUM_LOCKS>;
 template class BasicStepSeqDataTrack<STEPSEQ_NUM_LOCKS>;
 template class BasicStepSeqSlideTrack<STEPSEQ_TRANSFER_LOCK_CAPACITY>;
