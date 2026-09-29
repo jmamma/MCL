@@ -52,12 +52,19 @@ bool checkKitWireCapability(uint32_t caps, uint8_t expectedVersion,
     std::array<uint8_t, 2048> message{};
     MD.is_spsx = true;
     MD.fw_caps = FW_CAP_SPSX | caps;
+    for (unsigned fx = 0; fx < 3; ++fx)
+        for (unsigned p = 0; p < 8; ++p) MD.kit.userBusFx[fx][p] = 11 + fx * 8 + p;
+    for (unsigned p = 0; p < 8; ++p) MD.kit.userPostFx[p] = 91 + p;
     for (uint8_t track = 0; track < 16; ++track) {
         MD.kit.params[track][MODEL_ENVDEST] = track % 3;
         MD.kit.outputRouting[track] = mdKitRouteFromSelection(track % 8);
     }
     ElektronDataToSysexEncoder encoder(message.data());
     const uint16_t length = MD.kit.toSysex(&encoder);
+    if (expectedVersion == SPSX_KIT_VERSION &&
+        (std::memcmp(message.data() + 0x463, MD.kit.outputRouting, 16) ||
+         std::memcmp(message.data() + 0x473, MD.kit.userBusFx, 24) ||
+         std::memcmp(message.data() + 0x48b, MD.kit.userPostFx, 8))) return false;
     auto fixture = std::make_unique<SysexFixture>();
     if (length != expectedSize || message[7] != expectedVersion ||
         !publishToMidiSysex(fixture->sysex, message.data(), length)) {

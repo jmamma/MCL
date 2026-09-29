@@ -403,7 +403,7 @@ bool MDKit::fromSysex(MidiClass *midi) {
     return false;
   }
   if (is_spsx_kit) {
-    const uint16_t routes = record_len - 4u - 16u;
+    const uint16_t routes = record_len - 4u - 16u - (SPS_USER_BUS_FX_COUNT + 1u) * SPS_USER_FX_PARAM_COUNT;
     for (uint8_t track = 0; track < 16; ++track)
       if (!mdKitRouteValid(sysex.getByte(routes + track))) return false;
   }
@@ -491,9 +491,9 @@ bool MDKit::fromSysex(MidiClass *midi) {
     }
     decoder.stop7Bit();
 
+    decoder.get(outputRouting, sizeof(outputRouting));
     decoder.get(&userBusFx[0][0], sizeof(userBusFx));
     decoder.get(userPostFx, sizeof(userPostFx));
-    decoder.get(outputRouting, sizeof(outputRouting));
   } else {
     // Legacy/MDX kit: synthesize SPS-X side state with safe defaults so a
     // later toSysex(SPS-X) round-trips cleanly. Mirrors host MDTypes.cpp
@@ -616,9 +616,9 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
     }
     encoder->stop7Bit();
 
+    encoder->pack(outputRouting, sizeof(outputRouting));
     encoder->pack(&userBusFx[0][0], sizeof(userBusFx));
     encoder->pack(userPostFx, sizeof(userPostFx));
-    encoder->pack(outputRouting, sizeof(outputRouting));
   }
 #endif
 
