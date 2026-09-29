@@ -13,7 +13,7 @@
 //#define MDPATTERN_TOSYSEX_ENABLE
 
 #if !defined(__AVR__)
-#define MD_PATTERN_VERSION_SPSX    0x04
+#define MD_PATTERN_VERSION_SPSX    0x40
 #define MD_PATTERN_SCHEMA_SPSX     0x40
 #define MD_PATTERN_LOCK_SLOTS      SPS_PARAMS_PER_TRACK
 // Maximum number of distinct param-lock rows the host can transmit in an SPS-X

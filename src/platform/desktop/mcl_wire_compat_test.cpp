@@ -83,6 +83,7 @@ bool checkKitWireCapability(uint32_t caps, uint8_t expectedVersion,
 }
 
 bool checkGlobalVersions() {
+    static_assert(SPSX_GLOBAL_VERSION == 0x40);
     std::array<uint8_t, 512> message{}, roundtrip{};
     static MDGlobal source;
     source.seqTempoMode = 1;
@@ -101,6 +102,12 @@ bool checkGlobalVersions() {
         ElektronDataToSysexEncoder again(roundtrip.data());
         if (decoded.toSysex(&again) != length ||
             std::memcmp(message.data(), roundtrip.data(), length)) return false;
+        for (unsigned version = 0; version < 128; ++version) {
+            if ((version >= 1 && version <= 6) || version == 0x40) continue;
+            message[7] = static_cast<uint8_t>(version);
+            if (!publishToMidiSysex(fixture->sysex, message.data(), length) ||
+                decoded.fromSysex(&fixture->midi)) return false;
+        }
     }
     return true;
 }
@@ -291,6 +298,7 @@ bool hasValidElektronEnvelope(
 }
 
 bool checkCanonicalPatternEnvelope(uint16_t& encodedLength) {
+    static_assert(MD_PATTERN_VERSION_SPSX == 0x40);
     std::array<uint8_t, 8192> message{};
     MD.is_spsx = true;
     MD.fw_caps = FW_CAP_SPSX | FW_CAP_SPSX_PARAMS_37;
@@ -332,8 +340,17 @@ bool checkCanonicalPatternEnvelope(uint16_t& encodedLength) {
         message[7] != MD_PATTERN_VERSION_SPSX) {
         return false;
     }
-    return hasValidElektronEnvelope(
-        message.data(), encodedLength);
+    if (!hasValidElektronEnvelope(message.data(), encodedLength)) return false;
+    auto fixture = std::make_unique<SysexFixture>();
+    auto decoded = std::make_unique<MDPattern>();
+    if (!publishToMidiSysex(fixture->sysex, message.data(), encodedLength) ||
+        !decoded->fromSysex(&fixture->midi)) return false;
+    for (uint8_t version : {uint8_t(4), uint8_t(0x41), uint8_t(0x7f)}) {
+        message[7] = version;
+        if (!publishToMidiSysex(fixture->sysex, message.data(), encodedLength) ||
+            decoded->fromSysex(&fixture->midi)) return false;
+    }
+    return true;
 }
 
 bool checkMaximumPatternRoundTrip(uint16_t& encodedLength) {

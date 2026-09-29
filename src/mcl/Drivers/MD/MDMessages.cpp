@@ -87,10 +87,10 @@ bool MDGlobal::fromSysex(MidiClass *midi) {
 
   uint8_t version = sysex.getByte(offset + 1);
   // Minimum encoded lengths, including the four-byte message envelope and
-  // checksum/length trailer: v1-4=188, v5-6=190, v7+=192.
+  // checksum/length trailer: v1-4=188, v5-6=190, extended=192.
   uint16_t min_len = 188;
   if (version >= 5) min_len += 2;
-  if (version >= 7) min_len += 2;
+  if (version == SPSX_GLOBAL_VERSION) min_len += 2;
   if (len < min_len) {
     return false;
   }
@@ -99,6 +99,8 @@ bool MDGlobal::fromSysex(MidiClass *midi) {
     return false;
   }
 #endif
+
+  if (!mdGlobalWireVersionSupported(version)) return false;
 
   origPosition = sysex.getByte(offset + 3);
   ElektronSysexDecoder decoder(sysex, offset + 4);
@@ -137,7 +139,7 @@ bool MDGlobal::fromSysex(MidiClass *midi) {
     trigMode = 0;
   }
 
-  if (version >= 7) {
+  if (version == SPSX_GLOBAL_VERSION) {
     decoder.get8(&seqTempoMode);
     decoder.get8(&channelMode);
   } else {

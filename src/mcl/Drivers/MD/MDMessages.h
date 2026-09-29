@@ -11,7 +11,11 @@
 #define MDX_KIT_VERSION     64
 #define SPSX_KIT_VERSION    65
 #define MDX_GLOBAL_VERSION    6
-#define SPSX_GLOBAL_VERSION   7
+#define SPSX_GLOBAL_VERSION   0x40
+
+constexpr bool mdGlobalWireVersionSupported(uint8_t version) {
+  return (version >= 1 && version <= MDX_GLOBAL_VERSION) || version == SPSX_GLOBAL_VERSION;
+}
 
 static constexpr uint8_t SPS_USER_BUS_FX_COUNT = 3;
 static constexpr uint8_t SPS_USER_FX_PARAM_COUNT = 8;
