@@ -221,7 +221,7 @@ uint16_t MDGlobal::toSysex(ElektronDataToSysexEncoder *encoder) {
 
 uint8_t MDMachine::get_model() { return model; }
 bool MDMachine::get_tonal() {
-  if (model >= 0x20000) {
+  if ((model & 0x20000UL) != 0) {
     return true;
   }
   return false;
@@ -265,7 +265,7 @@ float SPSMachine::normalize_level() {
 
 uint8_t SPSMachine::get_model() { return model; }
 bool SPSMachine::get_tonal() {
-  if (model >= 0x20000) {
+  if ((model & 0x20000UL) != 0) {
     return true;
   }
   return false;
@@ -324,7 +324,7 @@ static void unpack_compact_lfo_state(MDLFO &lfo, const uint8_t in[4], int track)
 
 uint8_t MDKit::get_model(uint8_t track) { return models[track]; }
 bool MDKit::get_tonal(uint8_t track) {
-  if (models[track] >= 0x20000) {
+  if ((models[track] & 0x20000UL) != 0) {
     return true;
   }
   return false;
@@ -567,7 +567,12 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->pack(levels, 16);
 
   encoder->start7Bit();
-  encoder->pack32(models, 16);
+  for (uint8_t track = 0; track < 16; ++track) {
+    // Legacy kit recipients understand tonal on/off, but not octave flags.
+    const uint32_t model = kit_ver == SPSX_KIT_VERSION ? models[track]
+                                                     : models[track] & ~0xc0000UL;
+    encoder->pack32(model);
+  }
   encoder->stop7Bit();
 
   // LFO-A section: compact 9 bytes/track for SPS-X, full 36 for MDX/legacy.

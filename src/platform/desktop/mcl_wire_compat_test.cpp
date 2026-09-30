@@ -1,4 +1,8 @@
 #include "Drivers/MD/MD.h"
+#include "Drivers/MD/MDSysex.h"
+#include "Drivers/MD/UI/MDTrackSelect.h"
+#include "GUI/Pages/Sequencer/SeqPage.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 #include "Drivers/MD/GridTracks/MDFXTrack.h"
 #include "Drivers/MD/GridTracks/SPSXTrack.h"
 #include "ElektronDataEncoder.h"
@@ -56,6 +60,8 @@ bool checkKitWireCapability(uint32_t caps, uint8_t expectedVersion,
         for (unsigned p = 0; p < 8; ++p) MD.kit.userBusFx[fx][p] = 11 + fx * 8 + p;
     for (unsigned p = 0; p < 8; ++p) MD.kit.userPostFx[p] = 91 + p;
     for (uint8_t track = 0; track < 16; ++track) {
+        constexpr uint32_t modes[]{0,0x20000,0x60000,0xa0000};
+        MD.kit.models[track] = modes[track % 4] | (track & 1 ? 0xc2u : 0x10u);
         MD.kit.params[track][MODEL_ENVDEST] = track % 3;
         MD.kit.outputRouting[track] = mdKitRouteFromSelection(track % 8);
     }
@@ -73,7 +79,9 @@ bool checkKitWireCapability(uint32_t caps, uint8_t expectedVersion,
     MDKit decoded;
     if (!decoded.fromSysex(&fixture->midi)) return false;
     for (uint8_t track = 0; track < 16; ++track) {
-        if (decoded.params[track][MODEL_ENVDEST] != track % 3 ||
+        if (decoded.models[track] != MD.kit.models[track] ||
+            decoded.get_tuning(track) != track % 4 ||
+            decoded.params[track][MODEL_ENVDEST] != track % 3 ||
             decoded.outputRouting[track] != MD.kit.outputRouting[track])
             return false;
     }
@@ -148,6 +156,100 @@ bool checkMachineRoutePackets() {
     ok &= MD.kit.outputRouting[3] == route;
     MD.uart = savedUart;
     MD.connected = wasConnected;
+    return ok;
+}
+
+bool checkTonalOctaveMessages() {
+    constexpr uint32_t modelFlags[]{0,0x20000,0x60000,0xa0000};
+    constexpr uint8_t wireFlags[]{0,2,10,18};
+    const auto oldUart=MD.uart;
+    const bool oldConnected=MD.connected;
+    const bool oldSpsx=MD.is_spsx;
+    const auto oldCaps=MD.fw_caps;
+    MidiUartClass output;
+    MD.uart=&output;MD.connected=true;
+    bool ok=true;
+    auto fixture=std::make_unique<SysexFixture>();
+    MDSysexListenerClass listener;listener.setup(&fixture->midi);
+    MDTrackSelect select;select.setup(&fixture->midi);
+    for(unsigned track=0;track<16;++track)for(unsigned mode=0;mode<4;++mode)
+    for(unsigned high=0;high<2;++high) {
+        const uint8_t model=uint8_t(16+128*high);
+        const uint32_t raw=model|modelFlags[mode];
+        const uint8_t flags=wireFlags[mode]|high;
+        MDMachine legacy{};legacy.track=track;legacy.init();legacy.model=raw;
+        SPSMachine native{};native.init();native.model=raw;native.outputRouting=6;
+        ok &= legacy.get_model()==model && legacy.get_tuning()==mode &&
+              legacy.get_tonal()==bool(mode) && legacy.get_model_raw()==raw &&
+              native.get_tuning()==mode && native.get_model_raw()==raw;
+        // Existing raw machine/grid storage carries all flags without growing.
+        std::array<uint8_t,sizeof(MDMachine)> stored{};
+        std::memcpy(stored.data(),&legacy,stored.size());
+        MDMachine restored{};std::memcpy(&restored,stored.data(),stored.size());
+        ok &= restored.get_model_raw()==raw;
+        for(bool spsx : {false,true}) {
+            MD.is_spsx=spsx;MD.fw_caps=spsx?FW_CAP_SPSX:0;
+            std::array<uint8_t,128> packet{};
+            for(uint8_t init : {uint8_t(0),uint8_t(1),uint8_t(2),uint8_t(255)}) {
+                output.init();MD.assignMachine(track,model,init,mode);
+                const size_t n=output.desktop_egress(packet.data(),packet.size());
+                ok &= n==unsigned(init==255?11:12) && packet[6]==0x5b &&
+                      packet[7]==track && packet[8]==16 && packet[9]==(spsx?flags:high);
+                if(init!=255)ok &= packet[10]==init;
+            }
+            output.init();MD.setMachine(track,&legacy);
+            const size_t setSize=output.desktop_egress(packet.data(),packet.size());
+            ok &= setSize>=12 && packet[6]==0x5b && packet[9]==(spsx?flags:high);
+            for(unsigned cached=0;cached<2;++cached)for(uint8_t count : {uint8_t(0),uint8_t(1),uint8_t(255)}) {
+                output.init();MD.assignMachineBulk(track+16*cached,&legacy,59,count,true);
+                const size_t n=output.desktop_egress(packet.data(),packet.size());
+                const uint8_t expected=spsx?flags:uint8_t(high|(mode?2:0));
+                ok &= n==unsigned(count==0?13:count==1?37:45) && packet[6]==0x70 &&
+                      packet[7]==0x5b && packet[9]==track+16*cached && packet[10]==16 && packet[11]==expected;
+                output.init();MD.assignMachineBulk(track+16*cached,&native,59,count,true);
+                const size_t nativeSize=output.desktop_egress(packet.data(),packet.size());
+                const bool routed=spsx && count==255;
+                ok &= nativeSize==unsigned(count==0?13:count==1?(spsx?51:37):(spsx?65:45)) &&
+                      packet[11]==uint8_t(expected|(routed?4:0));
+                if(routed)ok &= packet[nativeSize-2]==6;
+            }
+        }
+        // These are the actual receiver entry points, using literal wire flags.
+        const uint8_t update[]{0xf0,0,0x20,0x3c,2,0,0x63,uint8_t(track),16,flags,0,0xf7};
+        ok &= publishToMidiSysex(fixture->sysex,update,sizeof(update));
+        listener.end();ok &= MD.kit.models[track]==raw;
+        const uint8_t trackState[]{0xf0,0x7f,0x0e,0,uint8_t(track),flags,16,0xf7};
+        ok &= publishToMidiSysex(fixture->sysex,trackState,sizeof(trackState));
+        // Keep the unrelated UI refresh out of this protocol-only test.
+        last_primary_track=track;SeqPage::last_md_model=raw;
+        select.handle_track_select_legacy(SysexView(&fixture->sysex),6);
+        ok &= MD.currentTrack==track && MD.kit.models[track]==raw;
+    }
+    // Reserved octave combinations normalize like the firmware; route is independent.
+    for(unsigned flags=0;flags<128;++flags) {
+        const unsigned mode=(flags&2)==0?0:(flags&24)==8?2:(flags&24)==16?3:1;
+        ok &= mdModelFromMachineFlags(16,flags)==((16u|((flags&1u)<<7u))|modelFlags[mode]);
+    }
+    MD.uart=oldUart;MD.connected=oldConnected;MD.is_spsx=oldSpsx;MD.fw_caps=oldCaps;
+    return ok;
+}
+
+bool checkTonalLegacyKitExport() {
+    const bool wasSpsx=MD.is_spsx;MD.is_spsx=false;
+    constexpr uint32_t modes[]{0,0x20000,0x60000,0xa0000};
+    for(unsigned track=0;track<16;++track)MD.kit.models[track]=0x10u|modes[track%4];
+    std::array<uint8_t,2048> message{};
+    ElektronDataToSysexEncoder encoder(message.data());
+    const auto length=MD.kit.toSysex(&encoder);
+    auto fixture=std::make_unique<SysexFixture>();
+    MDKit decoded;
+    bool ok=message[7]==MDX_KIT_VERSION && publishToMidiSysex(fixture->sysex,message.data(),length) &&
+        decoded.fromSysex(&fixture->midi);
+    for(unsigned track=0;track<16;++track) {
+        ok &= decoded.models[track]==(0x10u|(track%4?0x20000u:0u));
+        ok &= MD.kit.models[track]==(0x10u|modes[track%4]);
+    }
+    MD.is_spsx=wasSpsx;
     return ok;
 }
 
@@ -958,6 +1060,12 @@ bool checkSequencerNegotiation(uint8_t param, uint8_t value) {
 int main(int argc, char** argv) {
     if (argc == 4 && std::strcmp(argv[1], "--roundtrip-kit") == 0)
         return roundtripKitFile(argv[2], argv[3]);
+    const bool octaves=checkTonalOctaveMessages();
+    const bool legacyOctaves=checkTonalLegacyKitExport();
+    if(!octaves || !legacyOctaves) {
+        std::fprintf(stderr,"MCL tonal octave checks failed: messages=%d legacy-kit=%d\n",octaves,legacyOctaves);
+        return 1;
+    }
     const bool globalVersions = checkGlobalVersions();
     const bool machineRoutes = checkMachineRoutePackets();
     const bool kitV1 = checkKitWireCapability(
@@ -1001,7 +1109,7 @@ int main(int argc, char** argv) {
         return 1;
     }
     std::fprintf(stderr,
-                 "MCL wire compatibility passed: kit/pattern, 24/34/38 "
+                 "MCL wire compatibility passed: tonal octaves, kit/pattern, 24/34/38 "
                  "packets, row migrations, v1/v2 negotiation, BUS3/DST bridge "
                  "round-trip, malformed-body rejection, and 608 rows "
                  "(%u-byte dense MKII fixture)\n",

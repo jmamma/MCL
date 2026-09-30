@@ -168,13 +168,7 @@ void MDTrackSelect::handle_track_select_legacy(const SysexView &view,
     MD.currentBank = (b & 64) > 0;
 
     b = view.getByte(4);
-    MD.kit.models[MD.currentTrack] = view.getByte(5);
-    if (b & 1) {
-      MD.kit.models[MD.currentTrack] += 128;
-    }
-    if (b & 2) {
-      MD.kit.models[MD.currentTrack] += 0x20000;
-    }
+    MD.kit.models[MD.currentTrack] = mdModelFromMachineFlags(view.getByte(5), b);
   }
   bool ret = seq_step_page.md_track_change_check();
   if (ret) {

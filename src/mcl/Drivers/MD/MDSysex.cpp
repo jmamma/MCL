@@ -171,14 +171,7 @@ void MDSysexListenerClass::end() {
       }
 #endif
 
-      // Decode model: flags_byte = (tonal << 1) | uwFlag
-      uint8_t uwFlag = flags_byte & 0x01;
-      uint8_t tonal = (flags_byte >> 1) & 0x01;
-
-      if (uwFlag) {
-        model += 128;
-      }
-      MD.kit.models[track] = tonal ? ((uint32_t)model + 0x20000) : model;
+      MD.kit.models[track] = mdModelFromMachineFlags(model, flags_byte);
 
       // Current SPS-X parameters, or the stock 24-byte payload.
       if (data_flags & 0x01) {

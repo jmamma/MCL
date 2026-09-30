@@ -7,6 +7,7 @@
 #include "MDPattern.h"
 #include "MDParams.h"
 #include "MDKitRouting.h"
+#include "MDTuning.h"
 
 #define MDX_KIT_VERSION     64
 #define SPSX_KIT_VERSION    65
@@ -287,9 +288,10 @@ public:
 
   uint8_t get_model();
   bool get_tonal();
+  uint8_t get_tuning() const { return mdTuningFromModel(model); }
 
   uint32_t get_model_raw() {
-    return model & 0x200FF; //2^17 + 255
+    return model & MD_MODEL_TUNING_MASK;
   }
   /* @} */
 };
@@ -331,9 +333,10 @@ public:
 
   uint8_t get_model();
   bool get_tonal();
+  uint8_t get_tuning() const { return mdTuningFromModel(model); }
 
   uint32_t get_model_raw() {
-    return model & 0x200FF;
+    return model & MD_MODEL_TUNING_MASK;
   }
 };
 #endif
@@ -427,6 +430,7 @@ public:
 
   uint8_t get_model(uint8_t track);
   bool get_tonal(uint8_t track);
+  uint8_t get_tuning(uint8_t track) const { return mdTuningFromModel(models[track]); }
   uint8_t get_fx_param(uint8_t fx, uint8_t param) {
     uint8_t *params = fx_params(fx);
     return params == nullptr ? 255 : params[param];

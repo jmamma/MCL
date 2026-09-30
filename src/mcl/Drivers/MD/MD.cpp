@@ -1885,20 +1885,19 @@ void MDClass::setMuteGroup(uint8_t srcTrack, uint8_t muteTrack) {
   send_md_request3(*this, 0x66, srcTrack, muteTrack);
 }
 
-void MDClass::assignMachine(uint8_t track, uint8_t model, uint8_t init) {
+void MDClass::assignMachine(uint8_t track, uint8_t model, uint8_t init, uint8_t tuning) {
+  if (tuning > MD_TUNING_UP) return;
   uint8_t send_length = 5;
   if (init == 255) {
     send_length = 4;
   }
 
   uint8_t data[] = {0x5B, track, model, 0x00, init};
-  if (model >= 128) {
-    data[2] = (model - 128);
-    data[3] = 0x01;
-  } else {
-    data[2] = model;
-    data[3] = 0x00;
-  }
+  data[2] = model & 0x7f;
+  // Use peer capabilities: AVR keeps its legacy kit layout even with SPS-X.
+  const bool tuningFlags = (fw_caps & FW_CAP_SPSX) != 0;
+  data[3] = mdMachineTuningFlags(uint32_t(model) |
+      (tuningFlags ? mdTuningModelFlags(tuning) : 0UL), tuningFlags);
   sendRequest(data, send_length);
 }
 
@@ -1920,7 +1919,7 @@ void MDClass::setMachine(uint8_t track, MDKit *kit) {
   }
 #endif
   // 138 bytes approx
-  assignMachine(track, kit->get_model(track), kit->get_tonal(track));
+  assignMachine(track, kit->get_model(track), kit->get_tonal(track), kit->get_tuning(track));
   setLFO(track, &(kit->lfos[track]), false);
   setTrigGroup(track, kit->trigGroups[track]);
   setMuteGroup(track, kit->muteGroups[track]);
@@ -1935,7 +1934,7 @@ void MDClass::setMachine(uint8_t track, MDKit *kit) {
 
 void MDClass::setMachine(uint8_t track, MDMachine *machine) {
   // 138 bytes approx
-  assignMachine(track, machine->get_model(), machine->get_tonal());
+  assignMachine(track, machine->get_model(), machine->get_tonal(), machine->get_tuning());
   setLFO(track, &(machine->lfo), false);
   if (machine->trigGroup == 255) {
     setTrigGroup(track, 127);
@@ -1972,17 +1971,8 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
   uint8_t length_index = i++;
 
   data[i++] = track;
-  if (machine->get_model() >= 128) {
-    data[i++] = (machine->get_model() - 128);
-    data[i] = 0x01;
-  } else {
-    data[i++] = machine->get_model();
-    data[i] = 0x00;
-  }
-  if (machine->get_tonal()) {
-    data[i] += 2;
-  }
-  i++;
+  data[i++] = machine->get_model() & 0x7f;
+  data[i++] = mdMachineTuningFlags(machine->get_model_raw(), (fw_caps & FW_CAP_SPSX) != 0);
 
   if (mode == 0) {
     goto end;
@@ -2040,17 +2030,8 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, SPSMachine *machine,
   uint8_t length_index = i++;
 
   data[i++] = track;
-  if (machine->get_model() >= 128) {
-    data[i++] = (machine->get_model() - 128);
-    data[i] = 0x01;
-  } else {
-    data[i++] = machine->get_model();
-    data[i] = 0x00;
-  }
-  if (machine->get_tonal()) {
-    data[i] += 2;
-  }
-  i++;
+  data[i++] = machine->get_model() & 0x7f;
+  data[i++] = mdMachineTuningFlags(machine->get_model_raw(), (fw_caps & FW_CAP_SPSX) != 0);
 
   uint8_t num_params =
       is_spsx ? spsxWireParamCount()

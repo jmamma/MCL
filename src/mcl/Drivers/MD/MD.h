@@ -324,7 +324,8 @@ public:
   /**
    * Send a sysex machine to change the model of the machine on the given track.
    **/
-  void assignMachine(uint8_t track, uint8_t model, uint8_t init = 255);
+  void assignMachine(uint8_t track, uint8_t model, uint8_t init = 255,
+                     uint8_t tuning = MD_TUNING_DEFAULT);
   uint8_t assignMachineBulk(uint8_t track, MDMachine *machine, uint8_t send_level, uint8_t mode = 255, bool send = true);
 #if !defined(__AVR__)
   uint8_t assignMachineBulk(uint8_t track, SPSMachine *machine, uint8_t send_level, uint8_t mode = 255, bool send = true);
