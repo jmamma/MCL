@@ -21,9 +21,9 @@
   },
   "capabilities": {
     "spsx": {
-      "track_params": 37,
-      "kit_wire_version": 66,
-      "pattern_wire_version": 65,
+      "track_params": 38,
+      "kit_wire_version": 65,
+      "pattern_wire_version": 64,
       "routed_fx_param_bytes": 32
     }
   },
