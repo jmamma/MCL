@@ -18,7 +18,8 @@ namespace {
 // ---- Path resolution -----------------------------------------------------
 
 fs::path& sd_root() {
-    static fs::path root = fs::current_path() / "mcl_sd";
+    static fs::path root =
+        fs::current_path() / "build" / "local-state" / "mcl_sd";
     return root;
 }
 fs::path& sd_cwd() {
