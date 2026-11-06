@@ -129,9 +129,13 @@ bool apply_slot_dirty_fields(GridTrack &target_slot, const GridTrack &edited_slo
             (uint32_t)edited_slot.link.length *
             SeqTrack::get_speed_multiplier_int(edited_slot.link.speed_value()) *
             edited_slot.link.loops / 12;
-        if (!(target_length % slot_length) && slot_length <= target_length) {
-          target_slot.link.loops = target_length / slot_length;
+        uint16_t matched_loops = target_length / slot_length;
+        if (!(target_length % slot_length) && matched_loops > 0 &&
+            matched_loops <= UINT8_MAX) {
+          target_slot.link.loops = matched_loops;
         } else {
+          // An unrepresentable match uses the same fallback as a fractional one.
+          // Narrowing 256/512/... to zero would silently disable chaining.
           target_slot.link.loops = edited_slot.link.loops;
         }
         store_slot = true;

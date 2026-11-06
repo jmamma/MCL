@@ -1,5 +1,11 @@
 Unreleased
 
+- Fix applying LOOP across tracks of different lengths wrapping an oversized
+  converted loop count to zero and disabling chaining. If the equivalent
+  duration cannot fit, retain the entered loop count as for fractional matches.
+- Fix the external-sequencer overview's viewport and playhead positions on
+  long or slow AVR patterns. Pixel scaling no longer overflows 16-bit ticks.
+
 - Fix project cloning on AVR copying row labels but omitting track data,
   leaving cloned tracks empty or one step long. A 16-bit overflow skipped
   every track-data copy. This affects fresh and upgraded projects, and the

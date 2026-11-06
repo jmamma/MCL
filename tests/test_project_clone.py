@@ -5,10 +5,8 @@ The AVR case needs avr-g++ (PATH or PlatformIO) and qemu-system-avr.
 """
 from pathlib import Path
 import re
-import shutil
-import subprocess
-import tempfile
 import unittest
+from target_fixture import run_fixture
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -26,44 +24,11 @@ def fixture_source():
 
 class ProjectCloneTests(unittest.TestCase):
     def test_native_row_copy(self):
-        compiler = shutil.which("c++")
-        if not compiler:
-            self.skipTest("c++ unavailable")
-        with tempfile.TemporaryDirectory(prefix="mcl-clone-native-") as folder:
-            path = Path(folder)
-            (path / "test.cpp").write_text(fixture_source())
-            subprocess.run([compiler, "-std=c++11", "-O2", str(path / "test.cpp"),
-                            "-o", str(path / "test")], check=True)
-            result = subprocess.run([str(path / "test")], capture_output=True,
-                                    text=True, timeout=10)
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertIn("PASS: complete rows and I/O failures", result.stdout)
+        self.assertIn("PASS: complete rows and I/O failures", run_fixture(fixture_source()))
 
     def test_avr_row_copy(self):
-        compiler = shutil.which("avr-g++")
-        bundled = Path.home() / ".platformio/packages/toolchain-atmelavr/bin/avr-g++"
-        if not compiler and bundled.is_file():
-            compiler = str(bundled)
-        emulator = shutil.which("qemu-system-avr")
-        if not compiler or not emulator:
-            self.skipTest("avr-g++ and qemu-system-avr required")
-        with tempfile.TemporaryDirectory(prefix="mcl-clone-avr-") as folder:
-            path = Path(folder)
-            (path / "test.cpp").write_text(fixture_source())
-            subprocess.run([compiler, "-std=c++11", "-Os", "-mmcu=atmega2560",
-                            str(path / "test.cpp"), "-o", str(path / "test.elf")],
-                           check=True)
-            # The fixture prints once and halts; QEMU has no AVR process-exit ABI.
-            try:
-                result = subprocess.run(
-                    [emulator, "-M", "mega2560", "-display", "none", "-monitor",
-                     "none", "-serial", "stdio", "-bios", str(path / "test.elf")],
-                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=5)
-                output = result.stdout
-            except subprocess.TimeoutExpired as error:
-                output = error.stdout or b""
-            self.assertIn(b"PASS: complete rows and I/O failures", output,
-                          output.decode(errors="replace"))
+        output = run_fixture(fixture_source(), avr=True)
+        self.assertIn("PASS: complete rows and I/O failures", output, output)
 
 
 if __name__ == "__main__":

@@ -1026,11 +1026,11 @@ void SeqExtStepPage::draw_viewport_minimap() {
   // viewport is [fov_offset, fov_offset+fov_length] out of [0,
   // pattern_end]
 
-  uint16_t s = (seq_extstep_tick_t)fov_offset * (width - 1) / pattern_end;
-  uint16_t w = fov_length * (width - 2) / pattern_end;
+  // AVR tick storage is 16-bit; multiplying by the pixel width needs 32 bits.
+  uint16_t s = (int32_t)fov_offset * (width - 1) / pattern_end;
+  uint16_t w = (int32_t)fov_length * (width - 2) / pattern_end;
   uint16_t p = min((seq_extstep_tick_t)width,
-                   (seq_extstep_tick_t)(cur_tick_x *
-                                        (seq_extstep_tick_t)(width - 1) /
+                   (seq_extstep_tick_t)((int32_t)cur_tick_x * (width - 1) /
                                         pattern_end));
 
   oled_display.drawFastHLine(pidx_x0 + 1 + s, pidx_y + 1, w, WHITE);
