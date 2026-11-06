@@ -25,6 +25,35 @@ uint8_t spsx_swing_q14_to_amount(uint32_t swing_q14) {
 
 } // namespace
 
+uint8_t SPSXSeqTrack::pitch_lock_param() const {
+    return MD.pitchParameter(track_number);
+}
+
+void SPSXSeqTrack::set_track_pitch(uint8_t step, uint8_t pitch) {
+    const uint8_t parameter = pitch_lock_param();
+    if (parameter != 255) set_track_locks(step, parameter, pitch);
+}
+
+void SPSXSeqTrack::transpose(int8_t offset) {
+    if (uint8_t(MD.kit.get_model(track_number) - MD_USR_FIRST) >= MD_USR_SLOTS) {
+        SPSXSeqDataTrack::transpose(offset);
+        return;
+    }
+    const uint8_t parameter = pitch_lock_param();
+    if (parameter == 255 || !MD.getKitModelTuning(track_number)) return;
+    const auto shift = [offset](uint8_t value) {
+        const int next = int(value) + int(offset) * 2;
+        const int low = value & 1u;
+        const int high = 126 | low;
+        return uint8_t(next < low ? low : next > high ? high : next);
+    };
+    for (uint8_t step = 0; step < 64; ++step) {
+        const uint8_t value = get_track_lock_implicit(step, parameter);
+        if (value != 255) set_track_pitch(step, shift(value));
+    }
+    MD.setTrackParam(track_number, parameter, shift(MD.kit.params[track_number][parameter]), nullptr, true);
+}
+
 // ============================================================================
 // SPSXSeqTrack — MID Machine Helpers
 // ============================================================================

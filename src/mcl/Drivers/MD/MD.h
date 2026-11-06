@@ -10,6 +10,7 @@
 #include "MDMessages.h"
 #include "MDParams.h"
 #include "MDSysex.h"
+#include "MDUsr.h"
 
 #ifdef PLATFORM_TBD
 #include "UI/MDUI.h"
@@ -123,6 +124,8 @@ public:
   virtual void requestGlobal(uint8_t global) override;
 #endif
   virtual void requestPattern(uint8_t pattern) override;
+  bool getBlockingKit(uint8_t kit, uint16_t timeout = 3000) override;
+  uint8_t pitchParameter(uint8_t track) const;
   virtual void init_grid_devices(DeviceIdx device_idx) override;
 #ifdef PLATFORM_TBD
   virtual bool supports_capability(MidiDeviceCapability capability) const override;

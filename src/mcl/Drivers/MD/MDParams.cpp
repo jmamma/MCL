@@ -36,6 +36,10 @@ const char *MDLFONames[8] = {
 
 /// Caller is responsible to make sure machine_names_short is loaded in RM
 const char* getMDMachineNameShort(uint8_t machine, uint8_t type) {
+  if (uint8_t(machine - MD_USR_FIRST) < MD_USR_SLOTS) {
+    const char *name = md_usr.name(machine);
+    return name ? name + (type == 1 ? 0 : 4) : "??";
+  }
   if (machine == 0) {
     if (type == 1) {
       return R.machine_names_short->md_machine_names_short[0].name2;
@@ -49,6 +53,7 @@ const char* getMDMachineNameShort(uint8_t machine, uint8_t type) {
 
 /// Caller is responsible to make sure machine_names_long is loaded in RM
 const char* MDClass::getMachineName(uint8_t machine) {
+  if (uint8_t(machine - MD_USR_FIRST) < MD_USR_SLOTS) return md_usr.name(machine);
   for (uint8_t i = 0; i < R.machine_names_long->countof_machine_names; i++) {
     if (R.machine_names_long->machine_names[i].id == machine) {
       return R.machine_names_long->machine_names[i].name;
@@ -354,6 +359,7 @@ static const uint8_t tonal_tuning[] PROGMEM = {
 };
 
 static const tuning_t rom_tonal_tuning_t = { ROM_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 0, tonal_tuning };
+static const tuning_t usr_tonal_tuning_t = { MD_USR_FIRST, 37, sizeof(tonal_tuning), 0, tonal_tuning };
 
 
 static const tuning_t tunings_tonal[] = {
@@ -410,6 +416,12 @@ static const tuning_t tunings[] = {
 
 const tuning_t PROGMEM *MDClass::getModelTuning(uint8_t model, bool tonal) {
   uint8_t i;
+
+  if (uint8_t(model - MD_USR_FIRST) < MD_USR_SLOTS) {
+    const uint8_t descriptor = md_usr.descriptor(model);
+    return tonal && (descriptor & (MD_USR_PRESENT | MD_USR_TONAL)) ==
+                   (MD_USR_PRESENT | MD_USR_TONAL) ? &usr_tonal_tuning_t : nullptr;
+  }
 
   if ((model >= 128) && (model <= 191)) {
     //if (tonal) {

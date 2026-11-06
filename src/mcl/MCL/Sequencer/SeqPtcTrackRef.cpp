@@ -227,7 +227,12 @@ bool SeqPtcTrackRef::set_route_param(uint8_t track, uint8_t param,
 
 bool SeqPtcTrackRef::set_pitch(uint8_t track, uint8_t pitch,
                                MidiUartClass *uart_) {
-  return set_param(track, 0, pitch, uart_);
+#if !defined(__AVR__)
+  MidiDevice *device = device_manager.primary_device();
+  if (device == nullptr || device->id != DEVICE_MD) return set_param(track, 0, pitch, uart_);
+#endif
+  const uint8_t parameter = MD.pitchParameter(track);
+  return parameter != 255 && set_param(track, parameter, pitch, uart_);
 }
 
 void SeqPtcTrackRef::trigger(uint8_t track, uint8_t velocity,
@@ -282,7 +287,7 @@ bool SeqPtcTrackRef::trigger_voice(uint8_t track, uint8_t note,
   if (machine_pitch == 255) {
     return false;
   }
-  set_pitch(track, machine_pitch, uart_);
+  if (!set_pitch(track, machine_pitch, uart_)) return false;
   trigger(track, 127, uart_);
   if (record_pitch != nullptr) {
     *record_pitch = machine_pitch;
@@ -419,6 +424,10 @@ bool SeqPtcTrackRef::copy_track_label(uint8_t track, char *out, uint8_t len) {
       ctx, track, out, len, &pitch_max, &is_midi_model);
 #else
   uint8_t model = MD.kit.get_model(track);
+  if (len >= 7) {
+    const char *name = md_usr.name(model);
+    if (name) { memcpy(out, name, 7); return true; }
+  }
   const char *str = getMDMachineNameShort(model, 1);
   copyMachineNameShort(str, out);
   out[2] = '>';

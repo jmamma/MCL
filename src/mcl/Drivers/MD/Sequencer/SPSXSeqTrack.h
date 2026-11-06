@@ -130,6 +130,9 @@ public:
     void send_parameter_locks(uint8_t step, bool trig, uint16_t lock_idx = 0xFFFF);
     void send_parameter_locks_inline(uint8_t step, bool trig, uint16_t lock_idx);
     void reset_params();
+    void set_track_pitch(uint8_t step, uint8_t pitch) override;
+    uint8_t pitch_lock_param() const override;
+    void transpose(int8_t offset) override;
 
     // ========================================================================
     // MID Machine Methods

@@ -558,9 +558,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       seq_param1.old = seq_param1.cur;
 
       if (active_track.uses_note_pitch()) {
-        uint8_t pitch_param = active_track.uses_kit_sound()
-                                  ? 0
-                                  : active_track.pitch_lock_param_id();
+        uint8_t pitch_param = active_track.pitch_lock_param_id();
         uint8_t pitch = active_track.get_track_lock_implicit(step, pitch_param);
         if (pitch > 127) {
           pitch = active_track.default_pitch_lock();

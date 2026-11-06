@@ -58,6 +58,7 @@ void MDSysexListenerClass::end() {
   uint8_t param, value, fx_type, track;
   switch (msgType) {
   case MD_STATUS_RESPONSE_ID:
+    if (view.getByte(offset) == MD_USR_QUERY) md_usr.receive(view);
     param = view.getByte(offset++);
     value = view.getByte(offset++);
     onStatusResponseCallbacks.call(param, value);
@@ -146,7 +147,7 @@ void MDSysexListenerClass::end() {
     {
       uint8_t kitIdx = view.getByte(offset++);
       MD.currentKit = kitIdx;
-      // Could trigger kit reload callback here if needed
+      md_usr.kitChanged();
     }
     break;
 

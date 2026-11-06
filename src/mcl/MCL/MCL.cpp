@@ -343,6 +343,10 @@ void MCL::setup() {
 
 void MCL::loop() {
   platform_poll();
+  md_usr.service();
+  if (md_usr.takeChanged() && isSeqPage() && SeqPage::active_device_is_md() &&
+      MD.currentTrack < 16 && uint8_t(MD.kit.get_model(MD.currentTrack) - MD_USR_FIRST) < MD_USR_SLOTS)
+    GUI.currentPage()->config();
 
 #ifndef __AVR__
   MidiUartUSB.service_background();

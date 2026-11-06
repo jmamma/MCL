@@ -203,6 +203,13 @@ extern const uintptr_t BANK3_FILE_ENTRIES_END;
 constexpr size_t BANK1_MD_TRACKS_START = (BANK1_SYSEX3_DATA_START + SYSEX3_DATA_LEN);
 constexpr size_t BANK1_AUX_TRACKS_START = BANK1_MD_TRACKS_START + MD_CACHE_LEN;
 constexpr size_t BANK1_EXT_TRACKS_START = BANK1_AUX_TRACKS_START + AUX_CACHE_LEN;
+#if defined(__AVR__)
+// Volatile USR metadata follows the existing track caches in bank one.
+constexpr size_t BANK1_USR_CACHE_START = BANK1_EXT_TRACKS_START + EXT_CACHE_LEN;
+constexpr size_t BANK1_USR_CACHE_LEN = 48u * 6u;
+constexpr uint32_t BANK1_USED_END = uint32_t(BANK1_USR_CACHE_START) + BANK1_USR_CACHE_LEN;
+static_assert(BANK1_USED_END <= 0x10000UL, "AVR bank-one allocation exceeds SRAM");
+#endif
 #if defined(PLATFORM_TBD)
 constexpr size_t BANK1_TBD_TRACKS_START = BANK1_EXT_TRACKS_START + EXT_CACHE_LEN;
 #endif

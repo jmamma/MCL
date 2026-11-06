@@ -1,3 +1,5 @@
+#include <chrono>
+#include <thread>
 #include "Drivers/MD/MD.h"
 #include "Drivers/MD/MDSysex.h"
 #include "Drivers/MD/UI/MDTrackSelect.h"
@@ -231,6 +233,152 @@ bool checkTonalOctaveMessages() {
         ok &= mdModelFromMachineFlags(16,flags)==((16u|((flags&1u)<<7u))|modelFlags[mode]);
     }
     MD.uart=oldUart;MD.connected=oldConnected;MD.is_spsx=oldSpsx;MD.fw_caps=oldCaps;
+    return ok;
+}
+
+bool checkUsrMetadata() {
+    const auto oldUart = MD.uart;
+    const auto oldCaps = MD.fw_caps;
+    const bool oldConnected = MD.connected;
+    MidiUartClass output;
+    MD.uart = &output;
+    MD.connected = true;
+    MD.fw_caps = FW_CAP_USR_QUERY | FW_CAP_SPSX;
+    md_usr.reset();
+    if (!md_usr.takeChanged() || md_usr.takeChanged()) return false;
+    auto fixture = std::make_unique<SysexFixture>();
+    std::array<uint8_t, 160> request{}, reply{};
+    uint8_t lastTag = 0;
+    auto poll = [&](unsigned page, uint32_t generation, uint8_t count = 48) {
+        output.init();
+        md_usr.service();
+        const size_t n = output.desktop_egress(request.data(), request.size());
+        if (n != 13 || request[7] != 0x44 || request[10] != page || request[9] == 127) return false;
+        lastTag = request[9];
+        const uint8_t header[]{0xf0,0,0x20,0x3c,2,0,0x72,0x44,1,lastTag,uint8_t(page),count};
+        reply.fill(0);
+        std::memcpy(reply.data(), header, sizeof(header));
+        for (unsigned b = 0; b < 5; ++b) reply[12+b] = (generation >> (b*7)) & 127;
+        for (unsigned slot = 0; slot < 16; ++slot) {
+            reply[17+slot*6] = uint8_t(32|16|8|3); // primary pitch is parameter 3
+            std::memcpy(reply.data()+18+slot*6, "TXZLB", 5);
+        }
+        reply[113] = 0xf7;
+        return true;
+    };
+    auto deliver = [&](unsigned n = 114) {
+        if (!publishToMidiSysex(fixture->sysex, reply.data(), n)) return false;
+        md_usr.receive(SysexView(&fixture->sysex));
+        return true;
+    };
+    bool ok = poll(0, 1);
+    reply[9] ^= 1; // stale request tag cannot publish
+    ok &= deliver() && md_usr.descriptor(194) == 0;
+    reply[9] ^= 1;
+    reply[17] |= 64; // reserved descriptor flag
+    ok &= deliver() && md_usr.descriptor(194) == 0;
+    reply[17] &= ~64;
+    ok &= deliver() && md_usr.descriptor(194) == 59;
+    ok &= std::strcmp(md_usr.name(194), "TXZ-LB") == 0;
+    ok &= poll(1, 1) && deliver() && poll(2, 1) && deliver();
+    ok &= md_usr.descriptor(241) == 59 && md_usr.descriptor(242) == 0;
+    // A complete cache emits no status polling, even after the old interval.
+    output.init();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1010));
+    md_usr.service();
+    ok &= output.desktop_egress(request.data(), request.size()) == 0;
+    MD.kit.models[0] = 194 | mdTuningModelFlags(MD_TUNING_TONAL);
+    ok &= MD.pitchParameter(0) == 3 && MD.getKitModelTuning(0) != nullptr;
+    char label[8]{}; uint8_t pitchMax = 0; bool midiModel = true;
+    const auto context = DeviceContext::for_device(&MD, DeviceIdx::Primary);
+    ok &= MD.step_edit()->configure_kit_sound_panel(context, 0, label, sizeof(label), &pitchMax, &midiModel);
+    ok &= std::strcmp(label, "TXZ-LB") == 0 && !midiModel && pitchMax == 64;
+    ok &= MD.step_edit()->kit_sound_pitch_from_note(context, 0, pitchMax, 32) == 126;
+    mcl_seq.md_tracks[0].clear_locks();
+    mcl_seq.md_tracks[0].track_number = 0;
+    mcl_seq.md_tracks[0].set_track_pitch(2, 64);
+    ok &= mcl_seq.md_tracks[0].get_track_lock_implicit(2, 3) == 64;
+    ok &= mcl_seq.md_tracks[0].find_param(0) == 255;
+    for (uint8_t mode = 1; mode <= 3; ++mode) {
+        MD.kit.models[0] = 194 | mdTuningModelFlags(mode);
+        const uint8_t note = 69 + mdTuningNoteOffset(mode);
+        ok &= MD.trackGetCCPitch(0, 64, nullptr) == note && MD.trackGetPitch(0, note) == 64;
+    }
+    auto& nativeTrack = mcl_seq.spsx_tracks[0];
+    nativeTrack.track_number = 0;
+    nativeTrack.clear_locks();
+    nativeTrack.set_track_pitch(2, 64);
+    nativeTrack.set_track_pitch(3, 126);
+    nativeTrack.set_track_pitch(4, 127);
+    MD.kit.params[0][0] = 99;
+    MD.kit.params[0][3] = 64;
+    nativeTrack.transpose(1);
+    ok &= nativeTrack.get_track_lock_implicit(2, 3) == 66 && nativeTrack.find_param(0) == 255;
+    ok &= nativeTrack.get_track_lock_implicit(3, 3) == 126 && nativeTrack.get_track_lock_implicit(4, 3) == 127;
+    ok &= MD.kit.params[0][3] == 66 && MD.kit.params[0][0] == 99;
+    nativeTrack.clear_locks();
+    // A new bank/replacement generation invalidates every previously cached page.
+    md_usr.invalidate();
+    ok &= poll(0, 2) && deliver() && md_usr.descriptor(241) == 0;
+    // Empty and non-tonal machines never acquire melodic behavior.
+    md_usr.invalidate();
+    ok &= poll(0, 2);
+    std::memset(reply.data()+17, 0, 6);
+    reply[23] = 32;
+    ok &= deliver() && md_usr.name(194) == nullptr;
+    ok &= MD.pitchParameter(0) == 255 && MD.getModelTuning(195, true) == nullptr;
+    // A truncated message cannot partly overwrite a published cache.
+    md_usr.invalidate();
+    ok &= poll(0, 2);
+    reply[112] = 0xf7;
+    ok &= deliver(113) && md_usr.descriptor(194) == 0;
+    reply[112] = 'B'; reply[113] = 0xf7;
+    ok &= deliver();
+    // Exercise the actual blocking supplement through the MIDI listener.
+    // The existing legacy kit storage gains octave flags without extra rows.
+    const auto oldMidi = MD.midi;
+    MD.midi = &Midi; MD.uart = &MidiUart;
+    MDSysexListener.setup(&Midi);
+    MidiUart.init();
+    lastTag = (lastTag + 1) & 127;
+    const uint8_t kitHeader[]{0xf0,0,0x20,0x3c,2,0,0x72,0x44,1,lastTag,3,48,2,0,0,0,0};
+    std::memcpy(reply.data(), kitHeader, sizeof(kitHeader));
+    for (uint8_t track = 0; track < 16; ++track) {
+        MD.kit.models[track] = 194 + track;
+        reply[17 + track*2] = 66 + track;
+        reply[18 + track*2] = mdMachineTuningFlags(MD.kit.models[track] | mdTuningModelFlags(track%4), true);
+    }
+    reply[49] = 0xf7;
+    ok &= MidiUart.desktop_ingress(reply.data(), 50) == 50;
+    ok &= md_usr.readKitTuning(127, 100);
+    for (uint8_t track = 0; track < 16; ++track) ok &= MD.kit.get_tuning(track) == track%4;
+    // Public notice needs no outstanding query; malformed notices do nothing.
+    const uint8_t notice[]{0xf0,0,0x20,0x3c,2,0,0x72,0x44,1,127,4,48,3,0,0,0,0,0xf7};
+    std::memcpy(reply.data(), notice, sizeof(notice));
+    const auto descriptorBefore = md_usr.descriptor(194);
+    reply[10] = 0;
+    ok &= deliver(18) && md_usr.descriptor(194) == descriptorBefore;
+    reply[10] = 4;
+    MidiUart.init();
+    ok &= deliver(18) && md_usr.descriptor(194) == 0;
+    ok &= MidiUart.desktop_egress(request.data(), request.size()) == 0; // Callback only schedules.
+    // A library-only event fetches compact metadata, without a full kit dump.
+    MD.uart = &output;
+    ok &= poll(0, 3) && deliver();
+    // Tag wrap never collides with unsolicited $7f, and an old reply cannot
+    // complete a request invalidated by a library/kit notification.
+    md_usr.reset(); MD.uart = &output;
+    for (unsigned i = 0; i < 130; ++i) {
+        md_usr.invalidate();
+        ok &= poll(0, 4) && deliver();
+    }
+    md_usr.invalidate(); ok &= poll(0, 4);
+    md_usr.kitChanged();
+    ok &= deliver() && md_usr.descriptor(194) == 0;
+    MD.midi = oldMidi; MDSysexListener.setup(oldMidi);
+    mcl_seq.md_tracks[0].clear_locks();
+    md_usr.reset();
+    MD.uart = oldUart; MD.fw_caps = oldCaps; MD.connected = oldConnected;
     return ok;
 }
 
@@ -1060,6 +1208,10 @@ bool checkSequencerNegotiation(uint8_t param, uint8_t value) {
 int main(int argc, char** argv) {
     if (argc == 4 && std::strcmp(argv[1], "--roundtrip-kit") == 0)
         return roundtripKitFile(argv[2], argv[3]);
+    if (!checkUsrMetadata()) {
+        std::fprintf(stderr, "MCL USR metadata/tuning checks failed\n");
+        return 1;
+    }
     const bool octaves=checkTonalOctaveMessages();
     const bool legacyOctaves=checkTonalLegacyKitExport();
     if(!octaves || !legacyOctaves) {

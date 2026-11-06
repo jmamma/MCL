@@ -1068,7 +1068,8 @@ void MDSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
 }
 
 void MDSeqTrack::set_track_pitch(uint8_t step, uint8_t pitch) {
-  set_track_locks(step, 0, pitch);
+  const uint8_t parameter = MD.pitchParameter(track_number);
+  if (parameter != 255) set_track_locks(step, parameter, pitch);
 }
 
 void MDSeqTrack::record_track_pitch(uint8_t pitch) {
@@ -1471,10 +1472,12 @@ void MDSeqTrack::transpose(int8_t offset) {
  bool is_midi_model = md_track_is_midi_model(track_number);
  tuning_t const *tuning = MD.getKitModelTuning(track_number);
  if (!tuning && !is_midi_model) { return; }
+ const uint8_t parameter = MD.pitchParameter(track_number);
+ if (parameter == 255) return;
  for (uint8_t n = 0; n < 64; n++) {
-   uint8_t pitch = get_track_lock_implicit(n, 0);
+   uint8_t pitch = get_track_lock_implicit(n, parameter);
    if (pitch == 255) { continue; }
    set_track_pitch(n, transpose_pitch(pitch, offset));
  }
- MD.setTrackParam(track_number,0,transpose_pitch(MD.kit.params[track_number][0], offset), nullptr, true);
+ MD.setTrackParam(track_number,parameter,transpose_pitch(MD.kit.params[track_number][parameter], offset), nullptr, true);
 }

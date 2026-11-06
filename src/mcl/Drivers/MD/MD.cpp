@@ -230,6 +230,7 @@ void MDClass::setup_listeners() {
 }
 
 void MDClass::cleanup_listeners() {
+  md_usr.reset();
   midi_events.disable_live_kit_update();
   // Remove sysex listeners from the current (old) sysex object
   // before setPort() reassigns midi to the new port.
@@ -327,6 +328,9 @@ public:
                                           char *out, uint8_t len) override;
   virtual bool sequencer_uses_step_pitch(const DeviceContext &ctx,
                                          uint8_t target) const override;
+  uint8_t sequencer_pitch_lock_param(const DeviceContext &, uint8_t target) const override {
+    return md().pitchParameter(target);
+  }
 
 private:
   MDClass &md() const { return (MDClass &)device_; }
@@ -795,7 +799,9 @@ bool MDStepEditCapability::configure_kit_sound_panel(
   }
   if (pitch_max != nullptr) {
     if (tuning) {
-      *pitch_max = tuning->len - 1 + tuning->base;
+      const uint8_t base = uint8_t(model - MD_USR_FIRST) < MD_USR_SLOTS
+          ? tuning->base % 12 : tuning->base;
+      *pitch_max = tuning->len - 1 + base;
     } else if (midi_model) {
       *pitch_max = 127;
     } else {
@@ -803,6 +809,10 @@ bool MDStepEditCapability::configure_kit_sound_panel(
     }
   }
 
+  if (info_len >= 7) {
+    const char *name = md_usr.name(model);
+    if (name) { memcpy(info, name, 7); return true; }
+  }
   const char *str1 = getMDMachineNameShort(model, 1);
   const char *str2 = getMDMachineNameShort(model, 2);
   copyMachineNameShort(str1, info);
@@ -833,7 +843,8 @@ bool MDStepEditCapability::kit_sound_voice_allocatable(
 uint8_t MDStepEditCapability::kit_sound_default_pitch(const DeviceContext &ctx,
                                                       uint8_t target) const {
   (void)ctx;
-  return target < NUM_MD_TRACKS ? md().kit.params[target][0] : 0;
+  const uint8_t parameter = md().pitchParameter(target);
+  return parameter != 255 ? md().kit.params[target][parameter] : 0;
 }
 
 uint8_t MDStepEditCapability::kit_sound_note_from_pitch(
@@ -1405,6 +1416,7 @@ void MDClass::get_mutes() {
 }
 
 bool MDClass::probe() {
+  md_usr.reset();
   DEBUG_PRINT_FN();
 
   bool ti = key_interface.state;
@@ -1763,12 +1775,30 @@ void MDClass::setCompressorParam(uint8_t param, uint8_t value) {
 
 /*** tunings ***/
 
+bool MDClass::getBlockingKit(uint8_t kit, uint16_t timeout) {
+  if (!ElektronDevice::getBlockingKit(kit, timeout)) return false;
+#if !defined(__AVR__)
+  if (is_spsx) return true; // Native kits already contain all tuning flags.
+#endif
+  return md_usr.readKitTuning(kit, timeout);
+}
+
+uint8_t MDClass::pitchParameter(uint8_t track) const {
+  if (track >= 16) return 255;
+  const uint8_t model = uint8_t(kit.models[track]);
+  if (uint8_t(model - MD_USR_FIRST) >= MD_USR_SLOTS) return 0;
+  const uint8_t descriptor = md_usr.descriptor(model);
+  return (descriptor & (MD_USR_PRESENT | MD_USR_PITCH)) ==
+         (MD_USR_PRESENT | MD_USR_PITCH) ? descriptor & 7u : 255;
+}
+
 uint8_t MDClass::trackGetCCPitch(uint8_t track, uint8_t cc, int8_t *offset) {
   tuning_t const *tuning = getKitModelTuning(track);
 
   if (tuning == NULL)
     return 128;
 
+  const int16_t base = int16_t(tuning->base) + mdTuningNoteOffset(kit.get_tuning(track));
   uint8_t i;
   int8_t off = 0;
   for (i = 0; i < tuning->len; i++) {
@@ -1778,8 +1808,8 @@ uint8_t MDClass::trackGetCCPitch(uint8_t track, uint8_t cc, int8_t *offset) {
       if (offset != NULL) {
         *offset = off;
       }
-      if (off <= tuning->offset)
-        return i + tuning->base;
+      if (off <= tuning->offset && base + i >= 0 && base + i < 128)
+        return base + i;
       else
         return 128;
     }
@@ -1787,8 +1817,8 @@ uint8_t MDClass::trackGetCCPitch(uint8_t track, uint8_t cc, int8_t *offset) {
   off = ABS(pgm_read_byte(&tuning->tuning[tuning->len - 1]) - cc);
   if (offset != NULL)
     *offset = off;
-  if (off <= tuning->offset)
-    return i + tuning->base;
+  if (off <= tuning->offset && base + i >= 0 && base + i < 128)
+    return base + i;
   else
     return 128;
 }
@@ -1799,7 +1829,7 @@ uint8_t MDClass::trackGetPitch(uint8_t track, uint8_t pitch) {
   if (tuning == NULL)
     return 128;
 
-  uint8_t base = tuning->base;
+  const int16_t base = int16_t(tuning->base) + mdTuningNoteOffset(kit.get_tuning(track));
   uint8_t len = tuning->len;
 
   if ((pitch < base) || (pitch >= (base + len))) {

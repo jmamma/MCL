@@ -253,7 +253,7 @@ public:
     return lock_idx == 255 ? -1 : (int8_t)lock_idx;
   }
 
-  uint8_t pitch_lock_param_id() const { return 0; }
+  uint8_t pitch_lock_param_id() const { return MD.pitchParameter(track_index()); }
   uint8_t get_track_lock_implicit(uint8_t step, uint8_t param_id) {
     return track_->get_track_lock_implicit(step, param_id);
   }
@@ -324,12 +324,18 @@ private:
     }
     if (pitch_max != nullptr) {
       if (tuning) {
-        *pitch_max = tuning->len - 1 + tuning->base;
+        const uint8_t base = uint8_t(model - MD_USR_FIRST) < MD_USR_SLOTS
+            ? tuning->base % 12 : tuning->base;
+        *pitch_max = tuning->len - 1 + base;
       } else if (midi_model) {
         *pitch_max = 127;
       } else {
         *pitch_max = 1;
       }
+    }
+    if (info_len >= 7) {
+      const char *name = md_usr.name(model);
+      if (name) { memcpy(info, name, 7); return true; }
     }
     const char *str1 = getMDMachineNameShort(model, 1);
     const char *str2 = getMDMachineNameShort(model, 2);
@@ -350,7 +356,8 @@ private:
   }
 
   uint8_t md_kit_default_pitch() const {
-    return track_index() < NUM_MD_TRACKS ? MD.kit.params[track_index()][0] : 0;
+    const uint8_t parameter = MD.pitchParameter(track_index());
+    return parameter != 255 ? MD.kit.params[track_index()][parameter] : 0;
   }
 
   uint8_t md_kit_note_from_pitch(uint8_t pitch) const {

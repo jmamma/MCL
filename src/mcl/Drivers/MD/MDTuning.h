@@ -8,6 +8,10 @@ enum : uint8_t {
 };
 constexpr uint32_t MD_MODEL_TUNING_MASK = 0x000e00ffUL;
 
+inline int8_t mdTuningNoteOffset(uint8_t tuning) {
+  return tuning == MD_TUNING_DOWN ? -12 : tuning == MD_TUNING_UP ? 12 : 0;
+}
+
 inline uint8_t mdTuningFromModel(uint32_t model) {
   if ((model & 0x20000UL) == 0) return MD_TUNING_DEFAULT;
   const uint32_t octave = model & 0xc0000UL;

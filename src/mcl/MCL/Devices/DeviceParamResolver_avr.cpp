@@ -232,7 +232,8 @@ uint8_t DeviceParamTarget::pitch_lock_param() const {
   if (!valid()) {
     return 0;
   }
-  return 0;
+  return device_idx != DeviceIdx::Secondary && target < NUM_MD_TRACKS
+      ? MD.pitchParameter(target) : 0;
 }
 
 bool DevicePerfTarget::param_from_key(uint8_t key, uint8_t *param) const {
