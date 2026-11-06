@@ -34,13 +34,18 @@ namespace {
 
 bool copy_grid_row_slots_raw(Grid &src_grid, Grid &dst_grid, GridRow row) {
   uint8_t buf[256];
-  static_assert((GRID_WIDTH * GRID_SLOT_BYTES) % sizeof(buf) == 0,
-                "row slot copy buffer must divide row slot bytes");
+  static_assert(GRID_SLOT_BYTES % sizeof(buf) == 0,
+                "row slot copy buffer must divide each slot");
   if (!src_grid.seek(0, row) || !dst_grid.seek(0, row)) {
     return false;
   }
 
-  constexpr uint16_t chunks = (GRID_WIDTH * GRID_SLOT_BYTES) / sizeof(buf);
+  // A row is 65536 bytes, which wraps to zero in AVR's 16-bit size_t.
+  // Divide into chunks before multiplying; only the compile-time check is wide.
+  constexpr uint16_t chunks = GRID_WIDTH * (GRID_SLOT_BYTES / sizeof(buf));
+  static_assert(uint32_t(chunks) * sizeof(buf) ==
+                    uint32_t(GRID_WIDTH) * GRID_SLOT_BYTES,
+                "row copy chunk count must cover all slots");
   for (uint16_t i = 0; i < chunks; i++) {
     if (!src_grid.read(buf, sizeof(buf)) || !dst_grid.write(buf, sizeof(buf))) {
       return false;

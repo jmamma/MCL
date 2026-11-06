@@ -1,3 +1,11 @@
+Unreleased
+
+- Fix project cloning on AVR copying row labels but omitting track data,
+  leaving cloned tracks empty or one step long. A 16-bit overflow skipped
+  every track-data copy. This affects fresh and upgraded projects, and the
+  shared grid-pair copier used for project versions and moves. Existing
+  broken clones must be recreated from an intact original or backup.
+
 MCL 5.02 26/06/2026
 
 - Hotfix for regression in track LEV parameter loading.

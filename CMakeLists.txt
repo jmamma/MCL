@@ -152,3 +152,9 @@ add_executable(mcl_wire_compat_test EXCLUDE_FROM_ALL
     src/platform/desktop/mcl_wire_compat_test.cpp)
 target_link_libraries(mcl_wire_compat_test PRIVATE
     mcl_native_compile_oracle)
+
+# Real filesystem coverage for project cloning; pair with the AVR-width test:
+# python3 -m unittest discover -s tests -p test_project_clone.py
+add_executable(mcl_project_clone_test EXCLUDE_FROM_ALL
+    tests/project_clone_storage.cpp)
+target_link_libraries(mcl_project_clone_test PRIVATE mcl_native_compile_oracle)
