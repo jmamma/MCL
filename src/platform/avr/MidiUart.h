@@ -138,11 +138,11 @@ private:
     volatile uint8_t *ptr = ucsra();
     return *ptr & (1 << UDRE0);
   }
-  void set_tx() {
+  FORCED_INLINE() void set_tx() {
     volatile uint8_t *ptr = ucsrb();
     *ptr |= (1 << UDRIE0);
   }
-  void clear_tx() {
+  FORCED_INLINE() void clear_tx() {
     volatile uint8_t *ptr = ucsrb();
     *ptr &= ~(1 << UDRIE0);
   }
@@ -177,7 +177,7 @@ public:
                 RingBuffer<> *_txRb = nullptr,
                 RingBuffer<> *_txRb_realtime = nullptr) NOINLINE();
 
-  ALWAYS_INLINE() bool avail() { return !rxRb->isEmpty(); }
+  FORCED_INLINE() bool avail() { return !rxRb->isEmpty(); }
   ALWAYS_INLINE() uint8_t m_getc() { return rxRb->get(); }
 
 

@@ -35,9 +35,17 @@ void MidiClass::processSysex() {
 }
 
 void MidiClass::processMidi() {
+#if defined(__AVR__)
+    // MidiUartClass is the only UART type on AVR: call it directly so the
+    // per-byte poll and read need no virtual dispatch.
+    while (uart->MidiUartClass::avail()) {
+        handleByte(uart->MidiUartClass::m_getc());
+    }
+#else
     while (((MidiUartParent*)uart)->avail()) {
         handleByte(((MidiUartParent*)uart)->m_getc());
     }
+#endif
 }
 
 void MidiClass::sysexEnd(uint8_t msg_rd) {
