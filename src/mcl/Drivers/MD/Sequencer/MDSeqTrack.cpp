@@ -1364,7 +1364,7 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
 #endif
 }
 
-void MDSeqTrack::modify_track(uint8_t dir) {
+COLD_SMALL() void MDSeqTrack::modify_track(uint8_t dir) {
 
   uint8_t old_mute_state = mute_state;
 

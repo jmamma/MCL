@@ -59,6 +59,7 @@ extern volatile uint32_t interrupt_lock_count;
 #define ALWAYS_INLINE() __attribute__((always_inline))
 #define FORCED_INLINE() __attribute__((always_inline))
 #define NOINLINE() __attribute__((noinline))
+#define COLD_SMALL()
 
 extern uint8_t SW_IRQ1;
 extern uint8_t SW_IRQ2;

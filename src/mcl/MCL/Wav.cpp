@@ -25,7 +25,7 @@ bool Wav::close(bool write) {
   return file.close();
 }
 
-bool Wav::open(const char *file_name, bool write, uint16_t numChannels,
+COLD_SMALL() bool Wav::open(const char *file_name, bool write, uint16_t numChannels,
                uint32_t sampleRate, uint8_t bitRate, bool loop) {
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(file_name);

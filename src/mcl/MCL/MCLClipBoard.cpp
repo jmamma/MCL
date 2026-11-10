@@ -267,7 +267,7 @@ bool MCLClipBoard::copy(GridSlot col, GridRow row, GridSpan w, GridSpan h) {
   }
   return close() && ret;
 }
-bool MCLClipBoard::paste(GridSlot col, GridRow row) {
+COLD_SMALL() bool MCLClipBoard::paste(GridSlot col, GridRow row) {
   DEBUG_PRINT_FN();
   if (!open()) {
     DEBUG_PRINTLN(F("error could not open clipboard"));

@@ -667,7 +667,7 @@ bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
   return ret;
 }
 
-bool ExtSeqTrack::del_notes(uint16_t cur_x, uint16_t cur_w,
+COLD_SMALL() bool ExtSeqTrack::del_notes(uint16_t cur_x, uint16_t cur_w,
                             uint8_t note_min, uint8_t note_max) {
   if (note_min > note_max || length == 0 || event_count == 0) {
     return false;
@@ -1429,7 +1429,7 @@ void ExtSeqTrack::clear_step(uint8_t step) {
   CLEAR_BIT128_P(mute_mask, step);
 }
 
-void ExtSeqTrack::modify_track(uint8_t dir) {
+COLD_SMALL() void ExtSeqTrack::modify_track(uint8_t dir) {
   uint8_t old_mute_state = mute_state;
   uint8_t n_cur;
   mute_state = SEQ_MUTE_ON;

@@ -1722,7 +1722,7 @@ void SeqExtStepPage::param_select_update() {
   }
 }
 
-bool SeqExtStepPage::handleEvent(gui_event_t *event) {
+COLD_SMALL() bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
   auto active_track = active_ext_step_track();
   uint16_t ticks_per_step = active_track.ticks_per_step();

@@ -53,6 +53,8 @@ extern volatile uint32_t interrupt_lock_count;
     #define FORCED_INLINE() __attribute__((always_inline))
 #endif
 #define NOINLINE() __attribute__((noinline))
+// Cold, loop-heavy code: skip loop-invariant hoisting to save flash.
+#define COLD_SMALL() __attribute__((optimize("no-move-loop-invariants")))
 
 // C++ specific functionality
 #ifdef __cplusplus

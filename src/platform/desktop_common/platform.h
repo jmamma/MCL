@@ -47,6 +47,7 @@ inline uint64_t time_us_64() { return micros(); }
 #define ALWAYS_INLINE()  inline __attribute__((always_inline))
 #define FORCED_INLINE()  inline __attribute__((always_inline))
 #define NOINLINE()       __attribute__((noinline))
+#define COLD_SMALL()
 
 // Software-IRQ trigger macros — empty stubs (no IRQs).
 extern uint8_t SW_IRQ1;

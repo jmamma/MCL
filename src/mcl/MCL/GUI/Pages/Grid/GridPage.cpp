@@ -922,7 +922,7 @@ void rename_row() {
 
 void apply_slot_changes_cb() { grid_page.apply_slot_changes(); }
 
-void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
+COLD_SMALL() void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
   GridSpan width;
   GridSpan height;
 

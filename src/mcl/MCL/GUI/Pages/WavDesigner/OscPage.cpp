@@ -168,7 +168,7 @@ void OscPage::loop() {
 
 
 
-void OscPage::display() {
+COLD_SMALL() void OscPage::display() {
   // oled_display.clearDisplay();
   oled_display.fillRect(0, 0, 64, 32, BLACK);
 

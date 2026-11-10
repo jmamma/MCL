@@ -29,7 +29,7 @@ bool OscMixerPage::handleEvent(gui_event_t *event) {
 }
 
 void OscMixerPage::loop() { WavDesignerPage::loop(); }
-void OscMixerPage::display() {
+COLD_SMALL() void OscMixerPage::display() {
   if (show_menu) {
     WavDesignerPage::display();
   } else {

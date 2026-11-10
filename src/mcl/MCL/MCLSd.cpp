@@ -339,7 +339,7 @@ bool MCLSd::read_data(void *data, size_t len, File *filep) {
   return false;
 }
 
-bool MCLSd::copy_file(const char *src, const char *dst, uint8_t progress_base,
+COLD_SMALL() bool MCLSd::copy_file(const char *src, const char *dst, uint8_t progress_base,
                       uint8_t progress_span, uint8_t progress_max) {
   File in;
   File out;

@@ -42,7 +42,7 @@ void WavDesigner::prompt_send() {
   mcl.setPage(WD_MIXER_PAGE);
 }
 
-bool WavDesigner::render() {
+COLD_SMALL() bool WavDesigner::render() {
   DEBUG_PRINT_FN();
   float sample_rate = 44100;
   Wav wav_file;

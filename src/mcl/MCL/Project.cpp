@@ -405,7 +405,7 @@ constexpr size_t PROJECT_HEADER_SIZE_LEGACY_CONFIG =
 #ifdef MCL_HAS_PROJECT_CONVERSION
 #define PROJECT_VERSION_CAN_OPEN(v)                                           \
   ((v) == PROJ_MIN_READABLE_VERSION || (v) == PROJ_VERSION)
-#define PROJECT_CONVERSION_ATTR() __attribute__((noinline, cold))
+#define PROJECT_CONVERSION_ATTR() __attribute__((noinline, cold)) COLD_SMALL()
 #else
 #define PROJECT_VERSION_CAN_OPEN(v) ((v) == PROJ_VERSION)
 #endif
@@ -1775,7 +1775,7 @@ bool Project::store_config_from_system() {
   return write_header();
 }
 
-bool Project::copy_grid_pair(const char *from_project,
+COLD_SMALL() bool Project::copy_grid_pair(const char *from_project,
                              const char *from_basename,
                              const char *to_project,
                              const char *to_basename,
